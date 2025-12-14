@@ -162,7 +162,7 @@ END:VCALENDAR`;
                             )}
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-16">
                             <div className="lg:col-span-1 space-y-4">
                                 <h2 className="text-2xl font-bold text-gray-700 flex items-center gap-2 border-b pb-2"><Zap className="w-6 h-6 text-[#CE8E94]" /> Book a Class</h2>
                                 <BookingCalendar
