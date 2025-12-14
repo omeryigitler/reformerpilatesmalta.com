@@ -343,26 +343,20 @@ function PilatesMaltaByGozde() {
                 'pqtdmtV_1xQxlCa0T'
             ).catch(err => console.error("Failed to send user email:", err));
 
-            // 2. Email to Admins (Notification)
-            adminEmails.forEach(adminEmail => {
-                emailjs.send(
-                    'service_335c8mj',
-                    'template_lsuq5bc',
-                    {
-                        to_name: `Admin Alert (User: ${loggedInUser.firstName})`,
-                        to_email: adminEmail,
-                        studio_name: 'Reformer Pilates Malta',
-                        class_name: `NEW BOOKING by ${loggedInUser.firstName} ${loggedInUser.lastName}`,
-                        class_date: formatDateDisplay(slotDate),
-                        class_time: slotTime,
-                        instructor_name: 'System Notification',
-                        studio_address: 'Check Admin Panel',
-                        maps_link: '',
-                        website_url: 'https://www.reformerpilatesmalta.com/admin'
-                    },
-                    'pqtdmtV_1xQxlCa0T'
-                ).catch(err => console.error("Failed to send admin email:", err));
-            });
+            // 2. Email to Admins (Notification via New Template with CC)
+            emailjs.send(
+                'service_335c8mj',
+                'template_jf9q6tg', // New Admin Template ID
+                {
+                    event_type: 'New Class Booking',
+                    user_name: `${loggedInUser.firstName} ${loggedInUser.lastName}`,
+                    user_email: loggedInUser.email,
+                    user_phone: loggedInUser.phone,
+                    event_date: formatDateDisplay(slotDate),
+                    event_time: slotTime
+                },
+                'pqtdmtV_1xQxlCa0T'
+            ).catch(err => console.error("Failed to send admin email:", err));
 
             showNotification(`Booking confirmed for ${slotTime} on ${formatDateDisplay(slotDate)}! Confirmation email sent.`, 'success');
         } catch (e: any) {
