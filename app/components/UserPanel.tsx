@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { UserType } from '../types';
 import { useNotification } from '../context/NotificationContext';
 import { Modal } from './Modal';
+import emailjs from '@emailjs/browser';
 import { registerUserAuth, loginUserAuth, resetPasswordAuth, getUserProfile } from '../services/pilatesService';
 
 interface UserPanelProps {
@@ -82,6 +83,29 @@ export const UserPanel = ({ existingUsers, addUser, onLogin, activePanel, setAct
             await registerUserAuth(newUser);
 
             showNotification('Registration successful! Logging you in...', 'success');
+
+            // Notify Admins about New User
+            const adminEmails = ['omeryigitler@hotmail.com', 'info@reformerpilatesmalta.com'];
+            adminEmails.forEach(adminEmail => {
+                emailjs.send(
+                    'service_335c8mj',
+                    'template_lsuq5bc',
+                    {
+                        to_name: `Admin Alert`,
+                        to_email: adminEmail,
+                        studio_name: 'Reformer Pilates Malta',
+                        class_name: `NEW MEMBER REGISTERED: ${newUser.firstName} ${newUser.lastName}`,
+                        class_date: newUser.registered,
+                        class_time: newUser.phone, // Using time field for phone number
+                        instructor_name: newUser.email, // Using instructor field for email
+                        studio_address: 'Check Admin Panel',
+                        maps_link: '',
+                        website_url: 'https://www.reformerpilatesmalta.com/admin'
+                    },
+                    'pqtdmtV_1xQxlCa0T'
+                ).catch(err => console.error("Failed to send admin reg email:", err));
+            });
+
             // Check session manually to update UI immediately
             onLogin(newUser);
             setActiveUserPanel(null);

@@ -33,6 +33,7 @@ import {
     browserLocalPersistence
 } from "firebase/auth";
 import { collection, doc, setDoc, onSnapshot, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
+import emailjs from '@emailjs/browser';
 import dynamic from 'next/dynamic';
 
 // --- TYPE DEFINITIONS ---
@@ -319,7 +320,51 @@ function PilatesMaltaByGozde() {
         try {
             // Use Transaction Service
             await bookSlotTransaction(slotDate, slotTime, loggedInUser);
-            showNotification(`Booking confirmed for ${slotTime} on ${formatDateDisplay(slotDate)}!`, 'success');
+
+            // --- SEND EMAIL NOTIFICATIONS ---
+            const adminEmails = ['omeryigitler@hotmail.com', 'info@reformerpilatesmalta.com']; // Add/Edit admin emails here
+
+            // 1. Email to User
+            emailjs.send(
+                'service_335c8mj',
+                'template_lsuq5bc',
+                {
+                    to_name: loggedInUser.firstName,
+                    to_email: loggedInUser.email,
+                    studio_name: 'Reformer Pilates Malta',
+                    class_name: 'Reformer Pilates',
+                    class_date: formatDateDisplay(slotDate),
+                    class_time: slotTime,
+                    instructor_name: 'Ömer YİĞİTLER',
+                    studio_address: 'Triq Il-Hgejjeg, San Giljan, Malta',
+                    maps_link: 'https://maps.app.goo.gl/YourGoogleMapsLinkHere',
+                    website_url: 'https://www.reformerpilatesmalta.com'
+                },
+                'pqtdmtV_1xQxlCa0T'
+            ).catch(err => console.error("Failed to send user email:", err));
+
+            // 2. Email to Admins (Notification)
+            adminEmails.forEach(adminEmail => {
+                emailjs.send(
+                    'service_335c8mj',
+                    'template_lsuq5bc',
+                    {
+                        to_name: `Admin Alert (User: ${loggedInUser.firstName})`,
+                        to_email: adminEmail,
+                        studio_name: 'Reformer Pilates Malta',
+                        class_name: `NEW BOOKING by ${loggedInUser.firstName} ${loggedInUser.lastName}`,
+                        class_date: formatDateDisplay(slotDate),
+                        class_time: slotTime,
+                        instructor_name: 'System Notification',
+                        studio_address: 'Check Admin Panel',
+                        maps_link: '',
+                        website_url: 'https://www.reformerpilatesmalta.com/admin'
+                    },
+                    'pqtdmtV_1xQxlCa0T'
+                ).catch(err => console.error("Failed to send admin email:", err));
+            });
+
+            showNotification(`Booking confirmed for ${slotTime} on ${formatDateDisplay(slotDate)}! Confirmation email sent.`, 'success');
         } catch (e: any) {
             showNotification(typeof e === 'string' ? e : 'Error booking slot', 'error');
         }
