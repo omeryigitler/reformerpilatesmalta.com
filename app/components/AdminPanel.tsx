@@ -553,7 +553,6 @@ export const AdminPanel = ({
             <div className="w-full max-w-7xl px-8 md:px-16 py-10 bg-white/60 backdrop-blur-md rounded-[3rem] shadow-2xl border border-white/50 space-y-12">
                 {/* ... header ... */}
 
-                {/* Added reset button near header for easy access during debug */}
 
                 <div className="flex justify-between items-start md:items-center border-b border-[#CE8E94]/20 pb-6">
                     <h1 className="text-4xl font-bold text-[#CE8E94] flex items-center gap-3">
