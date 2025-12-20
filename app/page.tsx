@@ -418,11 +418,23 @@ function PilatesMaltaByGozde() {
 
             <div className="w-full max-w-7xl px-8 md:px-16 py-16 md:py-20 bg-white/60 backdrop-blur-md rounded-[3rem] shadow-2xl border border-white/50">
 
-                {/* HEADER SECTION (Logo + Login/Register) - Moved to top for mobile */}
-                <div className="w-full flex flex-col sm:flex-row justify-between items-center mb-10 border-b border-[#CE8E94]/20 pb-6 gap-6 sm:gap-0">
-                    <div className="border-2 border-white rounded-full shadow-lg inline-block hover:rotate-3 transition duration-500 overflow-hidden">
-                        <img src={managementState.logo} alt="Logo" className="w-20 h-20 rounded-full object-cover" />
+
+                {/* SAFE HEADER SECTION (Logo + Login/Register) */}
+                <div id="main-header" className="w-full flex flex-col sm:flex-row justify-between items-center mb-10 border-b border-[#CE8E94]/20 pb-8 gap-6 sm:gap-0 transition-all duration-300">
+                    <div className="border-4 border-white rounded-full shadow-xl inline-block hover:scale-105 transition-transform duration-500 overflow-hidden bg-white">
+
+                        <img
+                            src={managementState.logo || defaultLogo}
+                            alt="Logo"
+                            className="w-20 h-20 rounded-full object-cover"
+                            onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = defaultLogo;
+                            }}
+                        />
+
                     </div>
+
 
                     <div>
                         {loggedInUser ? (

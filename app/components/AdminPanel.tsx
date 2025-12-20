@@ -466,13 +466,55 @@ export const AdminPanel = ({
 
         try {
             if (editingSlot.date !== editFormData.date || editingSlot.time !== editFormData.time.trim()) {
-                // Attempt to delete with standard underscore format
-                await deleteDoc(doc(db, "slots", `${editingSlot.date}_${editingSlot.time}`));
-                // Attempt to delete with hyphen format (legacy/bug fix)
-                await deleteDoc(doc(db, "slots", `${editingSlot.date}-${editingSlot.time}`));
+                const isOccupied = editingSlot.status === 'Booked' || editingSlot.status === 'Active' || editingSlot.status === 'Completed';
 
-                const newSlot: Slot = { ...editingSlot, date: editFormData.date, time: editFormData.time.trim() };
-                await setDoc(doc(db, "slots", `${newSlot.date}_${newSlot.time}`), newSlot);
+                if (isOccupied) {
+                    // 1. Leave the old slot as Available (Reset it instead of deleting)
+                    await setDoc(doc(db, "slots", `${editingSlot.date}_${editingSlot.time}`), {
+                        date: editingSlot.date,
+                        time: editingSlot.time,
+                        status: 'Available',
+                        bookedBy: null
+                    });
+
+                    // 2. Create/Update the new slot with the existing booking info
+                    const newSlot: Slot = { ...editingSlot, date: editFormData.date, time: editFormData.time.trim() };
+                    await setDoc(doc(db, "slots", `${newSlot.date}_${newSlot.time}`), newSlot);
+
+                    // 3. Notify the user
+                    if (editingSlot.bookedBy) {
+                        const bookedName = editingSlot.bookedBy.replace(' (Admin)', '');
+                        const user = users.find(u => `${u.firstName} ${u.lastName}` === bookedName);
+
+                        if (user) {
+                            showNotification(`Booking moved. Notifying ${user.firstName}...`, 'info');
+                            await emailjs.send(
+                                'service_335c8mj',
+                                'template_lsuq5bc',
+                                {
+                                    to_name: user.firstName,
+                                    to_email: user.email,
+                                    studio_name: 'Reformer Pilates Malta',
+                                    class_name: 'RESCHEDULED: Reformer Pilates Session',
+                                    class_date: formatDateDisplay(newSlot.date),
+                                    class_time: newSlot.time,
+                                    instructor_name: 'Ömer YİĞİTLER',
+                                    studio_address: 'Triq Il-Hgejjeg, San Giljan, Malta',
+                                    maps_link: 'https://maps.app.goo.gl/YourGoogleMapsLinkHere',
+                                    website_url: 'https://www.reformerpilatesmalta.com'
+                                },
+                                'pqtdmtV_1xQxlCa0T'
+                            ).catch(err => console.error("Email notify failed:", err));
+                        }
+                    }
+                } else {
+                    // Regular move for Available slots (Delete old, create new)
+                    await deleteDoc(doc(db, "slots", `${editingSlot.date}_${editingSlot.time}`));
+                    await deleteDoc(doc(db, "slots", `${editingSlot.date}-${editingSlot.time}`));
+
+                    const newSlot: Slot = { ...editingSlot, date: editFormData.date, time: editFormData.time.trim() };
+                    await setDoc(doc(db, "slots", `${newSlot.date}_${newSlot.time}`), newSlot);
+                }
             }
 
             setEditingSlot(null);
