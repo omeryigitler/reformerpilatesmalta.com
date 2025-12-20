@@ -24,8 +24,7 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
     const [reportFilter, setReportFilter] = React.useState<'All' | 'Active' | 'Completed'>('All');
     const [isFilterOpen, setIsFilterOpen] = React.useState(false);
 
-    // Prevent hydration mismatch by not rendering until mounted
-    if (!isMounted) return <div className="p-8 text-center text-gray-500 animate-pulse">Loading analytics...</div>;
+
 
     const filterOptions = [
         { value: 'All', label: 'All Statuses' },
@@ -199,112 +198,117 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
         doc.save(`report-${new Date().toISOString().split('T')[0]}.pdf`);
     };
 
-    return (
-        <div className="space-y-8 p-4">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-                <h3 className="text-2xl font-bold text-gray-800">Performance Overview</h3>
-                <div className="flex flex-wrap gap-3 w-full lg:w-auto">
-                    {/* Tarih Filtresi */}
-                    <div className="relative min-w-[160px]">
-                        <button onClick={() => setIsDateFilterOpen(!isDateFilterOpen)} className="w-full h-12 bg-white border rounded-xl px-4 flex items-center justify-between shadow-sm">
-                            <span>{dateFilter}</span>
-                            <Calendar className="w-4 h-4 text-gray-400" />
-                        </button>
-                        {isDateFilterOpen && (
-                            <div className="absolute top-full mt-2 w-full bg-white border rounded-xl shadow-xl z-50">
-                                {(['All', 'Today', 'Week', 'Month', 'Custom'] as const).map(opt => (
-                                    <div key={opt} onClick={() => {
-                                        if (opt === 'Custom') setShowCustomDateModal(true);
-                                        else setDateFilter(opt);
-                                        setIsDateFilterOpen(false);
-                                    }} className="p-3 hover:bg-gray-50 cursor-pointer text-sm">
-                                        {opt}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+};
 
-                    {/* Statü Filtresi */}
-                    <div className="relative min-w-[160px]">
-                        <button onClick={() => setIsFilterOpen(!isFilterOpen)} className="w-full h-12 bg-white border rounded-xl px-4 flex items-center justify-between shadow-sm">
-                            <span>{reportFilter}</span>
-                            <ChevronDown className="w-4 h-4 text-gray-400" />
-                        </button>
-                        {isFilterOpen && (
-                            <div className="absolute top-full mt-2 w-full bg-white border rounded-xl shadow-xl z-50">
-                                {filterOptions.map(opt => (
-                                    <div key={opt.value} onClick={() => {
-                                        setReportFilter(opt.value as any);
-                                        setIsFilterOpen(false);
-                                    }} className="p-3 hover:bg-gray-50 cursor-pointer text-sm">
-                                        {opt.label}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+// Correct Placement: After all hooks, before JSX
+if (!isMounted) return <div className="p-8 text-center text-gray-500 animate-pulse">Loading analytics...</div>;
 
-                    <Button onClick={handleDownloadPDF} className="bg-[#CE8E94] hover:bg-[#B57A80] text-white h-12 rounded-xl flex gap-2">
-                        <Download className="w-5 h-5" /> Download PDF
-                    </Button>
-                </div>
-            </div>
-
-            {/* İstatistik Kartları */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <StatCard title="Total Bookings" value={totalBookings} icon={<Calendar className="text-blue-500" />} bg="bg-blue-50" />
-                <StatCard title="Total Members" value={totalUsers} icon={<Users className="text-purple-500" />} bg="bg-purple-50" />
-                <StatCard title="Occupancy Rate" value={`%${occupancyRate}`} icon={<TrendingUp className="text-green-500" />} bg="bg-green-50" />
-            </div>
-
-            {/* Tablo */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-6 border-b font-bold text-gray-800">Monthly Performance</div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50 text-xs uppercase text-gray-500">
-                            <tr>
-                                <th className="p-4">Month</th>
-                                <th className="p-4">Sessions</th>
-                                <th className="p-4">Status Filter</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                            {tableMonths.map(month => (
-                                <tr key={month} className="hover:bg-gray-50">
-                                    <td className="p-4 font-semibold">
-                                        {new Date(month + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                                    </td>
-                                    <td className="p-4">{filteredMonthlyStats[month]} sessions</td>
-                                    <td className="p-4">
-                                        <span className="px-2 py-1 bg-[#CE8E94]/10 text-[#CE8E94] text-xs font-bold rounded-md">
-                                            {reportFilter}
-                                        </span>
-                                    </td>
-                                </tr>
+return (
+    <div className="space-y-8 p-4">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <h3 className="text-2xl font-bold text-gray-800">Performance Overview</h3>
+            <div className="flex flex-wrap gap-3 w-full lg:w-auto">
+                {/* Tarih Filtresi */}
+                <div className="relative min-w-[160px]">
+                    <button onClick={() => setIsDateFilterOpen(!isDateFilterOpen)} className="w-full h-12 bg-white border rounded-xl px-4 flex items-center justify-between shadow-sm">
+                        <span>{dateFilter}</span>
+                        <Calendar className="w-4 h-4 text-gray-400" />
+                    </button>
+                    {isDateFilterOpen && (
+                        <div className="absolute top-full mt-2 w-full bg-white border rounded-xl shadow-xl z-50">
+                            {(['All', 'Today', 'Week', 'Month', 'Custom'] as const).map(opt => (
+                                <div key={opt} onClick={() => {
+                                    if (opt === 'Custom') setShowCustomDateModal(true);
+                                    else setDateFilter(opt);
+                                    setIsDateFilterOpen(false);
+                                }} className="p-3 hover:bg-gray-50 cursor-pointer text-sm">
+                                    {opt}
+                                </div>
                             ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {/* Custom Date Modal */}
-            {showCustomDateModal && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/20 backdrop-blur-sm p-4">
-                    <div className="bg-white p-6 rounded-2xl w-full max-w-sm shadow-2xl">
-                        <h4 className="font-bold mb-4">Custom Date Range</h4>
-                        <input type="date" value={customStartDate} onChange={e => setCustomStartDate(e.target.value)} className="w-full mb-3 p-2 border rounded-lg" />
-                        <input type="date" value={customEndDate} onChange={e => setCustomEndDate(e.target.value)} className="w-full mb-4 p-2 border rounded-lg" />
-                        <div className="flex gap-2">
-                            <Button onClick={() => setShowCustomDateModal(false)} className="flex-1 bg-gray-100 text-gray-700">Cancel</Button>
-                            <Button onClick={() => { setDateFilter('Custom'); setShowCustomDateModal(false); }} className="flex-1 bg-[#CE8E94] text-white">Apply</Button>
                         </div>
+                    )}
+                </div>
+
+                {/* Statü Filtresi */}
+                <div className="relative min-w-[160px]">
+                    <button onClick={() => setIsFilterOpen(!isFilterOpen)} className="w-full h-12 bg-white border rounded-xl px-4 flex items-center justify-between shadow-sm">
+                        <span>{reportFilter}</span>
+                        <ChevronDown className="w-4 h-4 text-gray-400" />
+                    </button>
+                    {isFilterOpen && (
+                        <div className="absolute top-full mt-2 w-full bg-white border rounded-xl shadow-xl z-50">
+                            {filterOptions.map(opt => (
+                                <div key={opt.value} onClick={() => {
+                                    setReportFilter(opt.value as any);
+                                    setIsFilterOpen(false);
+                                }} className="p-3 hover:bg-gray-50 cursor-pointer text-sm">
+                                    {opt.label}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <Button onClick={handleDownloadPDF} className="bg-[#CE8E94] hover:bg-[#B57A80] text-white h-12 rounded-xl flex gap-2">
+                    <Download className="w-5 h-5" /> Download PDF
+                </Button>
+            </div>
+        </div>
+
+        {/* İstatistik Kartları */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <StatCard title="Total Bookings" value={totalBookings} icon={<Calendar className="text-blue-500" />} bg="bg-blue-50" />
+            <StatCard title="Total Members" value={totalUsers} icon={<Users className="text-purple-500" />} bg="bg-purple-50" />
+            <StatCard title="Occupancy Rate" value={`%${occupancyRate}`} icon={<TrendingUp className="text-green-500" />} bg="bg-green-50" />
+        </div>
+
+        {/* Tablo */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-6 border-b font-bold text-gray-800">Monthly Performance</div>
+            <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                    <thead className="bg-gray-50 text-xs uppercase text-gray-500">
+                        <tr>
+                            <th className="p-4">Month</th>
+                            <th className="p-4">Sessions</th>
+                            <th className="p-4">Status Filter</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                        {tableMonths.map(month => (
+                            <tr key={month} className="hover:bg-gray-50">
+                                <td className="p-4 font-semibold">
+                                    {new Date(month + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                                </td>
+                                <td className="p-4">{filteredMonthlyStats[month]} sessions</td>
+                                <td className="p-4">
+                                    <span className="px-2 py-1 bg-[#CE8E94]/10 text-[#CE8E94] text-xs font-bold rounded-md">
+                                        {reportFilter}
+                                    </span>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {/* Custom Date Modal */}
+        {showCustomDateModal && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/20 backdrop-blur-sm p-4">
+                <div className="bg-white p-6 rounded-2xl w-full max-w-sm shadow-2xl">
+                    <h4 className="font-bold mb-4">Custom Date Range</h4>
+                    <input type="date" value={customStartDate} onChange={e => setCustomStartDate(e.target.value)} className="w-full mb-3 p-2 border rounded-lg" />
+                    <input type="date" value={customEndDate} onChange={e => setCustomEndDate(e.target.value)} className="w-full mb-4 p-2 border rounded-lg" />
+                    <div className="flex gap-2">
+                        <Button onClick={() => setShowCustomDateModal(false)} className="flex-1 bg-gray-100 text-gray-700">Cancel</Button>
+                        <Button onClick={() => { setDateFilter('Custom'); setShowCustomDateModal(false); }} className="flex-1 bg-[#CE8E94] text-white">Apply</Button>
                     </div>
                 </div>
-            )}
-        </div>
-    );
+            </div>
+        )}
+    </div>
+);
 };
 
 const StatCard = ({ title, value, icon, bg }: any) => (
