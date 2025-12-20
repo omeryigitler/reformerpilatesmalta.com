@@ -469,7 +469,11 @@ export const AdminPanel = ({
                 const isOccupied = editingSlot.status === 'Booked' || editingSlot.status === 'Active' || editingSlot.status === 'Completed';
 
                 if (isOccupied) {
-                    // 1. Leave the old slot as Available (Reset it instead of deleting)
+                    // 1. CLEAR OLD SLOT (Both formats for safety)
+                    await deleteDoc(doc(db, "slots", `${editingSlot.date}_${editingSlot.time}`));
+                    await deleteDoc(doc(db, "slots", `${editingSlot.date}-${editingSlot.time}`));
+
+                    // 2. Re-create old slot as Available (Underscore format only)
                     await setDoc(doc(db, "slots", `${editingSlot.date}_${editingSlot.time}`), {
                         date: editingSlot.date,
                         time: editingSlot.time,
@@ -477,14 +481,17 @@ export const AdminPanel = ({
                         bookedBy: null
                     });
 
-                    // 2. Create/Update the new slot with the existing booking info
+                    // 3. Create/Update the NEW slot with existing booking info
                     const newSlot: Slot = { ...editingSlot, date: editFormData.date, time: editFormData.time.trim() };
                     await setDoc(doc(db, "slots", `${newSlot.date}_${newSlot.time}`), newSlot);
 
-                    // 3. Notify the user
+                    // 4. Notify the user (Robust matching)
                     if (editingSlot.bookedBy) {
-                        const bookedName = editingSlot.bookedBy.replace(' (Admin)', '');
-                        const user = users.find(u => `${u.firstName} ${u.lastName}` === bookedName);
+                        const bookedName = editingSlot.bookedBy.replace(' (Admin)', '').trim().toLowerCase();
+                        const user = users.find(u => {
+                            const fullName = `${u.firstName} ${u.lastName}`.trim().toLowerCase();
+                            return fullName === bookedName;
+                        });
 
                         if (user) {
                             showNotification(`Booking moved. Notifying ${user.firstName}...`, 'info');
@@ -505,6 +512,8 @@ export const AdminPanel = ({
                                 },
                                 'pqtdmtV_1xQxlCa0T'
                             ).catch(err => console.error("Email notify failed:", err));
+                        } else {
+                            console.warn(`Could not find user for email notification: ${bookedName}`);
                         }
                     }
                 } else {
