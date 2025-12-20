@@ -9,7 +9,15 @@ export const UserHistory = ({ slots, userName, userEmail }: { slots: Slot[], use
     // Geçmiş dersleri bul ve sırala (En yeniden eskiye)
     const pastBookings = slots
         .filter(slot => {
-            const isMatch = slot.bookedByEmail === userEmail || (slot.bookedByEmail === null && (slot.bookedBy === userName || slot.bookedBy === `${userName} (Admin)`));
+            let isMatch = false;
+            if (slot.bookedByEmail) {
+                isMatch = slot.bookedByEmail === userEmail;
+            } else if (slot.bookedBy) {
+                // Robust name matching fallback
+                const cleanBookedBy = slot.bookedBy.replace(' (Admin)', '').trim().toLowerCase();
+                const myName = userName.trim().toLowerCase();
+                isMatch = cleanBookedBy === myName;
+            }
             return isMatch && (isPastDate(slot.date) || slot.status === 'Completed');
         })
         .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));

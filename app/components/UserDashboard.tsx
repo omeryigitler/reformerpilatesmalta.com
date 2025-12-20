@@ -41,8 +41,11 @@ export const UserDashboard = ({
             if (slot.status === 'Completed') return false;
             if (slot.bookedByEmail) return slot.bookedByEmail === loggedInUser.email;
 
-            // Fallback for old data
-            return slot.bookedBy === userName || slot.bookedBy === `${userName} (Admin)`;
+            // Fallback for old data (Robust matching)
+            if (!slot.bookedBy) return false;
+            const cleanBookedBy = slot.bookedBy.replace(' (Admin)', '').trim().toLowerCase();
+            const myFullName = `${loggedInUser.firstName} ${loggedInUser.lastName}`.trim().toLowerCase();
+            return cleanBookedBy === myFullName;
         })
         .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
 
