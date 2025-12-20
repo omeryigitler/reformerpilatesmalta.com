@@ -109,21 +109,66 @@ function PilatesMaltaByGozde() {
 
     const [isAuthChecking, setIsAuthChecking] = useState(true);
 
-    // --- HANDLERS (Defined early to prevent ReferenceError in effects) ---
-    const handleSetLoggedInUser = (user: UserType) => {
+    // --- HANDLERS (Optimized & Safe) ---
+    // 1. handleSetLoggedInUser'ı useCallback ile sarmala (Hata riskini azaltır)
+    const handleSetLoggedInUser = useCallback((user: UserType) => {
         setLoggedInUser(user);
-        // SAVE TO BACKUP (Critical for 'F5' persistence)
-        localStorage.setItem('pilates_user', JSON.stringify(user));
-        if (user.role === 'user') {
-            setCurrentView('user-dashboard');
-        } else if (user.role === 'admin') {
-            setCurrentView('admin');
+        if (typeof window !== 'undefined') {
+            try {
+                localStorage.setItem('pilates_user', JSON.stringify(user));
+            } catch (e) { console.error("LS Set Error", e); }
         }
-    }
 
-    // --- LOAD DATA FROM FIRESTORE ON STARTUP ---
+        // View yönlendirmesini burada yap
+        if (user.role === 'user') setCurrentView('user-dashboard');
+        else if (user.role === 'admin') setCurrentView('admin');
+    }, []);
+
+    // --- LOAD DATA & AUTH FROM FIRESTORE ON STARTUP ---
     useEffect(() => {
         setIsClient(true);
+        let unsubAuth: any;
+
+        // 2. LocalStorage kontrolünü isClient true olduktan sonra yap
+        const initAuth = async () => {
+            // LocalStorage Check (Safe Parse)
+            try {
+                const savedUser = localStorage.getItem('pilates_user');
+                if (savedUser) {
+                    const parsedUser = JSON.parse(savedUser);
+                    setLoggedInUser(parsedUser);
+                    if (parsedUser.role === 'admin') setCurrentView('admin');
+                    else setCurrentView('user-dashboard');
+                }
+            } catch (e) {
+                console.error("Local storage error/corruption", e);
+                localStorage.removeItem('pilates_user');
+            }
+
+            // 3. Firebase Auth Listener
+            unsubAuth = onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    try {
+                        const userDocSnap = await getDoc(doc(db, "users", user.email!));
+                        if (userDocSnap.exists()) {
+                            // Firestore'dan taze veri ile güncelle
+                            handleSetLoggedInUser(userDocSnap.data() as UserType);
+                        }
+                    } catch (err) {
+                        console.error("Firestore auth sync error", err);
+                    }
+                } else {
+                    // Firebase kesin olarak çıkış yapıldığını onaylarsa
+                    // Amaç: Kullanıcı expire olduysa UI'ı temizle
+                    // Not: LocalStorage'dan manuel silinmediyse burada state'i null yapmak,
+                    // offline support için istenmeyebilir ama güvenlik için iyidir.
+                    // Şimdilik sadece user yoksa ve LS de yoksa temizle diyelim.
+                }
+                setIsAuthChecking(false);
+            });
+        };
+
+        initAuth();
 
         // Subscribe to Slots (Needed for everyone)
         const slotsUnsub = listenToSlots((loadedSlots) => {
@@ -142,10 +187,13 @@ function PilatesMaltaByGozde() {
         });
 
         return () => {
+            if (unsubAuth) unsubAuth();
             slotsUnsub();
             mgmtUnsub();
         };
-    }, []);
+    }, [handleSetLoggedInUser, showNotification]);
+
+    // Fetch Users ONLY if Admin (Optimization)
 
     // Fetch Users ONLY if Admin (Optimization)
     useEffect(() => {
@@ -175,78 +223,7 @@ function PilatesMaltaByGozde() {
         };
     }, [loggedInUser?.role]); // Re-run when role changes
 
-    // --- AUTH STATE LISTENER (THE MODERN & ROBUST WAY) ---
-    useEffect(() => {
-        // 1. IMMEDIATE CHECK: LocalStorage Backup (Optimistic UI)
-        // This prevents the "flash of login screen" or "logout" feeling on refresh.
-        try {
-            const savedUser = localStorage.getItem('pilates_user');
-            if (savedUser) {
-                const parsedUser = JSON.parse(savedUser);
-                console.log("Restored user from LocalStorage backup:", parsedUser.email);
-                setLoggedInUser(parsedUser);
-                if (parsedUser.role === 'admin') setCurrentView('admin');
-                else setCurrentView('user-dashboard');
-                setIsAuthChecking(false); // Show the UI immediately!
-            }
-        } catch (e) {
-            console.error("LocalStorage restore error:", e);
-        }
 
-        // 2. BACKGROUND CHECK: Firebase Auth (Security & Verification)
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                console.log("Auth State Verified: User logged in:", user.email);
-                // Sync with Firestore to get latest data
-                if (user.email) {
-                    try {
-                        const userDocRef = doc(db, "users", user.email);
-                        const userDocSnap = await getDoc(userDocRef);
-
-                        if (userDocSnap.exists()) {
-                            const userData = userDocSnap.data() as UserType;
-                            // Ensure the UID matches
-                            if (!userData.uid) {
-                                await updateDoc(userDocRef, { uid: user.uid });
-                                userData.uid = user.uid;
-                            }
-                            // Update state and refresh backup
-                            handleSetLoggedInUser(userData);
-                        } else {
-                            // Fallback logic
-                            const fallbackUser: UserType = {
-                                email: user.email!,
-                                uid: user.uid,
-                                role: 'user',
-                                firstName: 'Member',
-                                lastName: '',
-                                phone: '',
-                                password: '',
-                                registered: new Date().toISOString()
-                            };
-                            handleSetLoggedInUser(fallbackUser);
-                        }
-                    } catch (error) {
-                        console.error("Error fetching user profile:", error);
-                    }
-                }
-            } else {
-                // Only clear if we are SURE. 
-                // Sometimes Firebase flickers 'null' on reload.
-                // We rely on localStorage for the first few seconds.
-                console.log("Auth State: No Firebase user confirmed.");
-                // If we have no localStorage data, then we are truly logged out.
-                if (!localStorage.getItem('pilates_user')) {
-                    setLoggedInUser(null);
-                    setCurrentView('main');
-                }
-            }
-            setIsAuthChecking(false);
-        });
-
-        // Cleanup subscription on unmount
-        return () => unsubscribe();
-    }, []);
 
 
     // --- EARLY RETURN FOR CLIENT SIDE RENDERING ---

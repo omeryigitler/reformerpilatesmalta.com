@@ -7,15 +7,25 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Slot, UserType } from "../types";
 
-export const AdminAnalytics = ({ slots, users, currentLogo }: { slots: Slot[], users: UserType[], currentLogo: string }) => {
+export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots: Slot[], users: UserType[], currentLogo: string }) => {
+    const [isMounted, setIsMounted] = React.useState(false);
     const [dateFilter, setDateFilter] = React.useState<'All' | 'Today' | 'Week' | 'Month' | 'Custom'>('All');
     const [isDateFilterOpen, setIsDateFilterOpen] = React.useState(false);
     const [customStartDate, setCustomStartDate] = React.useState('');
     const [customEndDate, setCustomEndDate] = React.useState('');
     const [showCustomDateModal, setShowCustomDateModal] = React.useState(false);
 
+    React.useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    // ... (rest of state)
+
     const [reportFilter, setReportFilter] = React.useState<'All' | 'Active' | 'Completed'>('All');
     const [isFilterOpen, setIsFilterOpen] = React.useState(false);
+
+    // Prevent hydration mismatch by not rendering until mounted
+    if (!isMounted) return <div className="p-8 text-center text-gray-500 animate-pulse">Loading analytics...</div>;
 
     const filterOptions = [
         { value: 'All', label: 'All Statuses' },
