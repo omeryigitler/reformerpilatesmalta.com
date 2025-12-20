@@ -744,23 +744,7 @@ export const AdminPanel = ({
                             </div>
                         </div>
 
-                        {/* Maintenance Zone */}
-                        <div className="pt-6 border-t border-gray-200">
-                            <h3 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-3"><AlertTriangle className="w-6 h-6 text-orange-500" /> Maintenance Zone</h3>
-                            <div className="bg-orange-50 border border-orange-200 rounded-xl p-6">
-                                <h4 className="font-bold text-orange-800 mb-2">Cleanup Old Slots</h4>
-                                <p className="text-sm text-orange-700 mb-4">
-                                    Manually move past 'Booked' or 'Active' slots to 'Completed' status.
-                                    Use this if you see old bookings stuck in active state.
-                                </p>
-                                <Button
-                                    onClick={handleCleanupExpiredSlots}
-                                    className="bg-orange-500 hover:bg-orange-600 text-white font-bold"
-                                >
-                                    Run Cleanup Task
-                                </Button>
-                            </div>
-                        </div>
+
 
                         <div className="flex justify-end pt-6">
                             <Button onClick={handleSaveManagement} className="bg-[#CE8E94] hover:bg-[#B57A80] text-white py-6 px-8 rounded-xl text-lg shadow-xl shadow-[#CE8E94]/20 font-bold transform hover:scale-105 transition-all">
