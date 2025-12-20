@@ -172,7 +172,7 @@ export const AdminPanel = ({
                     maps_link: 'https://maps.app.goo.gl/YourGoogleMapsLinkHere',
                     website_url: 'https://www.reformerpilatesmalta.com'
                 },
-                'pqtdmtV_1xQxlCa0T'  // Public Key
+                process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!  // Public Key
             );
 
             showNotification(`Slot assigned and email sent to ${user.firstName} !`, 'success');
@@ -510,8 +510,8 @@ export const AdminPanel = ({
                         if (user) {
                             showNotification(`Booking moved. Notifying ${user.firstName}...`, 'info');
                             await emailjs.send(
-                                'service_335c8mj',
-                                'template_lsuq5bc',
+                                process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
+                                process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_USER!,
                                 {
                                     to_name: user.firstName,
                                     to_email: user.email,

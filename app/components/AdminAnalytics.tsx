@@ -217,43 +217,69 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
                 <h3 className="text-2xl font-bold text-gray-800">Performance Overview</h3>
                 <div className="flex flex-wrap gap-3 w-full lg:w-auto">
                     {/* Tarih Filtresi */}
-                    <div className="relative min-w-[160px]">
-                        <button onClick={() => setIsDateFilterOpen(!isDateFilterOpen)} className="w-full h-12 bg-white border rounded-xl px-4 flex items-center justify-between shadow-sm">
-                            <span>{dateFilter}</span>
-                            <Calendar className="w-4 h-4 text-gray-400" />
+                    {/* Tarih Filtresi */}
+                    <div className="relative min-w-[160px] group">
+                        <button
+                            onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
+                            className="w-full h-12 bg-white hover:bg-gray-50 text-gray-700 font-bold border border-gray-100 rounded-xl px-4 flex items-center justify-between shadow-sm hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#CE8E94]/20"
+                        >
+                            <span className="text-gray-800 truncate">{dateFilter}</span>
+                            <Calendar className={`w-4 h-4 text-gray-400 transition-transform duration-300 group-hover:text-[#CE8E94] flex-shrink-0 ml-2 ${isDateFilterOpen ? 'rotate-180' : ''}`} />
                         </button>
                         {isDateFilterOpen && (
-                            <div className="absolute top-full mt-2 w-full bg-white border rounded-xl shadow-xl z-50">
-                                {(['All', 'Today', 'Week', 'Month', 'Custom'] as const).map(opt => (
-                                    <div key={opt} onClick={() => {
-                                        if (opt === 'Custom') setShowCustomDateModal(true);
-                                        else setDateFilter(opt);
-                                        setIsDateFilterOpen(false);
-                                    }} className="p-3 hover:bg-gray-50 cursor-pointer text-sm">
-                                        {opt}
-                                    </div>
-                                ))}
-                            </div>
+                            <>
+                                <div className="fixed inset-0 z-10" onClick={() => setIsDateFilterOpen(false)} />
+                                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200">
+                                    {(['All', 'Today', 'Week', 'Month', 'Custom'] as const).map(opt => (
+                                        <div key={opt} onClick={() => {
+                                            if (opt === 'Custom') setShowCustomDateModal(true);
+                                            else setDateFilter(opt);
+                                            setIsDateFilterOpen(false);
+                                        }} className={`px-4 py-3 cursor-pointer flex items-center justify-between transition-colors duration-200
+                                            ${dateFilter === opt && opt !== 'Custom'
+                                                ? 'bg-[#CE8E94]/10 text-[#CE8E94] font-bold'
+                                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                            }`}
+                                        >
+                                            <span className="text-sm">{opt}</span>
+                                            {dateFilter === opt && opt !== 'Custom' && <Check className="w-4 h-4 text-[#CE8E94]" />}
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
                         )}
                     </div>
 
                     {/* Statü Filtresi */}
-                    <div className="relative min-w-[160px]">
-                        <button onClick={() => setIsFilterOpen(!isFilterOpen)} className="w-full h-12 bg-white border rounded-xl px-4 flex items-center justify-between shadow-sm">
-                            <span>{reportFilter}</span>
-                            <ChevronDown className="w-4 h-4 text-gray-400" />
+                    {/* Statü Filtresi */}
+                    <div className="relative min-w-[160px] group">
+                        <button
+                            onClick={() => setIsFilterOpen(!isFilterOpen)}
+                            className="w-full h-12 bg-white hover:bg-gray-50 text-gray-700 font-bold border border-gray-100 rounded-xl px-4 flex items-center justify-between shadow-sm hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#CE8E94]/20"
+                        >
+                            <span className="text-gray-800 truncate">{reportFilter}</span>
+                            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 group-hover:text-[#CE8E94] flex-shrink-0 ml-2 ${isFilterOpen ? 'rotate-180' : ''}`} />
                         </button>
                         {isFilterOpen && (
-                            <div className="absolute top-full mt-2 w-full bg-white border rounded-xl shadow-xl z-50">
-                                {filterOptions.map(opt => (
-                                    <div key={opt.value} onClick={() => {
-                                        setReportFilter(opt.value as any);
-                                        setIsFilterOpen(false);
-                                    }} className="p-3 hover:bg-gray-50 cursor-pointer text-sm">
-                                        {opt.label}
-                                    </div>
-                                ))}
-                            </div>
+                            <>
+                                <div className="fixed inset-0 z-10" onClick={() => setIsFilterOpen(false)} />
+                                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200">
+                                    {filterOptions.map(opt => (
+                                        <div key={opt.value} onClick={() => {
+                                            setReportFilter(opt.value as any);
+                                            setIsFilterOpen(false);
+                                        }} className={`px-4 py-3 cursor-pointer flex items-center justify-between transition-colors duration-200
+                                            ${reportFilter === opt.value
+                                                ? 'bg-[#CE8E94]/10 text-[#CE8E94] font-bold'
+                                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                            }`}
+                                        >
+                                            <span className="text-sm">{opt.label}</span>
+                                            {reportFilter === opt.value && <Check className="w-4 h-4 text-[#CE8E94]" />}
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
                         )}
                     </div>
 

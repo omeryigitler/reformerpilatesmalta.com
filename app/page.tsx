@@ -333,7 +333,7 @@ function PilatesMaltaByGozde() {
                     event_date: formatDateDisplay(slotDate),
                     event_time: slotTime
                 },
-                'pqtdmtV_1xQxlCa0T'
+                process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
             ).catch(err => console.error("Failed to send admin email:", err));
 
             showNotification(`Booking confirmed for ${slotTime} on ${formatDateDisplay(slotDate)}! Confirmation email sent.`, 'success');
