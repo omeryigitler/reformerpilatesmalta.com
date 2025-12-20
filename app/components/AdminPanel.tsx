@@ -48,9 +48,12 @@ export const AdminPanel = ({
         setNewSlotDate(getTodayDate());
     }, []);
 
-    // NEW: Auto-update expired slots
+    // NEW: Auto-update expired slots (Protected from infinite loops)
+    const hasCheckedExpired = React.useRef(false);
+
     React.useEffect(() => {
-        if (slots.length > 0) {
+        if (slots.length > 0 && !hasCheckedExpired.current) {
+            hasCheckedExpired.current = true;
             updateExpiredSlots(slots);
         }
     }, [slots]);
