@@ -37,7 +37,13 @@ export const UserDashboard = ({
 
     // Filter out Completed slots from active bookings even if date is today/future
     const userBookings = futureSlots
-        .filter(slot => (slot.bookedBy === userName || slot.bookedBy === `${userName} (Admin)`) && slot.status !== 'Completed')
+        .filter(slot => {
+            if (slot.status === 'Completed') return false;
+            if (slot.bookedByEmail) return slot.bookedByEmail === loggedInUser.email;
+
+            // Fallback for old data
+            return slot.bookedBy === userName || slot.bookedBy === `${userName} (Admin)`;
+        })
         .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
 
     const availableSlotsForSelectedDate = futureSlots
@@ -195,7 +201,7 @@ END:VCALENDAR`;
                         </div>
                     </>
                 ) : (
-                    <UserHistory slots={slots} userName={userName} />
+                    <UserHistory slots={slots} userName={userName} userEmail={loggedInUser.email} />
                 )}
             </div>
         </div>

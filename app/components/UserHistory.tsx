@@ -5,10 +5,13 @@ import { Award, Clock } from "lucide-react";
 import { Slot } from "../types";
 import { isPastDate, formatDateDisplay } from "../utils/helpers";
 
-export const UserHistory = ({ slots, userName }: { slots: Slot[], userName: string }) => {
+export const UserHistory = ({ slots, userName, userEmail }: { slots: Slot[], userName: string, userEmail: string }) => {
     // Geçmiş dersleri bul ve sırala (En yeniden eskiye)
     const pastBookings = slots
-        .filter(slot => (slot.bookedBy === userName || slot.bookedBy === `${userName} (Admin)`) && (isPastDate(slot.date) || slot.status === 'Completed'))
+        .filter(slot => {
+            const isMatch = slot.bookedByEmail === userEmail || (slot.bookedByEmail === null && (slot.bookedBy === userName || slot.bookedBy === `${userName} (Admin)`));
+            return isMatch && (isPastDate(slot.date) || slot.status === 'Completed');
+        })
         .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
 
     const totalSessions = pastBookings.length;

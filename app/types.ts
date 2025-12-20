@@ -3,6 +3,7 @@ export type Slot = {
     time: string;
     status: 'Available' | 'Booked' | 'Active' | 'Completed';
     bookedBy: string | null;
+    bookedByEmail: string | null;
 }
 
 export type UserType = {

@@ -147,7 +147,8 @@ export const AdminPanel = ({
             await setDoc(doc(db, 'slots', slotId), {
                 ...slot,
                 status: 'Booked',
-                bookedBy: `${fullName} (Admin)`
+                bookedBy: `${fullName} (Admin)`,
+                bookedByEmail: user.email
             });
 
             // 2. Send Email Notification
@@ -321,7 +322,10 @@ export const AdminPanel = ({
         if (!user) return { total: 0, active: 0, completed: 0, history: [] };
 
         const fullName = `${user.firstName} ${user.lastName}`;
-        const mySlots = slots.filter(s => s.bookedBy && s.bookedBy.includes(fullName));
+        const mySlots = slots.filter(s =>
+            s.bookedByEmail === email ||
+            (s.bookedByEmail === null && s.bookedBy && s.bookedBy.includes(fullName))
+        );
 
         return {
             total: mySlots.length,
@@ -364,7 +368,8 @@ export const AdminPanel = ({
         try {
             await updateDoc(doc(db, "slots", `${slotDate}_${slotTime}`), {
                 status: newStatus,
-                bookedBy: newBookedBy
+                bookedBy: newBookedBy,
+                bookedByEmail: !isOccupied ? null : slot.bookedByEmail
             });
             showNotification(`Slot status toggled for ${slotTime} on ${formatDateDisplay(slotDate)}`, 'info');
         } catch (e) {
@@ -429,7 +434,7 @@ export const AdminPanel = ({
 
         const normalizedTime = newSlotTime.trim();
 
-        const newSlot: Slot = { date: newSlotDate, time: normalizedTime, status: 'Available', bookedBy: null };
+        const newSlot: Slot = { date: newSlotDate, time: normalizedTime, status: 'Available', bookedBy: null, bookedByEmail: null };
         try {
             await setDoc(doc(db, "slots", `${newSlotDate}_${normalizedTime}`), newSlot);
             setNewSlotTime('');
@@ -478,7 +483,8 @@ export const AdminPanel = ({
                         date: editingSlot.date,
                         time: editingSlot.time,
                         status: 'Available',
-                        bookedBy: null
+                        bookedBy: null,
+                        bookedByEmail: null
                     });
 
                     // 3. Create/Update the NEW slot with existing booking info
@@ -489,6 +495,9 @@ export const AdminPanel = ({
                     if (editingSlot.bookedBy) {
                         const bookedName = editingSlot.bookedBy.replace(' (Admin)', '').trim().toLowerCase();
                         const user = users.find(u => {
+                            if (editingSlot.bookedByEmail) return u.email === editingSlot.bookedByEmail;
+
+                            const bookedName = editingSlot.bookedBy!.replace(' (Admin)', '').trim().toLowerCase();
                             const fullName = `${u.firstName} ${u.lastName}`.trim().toLowerCase();
                             return fullName === bookedName;
                         });

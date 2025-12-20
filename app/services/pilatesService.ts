@@ -110,8 +110,9 @@ export const bookSlotTransaction = async (slotDate: string, slotTime: string, us
 
             // İşlem: Durumu güncelle ve kullanıcıyı yaz
             transaction.update(slotRef, {
-                status: 'Active', // Yeni status: Active
-                bookedBy: userName
+                status: 'Booked', // Yeni status: Booked
+                bookedBy: userName,
+                bookedByEmail: user.email
             });
         });
         return { success: true };
@@ -128,7 +129,8 @@ export const cancelBookingTransaction = async (slotDate: string, slotTime: strin
     try {
         await updateDoc(slotRef, {
             status: 'Available',
-            bookedBy: null
+            bookedBy: null,
+            bookedByEmail: null
         });
         return { success: true };
     } catch (error) {
