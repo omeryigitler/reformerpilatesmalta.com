@@ -109,6 +109,18 @@ function PilatesMaltaByGozde() {
 
     const [isAuthChecking, setIsAuthChecking] = useState(true);
 
+    // --- HANDLERS (Defined early to prevent ReferenceError in effects) ---
+    const handleSetLoggedInUser = (user: UserType) => {
+        setLoggedInUser(user);
+        // SAVE TO BACKUP (Critical for 'F5' persistence)
+        localStorage.setItem('pilates_user', JSON.stringify(user));
+        if (user.role === 'user') {
+            setCurrentView('user-dashboard');
+        } else if (user.role === 'admin') {
+            setCurrentView('admin');
+        }
+    }
+
     // --- LOAD DATA FROM FIRESTORE ON STARTUP ---
     useEffect(() => {
         setIsClient(true);
@@ -259,18 +271,7 @@ function PilatesMaltaByGozde() {
     }
 
     // --- HANDLERS ---
-    const handleSetLoggedInUser = (user: UserType) => {
-        setLoggedInUser(user);
 
-        // SAVE TO BACKUP (Critical for 'F5' persistence)
-        localStorage.setItem('pilates_user', JSON.stringify(user));
-
-        if (user.role === 'user') {
-            setCurrentView('user-dashboard');
-        } else if (user.role === 'admin') {
-            setCurrentView('admin');
-        }
-    }
 
     const handleLogout = async () => {
         try {

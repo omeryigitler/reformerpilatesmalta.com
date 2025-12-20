@@ -8,7 +8,6 @@ import autoTable from "jspdf-autotable";
 import { Slot, UserType } from "../types";
 
 export const AdminAnalytics = ({ slots, users, currentLogo }: { slots: Slot[], users: UserType[], currentLogo: string }) => {
-    // State Declarations (Must be at top)
     const [dateFilter, setDateFilter] = React.useState<'All' | 'Today' | 'Week' | 'Month' | 'Custom'>('All');
     const [isDateFilterOpen, setIsDateFilterOpen] = React.useState(false);
     const [customStartDate, setCustomStartDate] = React.useState('');
@@ -24,29 +23,42 @@ export const AdminAnalytics = ({ slots, users, currentLogo }: { slots: Slot[], u
         { value: 'Completed', label: 'Completed Only' }
     ];
 
-    // Date Filtering Logic
+    // 1. Tarih Filtreleme Logic (Düzeltildi & Robust)
+    // Helper: Normalize date to YYYY-MM-DD checks
+    const normalizeDate = (dateVal: any): string => {
+        if (!dateVal) return '';
+        const str = String(dateVal).trim();
+        // Handle DD.MM.YYYY
+        if (str.includes('.')) {
+            const [d, m, y] = str.split('.');
+            if (d && m && y && d.length <= 2 && m.length <= 2 && y.length === 4) return `${y}-${m}-${d}`;
+        }
+        // Handle DD/MM/YYYY
+        if (str.includes('/')) {
+            const [d, m, y] = str.split('/');
+            if (d && m && y && d.length <= 2 && m.length <= 2 && y.length === 4) return `${y}-${m}-${d}`;
+        }
+        // Return original if likely YYYY-MM-DD or unknown
+        return str;
+    };
+
     const dateFilteredSlots = React.useMemo(() => {
         const now = new Date();
         const todayStr = now.toISOString().split('T')[0];
 
         return slots.filter(slot => {
-            const slotDate = slot.date; // YYYY-MM-DD format assumed
+            if (!slot?.date) return false;
+            const slotDate = normalizeDate(slot.date);
 
             if (dateFilter === 'All') return true;
             if (dateFilter === 'Today') return slotDate === todayStr;
+
             if (dateFilter === 'Week') {
-                const d = new Date(slotDate);
-                const day = now.getDay();
-                const diff = now.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
-                const monday = new Date(now.setDate(diff));
-                monday.setHours(0, 0, 0, 0);
-                // Simple last 7 days might be easier or 'This Week' (Mon-Sun)
-                // Let's use "Last 7 Days" for robustness or standard week check?
-                // User said "hafta bir gün" (a day in the week) implies granular, but "time interval" implies range.
-                // Let's do ISO week check or just +/- 7 days.
-                // Simpler: Current Week (Mon-Sun).
                 const startOfWeek = new Date(now);
-                startOfWeek.setDate(now.getDate() - now.getDay() + 1); // Monday
+                // Haftanın başlangıcını (Pazartesi) bul
+                const day = now.getDay();
+                const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+                startOfWeek.setDate(diff);
                 startOfWeek.setHours(0, 0, 0, 0);
 
                 const endOfWeek = new Date(startOfWeek);
@@ -54,12 +66,13 @@ export const AdminAnalytics = ({ slots, users, currentLogo }: { slots: Slot[], u
                 endOfWeek.setHours(23, 59, 59, 999);
 
                 const sDate = new Date(slotDate);
-                // Reset now for safety if modified above (it was modified!)
                 return sDate >= startOfWeek && sDate <= endOfWeek;
             }
+
             if (dateFilter === 'Month') {
                 return slotDate.substring(0, 7) === todayStr.substring(0, 7);
             }
+
             if (dateFilter === 'Custom') {
                 if (!customStartDate || !customEndDate) return true;
                 return slotDate >= customStartDate && slotDate <= customEndDate;
@@ -68,510 +81,228 @@ export const AdminAnalytics = ({ slots, users, currentLogo }: { slots: Slot[], u
         });
     }, [slots, dateFilter, customStartDate, customEndDate]);
 
-    // 1. Genel İstatistikler (Filter applied)
-    const activeBookings = dateFilteredSlots.filter(s => s.status === 'Booked' || s.status === 'Active').length;
-    const completedBookings = dateFilteredSlots.filter(s => s.status === 'Completed').length;
-    const totalBookings = activeBookings + completedBookings;
+    // 2. Statü Filtreleme & İstatistikler
+    const filteredSlots = React.useMemo(() => {
+        return dateFilteredSlots.filter(slot => {
+            const isActive = slot.status === 'Booked' || slot.status === 'Active';
+            const isCompleted = slot.status === 'Completed';
 
-    const totalSlots = dateFilteredSlots.length;
+            if (reportFilter === 'Active') return isActive;
+            if (reportFilter === 'Completed') return isCompleted;
+            return isActive || isCompleted; // 'All' durumu
+        });
+    }, [dateFilteredSlots, reportFilter]);
+
+    // Genel İstatistikler
+    const totalBookings = filteredSlots.length;
+    const totalSlots = dateFilteredSlots.length; // Doluluk oranı tüm slotlar üzerinden hesaplanmalı
     const occupancyRate = totalSlots > 0 ? Math.round((totalBookings / totalSlots) * 100) : 0;
     const totalUsers = users.length;
 
-
-
-    // 2. Aylık Dağılım (Filtered by Date Range too - if 'Today' selected, only show this month with 1 day data? Yes)
-    const monthlyStats = dateFilteredSlots.reduce((acc, slot) => {
-        if (slot.status === 'Booked' || slot.status === 'Active' || slot.status === 'Completed') {
-            const monthKey = slot.date.substring(0, 7); // YYYY-MM
+    // Aylık Dağılım Hesaplama (Düzeltildi)
+    const filteredMonthlyStats = React.useMemo(() => {
+        return filteredSlots.reduce((acc, slot) => {
+            const monthKey = normalizeDate(slot.date).substring(0, 7);
             acc[monthKey] = (acc[monthKey] || 0) + 1;
-        }
-        return acc;
-    }, {} as Record<string, number>);
+            return acc;
+        }, {} as Record<string, number>);
+    }, [filteredSlots]);
 
-    // Sıralı aylar
-    const sortedMonths = Object.keys(monthlyStats).sort().reverse();
-
-    // Filtered months logic for table could be more complex if we want to filter specific months,
-    // but here we filter the breakdown inside the table rows potentially on status?
-    // Actually the table shows aggregate data per month.
-    // So let's add a "Status Breakdown" per month or just filter the aggregate calculation.
-
-    const filteredMonthlyStats = dateFilteredSlots.reduce((acc, slot) => {
-        // Filter based on reportFilter
-        const isActive = slot.status === 'Booked' || slot.status === 'Active';
-        const isCompleted = slot.status === 'Completed';
-
-        const matchesFilter =
-            (reportFilter === 'All' && (isActive || isCompleted)) ||
-            (reportFilter === 'Active' && isActive) ||
-            (reportFilter === 'Completed' && isCompleted);
-
-        if (matchesFilter) {
-            const monthKey = slot.date.substring(0, 7);
-            acc[monthKey] = (acc[monthKey] || 0) + 1;
-        }
-        return acc;
-    }, {} as Record<string, number>);
-
-    // Use filtered stats for the table
     const tableMonths = Object.keys(filteredMonthlyStats).sort().reverse();
 
     const handleDownloadPDF = async () => {
         const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.width;
-        const pageHeight = doc.internal.pageSize.height;
-        const brandColor = [206, 142, 148] as [number, number, number]; // #CE8E94
+        const brandColor = [206, 142, 148] as [number, number, number];
 
-        // Helper to load image as Base64
         const loadImage = (url: string): Promise<string> => {
             return new Promise((resolve, reject) => {
                 const img = new Image();
-                img.crossOrigin = 'Anonymous'; // CORS sorunlarını önlemek için
+                img.crossOrigin = 'Anonymous';
                 img.src = url;
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
+                    canvas.width = img.width; canvas.height = img.height;
                     const ctx = canvas.getContext('2d');
                     if (ctx) {
-                        // Yuvarlak Kırpma İşlemi
                         ctx.beginPath();
-                        ctx.arc(img.width / 2, img.height / 2, Math.min(img.width, img.height) / 2, 0, Math.PI * 2, true);
-                        ctx.closePath();
+                        ctx.arc(img.width / 2, img.height / 2, Math.min(img.width, img.height) / 2, 0, Math.PI * 2);
                         ctx.clip();
-
                         ctx.drawImage(img, 0, 0);
-                        resolve(canvas.toDataURL('image/png')); // PNG formatı şeffaflık (yuvarlak kenarlar) için gereklidir
-                    } else {
-                        reject(new Error('Canvas context failed'));
-                    }
+                        resolve(canvas.toDataURL('image/png'));
+                    } else reject(new Error('Canvas context failed'));
                 };
                 img.onerror = (e) => reject(e);
             });
         };
 
         try {
-            // 1. Logo Ekle (Sol Üst)
             const logoBase64 = await loadImage(currentLogo);
-            const logoX = 14;
-            const logoY = 10;
-            const logoSize = 24;
+            doc.addImage(logoBase64, 'PNG', 14, 10, 24, 24);
+        } catch (e) { console.error("Logo error:", e); }
 
-            doc.addImage(logoBase64, 'PNG', logoX, logoY, logoSize, logoSize);
-        } catch (e) {
-            console.error("Logo yüklenemedi:", e);
-        }
-
-        // 2. Başlık ve Kurumsal Bilgi (Header)
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(24);
-        doc.setTextColor(...brandColor);
+        doc.setFont("helvetica", "bold").setFontSize(22).setTextColor(...brandColor);
         doc.text("Reformer Pilates Malta", 42, 22);
+        doc.setFontSize(11).setTextColor(100).setFont("helvetica", "normal");
+        doc.text(`Report: ${dateFilter} | Status: ${reportFilter}`, 42, 29);
 
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(12);
-        doc.setTextColor(100);
-        doc.text(`Performance Report (${dateFilter === 'Custom' ? `${customStartDate} - ${customEndDate}` : dateFilter}) - Status: ${reportFilter}`, 42, 29);
-
-        // Sağ Üst Tarih
-        doc.setFontSize(10);
-        doc.setTextColor(150);
-        const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-        doc.text(dateStr, pageWidth - 14, 22, { align: 'right' });
-
-        // Ayırıcı Çizgi
-        doc.setDrawColor(...brandColor);
-        doc.setLineWidth(0.5);
-        doc.line(14, 38, pageWidth - 14, 38);
-
-        // 3. Genel İstatistikler (Overview Section)
-        doc.setFontSize(16);
-        doc.setTextColor(60);
-        doc.text("Executive Summary", 14, 50);
-
-        // İstatistik Kutuları (Basit çizim)
-        const statY = 58;
-        const boxWidth = (pageWidth - 28 - 10) / 3; // 3 kutu, aralarında 5mm boşluk
-
-        // Kutu 1: Bookings
-        doc.setFillColor(250, 250, 250);
-        doc.setDrawColor(230, 230, 230);
-        doc.roundedRect(14, statY, boxWidth, 25, 3, 3, 'FD');
-        doc.setFontSize(10);
-        doc.setTextColor(120);
-        doc.text("Total Bookings", 14 + 5, statY + 8);
-        doc.setFontSize(16);
-        doc.setTextColor(...brandColor);
-        doc.setFont("helvetica", "bold");
-        doc.text(totalBookings.toString(), 14 + 5, statY + 18);
-
-        // Kutu 2: Members
-        doc.setFillColor(250, 250, 250);
-        doc.roundedRect(14 + boxWidth + 5, statY, boxWidth, 25, 3, 3, 'FD');
-        doc.setFontSize(10);
-        doc.setTextColor(120);
-        doc.setFont("helvetica", "normal");
-        doc.text("Total Members", 14 + boxWidth + 10, statY + 8);
-        doc.setFontSize(16);
-        doc.setTextColor(...brandColor);
-        doc.setFont("helvetica", "bold");
-        doc.text(totalUsers.toString(), 14 + boxWidth + 10, statY + 18);
-
-        // Kutu 3: Occupancy
-        doc.setFillColor(250, 250, 250);
-        doc.roundedRect(14 + (boxWidth + 5) * 2, statY, boxWidth, 25, 3, 3, 'FD');
-        doc.setFontSize(10);
-        doc.setTextColor(120);
-        doc.setFont("helvetica", "normal");
-        doc.text("Occupancy Rate", 14 + (boxWidth + 5) * 2 + 5, statY + 8);
-        doc.setFontSize(16);
-        doc.setTextColor(...brandColor);
-        doc.setFont("helvetica", "bold");
-        doc.text(`%${occupancyRate}`, 14 + (boxWidth + 5) * 2 + 5, statY + 18);
-
-        // 4. Tablo Verisi Hazırlama
-        const tableData = tableMonths.map(month => [
-            new Date(month + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-            `${filteredMonthlyStats[month]} sessions`,
-            reportFilter === 'All' ? 'Mixed' : reportFilter,
-            // Basit bir bar grafik temsili (text olarak)
-            '|'.repeat(Math.min(filteredMonthlyStats[month], 20))
-        ]);
-
-        // 5. Tabloyu Çiz (Aylık Özet)
-        autoTable(doc, {
-            startY: 95,
-            head: [['Month', 'Total Sessions', 'Status', 'Activity Level']],
-            body: tableData,
-            theme: 'grid',
-            headStyles: {
-                fillColor: brandColor,
-                textColor: 255,
-                fontStyle: 'bold',
-                halign: 'left'
-            },
-            columnStyles: {
-                0: { fontStyle: 'bold', textColor: 80 },
-                3: { textColor: brandColor, fontStyle: 'bold' } // Activity Level rengi
-            },
-            styles: {
-                fontSize: 10,
-                cellPadding: 6,
-                lineColor: [240, 240, 240],
-                lineWidth: 0.1
-            },
-            alternateRowStyles: {
-                fillColor: [255, 250, 250] // Çok hafif pembe/beyaz
-            },
-            margin: { top: 90 }
+        // İstatistik Kutuları
+        const statY = 45;
+        const boxW = (pageWidth - 38) / 3;
+        [
+            { label: "Bookings", val: totalBookings },
+            { label: "Members", val: totalUsers },
+            { label: "Occupancy", val: `%${occupancyRate}` }
+        ].forEach((item, i) => {
+            const x = 14 + (i * (boxW + 5));
+            doc.setFillColor(250, 250, 250).roundedRect(x, statY, boxW, 20, 2, 2, 'FD');
+            doc.setFontSize(9).setTextColor(120).text(item.label, x + 5, statY + 7);
+            doc.setFontSize(12).setTextColor(...brandColor).setFont("helvetica", "bold").text(String(item.val), x + 5, statY + 15);
         });
 
-        // --- NEW: Detailed Booking Breakdown Table ---
-        // 6. Detaylı Liste Başlığı
-        // @ts-ignore
-        const finalY = doc.lastAutoTable.finalY + 15;
+        // Aylık Tablo
+        autoTable(doc, {
+            startY: 75,
+            head: [['Month', 'Sessions', 'Filter Context']],
+            body: tableMonths.map(m => [
+                new Date(m + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+                `${filteredMonthlyStats[m]} sessions`,
+                reportFilter
+            ]),
+            headStyles: { fillColor: brandColor },
+            theme: 'grid'
+        });
 
-        doc.setFontSize(14);
-        doc.setTextColor(80);
-        doc.text("Detailed Session Breakdown", 14, finalY);
-
-        // Filter and sort bookings for the detailed list
-        const detailedBookings = dateFilteredSlots
-            .filter(slot => {
-                const isActive = slot.status === 'Booked' || slot.status === 'Active';
-                const isCompleted = slot.status === 'Completed';
-                return (reportFilter === 'All' && (isActive || isCompleted)) ||
-                    (reportFilter === 'Active' && isActive) ||
-                    (reportFilter === 'Completed' && isCompleted);
-            })
-            // Sort by Date then Time
-            .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
-
-        const detailedData = detailedBookings.map(slot => [
-            slot.date,
-            slot.time,
-            slot.bookedBy || 'Unknown User',
-            slot.status === 'Booked' ? 'Active' : slot.status
-        ]);
+        // Detaylı Liste
+        const finalY = (doc as any).lastAutoTable.finalY + 15;
+        doc.setFontSize(14).setTextColor(60).text("Session Details", 14, finalY);
 
         autoTable(doc, {
             startY: finalY + 5,
-            head: [['Date', 'Time', 'Client Name', 'Status']],
-            body: detailedData,
-            theme: 'grid',
-            headStyles: {
-                fillColor: [100, 100, 100], // Darker gray for detail table
-                textColor: 255,
-                fontStyle: 'bold'
-            },
-            styles: {
-                fontSize: 9,
-                cellPadding: 4,
-                lineColor: [230, 230, 230],
-                lineWidth: 0.1
-            },
-            alternateRowStyles: {
-                fillColor: [245, 245, 245]
-            },
-            // Add page break logic automatically handled by autoTable
+            head: [['Date', 'Time', 'Client', 'Status']],
+            body: filteredSlots.sort((a, b) => normalizeDate(a.date).localeCompare(normalizeDate(b.date))).map(s => [
+                s.date, s.time, s.bookedBy || '-', s.status
+            ]),
+            styles: { fontSize: 8 }
         });
 
-
-        // 7. Footer (Alt Bilgi)
-        const footerY = pageHeight - 15;
-
-        // Footer Çizgisi
-        doc.setDrawColor(200);
-        doc.setLineWidth(0.1);
-        doc.line(14, footerY - 5, pageWidth - 14, footerY - 5);
-
-        // Site Linki
-        doc.setFontSize(10);
-        doc.setTextColor(150);
-        doc.setFont("helvetica", "normal");
-        doc.text("www.reformerpilatesmalta.com", pageWidth / 2, footerY, { align: 'center' });
-
-        // Telif Hakkı / Ek Bilgi
-        doc.setFontSize(8);
-        doc.setTextColor(180);
-        doc.text("Confidential Report • Generated by ReformerPilatesMalta", pageWidth / 2, footerY + 5, { align: 'center' });
-
-        // Kaydet
-        doc.save(`pilates-report-${new Date().toISOString().slice(0, 10)}.pdf`);
+        doc.save(`report-${new Date().toISOString().split('T')[0]}.pdf`);
     };
 
     return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Header & Download Button */}
+        <div className="space-y-8 p-4">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <h3 className="text-2xl font-bold text-gray-800">Performance Overview</h3>
-                <div className="flex flex-col md:flex-row gap-3 w-full lg:w-auto">
-                    {/* Date Filter Dropdown */}
-                    <div className="relative w-full sm:w-[200px] group">
-                        <button
-                            onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
-                            className="w-full h-12 bg-white hover:bg-gray-50 text-gray-700 font-bold border border-gray-100 rounded-xl px-4 flex items-center justify-between shadow-sm hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#CE8E94]/20"
-                        >
-                            <span className="text-gray-800 truncate">
-                                {dateFilter === 'Custom' && customStartDate ? 'Custom Range' : dateFilter}
-                            </span>
-                            <Calendar className={`w-4 h-4 text-gray-400 transition-transform duration-300 group-hover:text-[#CE8E94] flex-shrink-0 ml-2 ${isDateFilterOpen ? 'rotate-180' : ''}`} />
+                <div className="flex flex-wrap gap-3 w-full lg:w-auto">
+                    {/* Tarih Filtresi */}
+                    <div className="relative min-w-[160px]">
+                        <button onClick={() => setIsDateFilterOpen(!isDateFilterOpen)} className="w-full h-12 bg-white border rounded-xl px-4 flex items-center justify-between shadow-sm">
+                            <span>{dateFilter}</span>
+                            <Calendar className="w-4 h-4 text-gray-400" />
                         </button>
-
                         {isDateFilterOpen && (
-                            <>
-                                <div className="fixed inset-0 z-10" onClick={() => setIsDateFilterOpen(false)} />
-                                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200">
-                                    {(['All', 'Today', 'Week', 'Month', 'Custom'] as const).map((option) => (
-                                        <div
-                                            key={option}
-                                            onClick={() => {
-                                                if (option === 'Custom') {
-                                                    setShowCustomDateModal(true);
-                                                    setIsDateFilterOpen(false);
-                                                } else {
-                                                    setDateFilter(option);
-                                                    setIsDateFilterOpen(false);
-                                                }
-                                            }}
-                                            className={`px-4 py-3 cursor-pointer flex items-center justify-between transition-colors duration-200
-                                                ${dateFilter === option && option !== 'Custom'
-                                                    ? 'bg-[#CE8E94]/10 text-[#CE8E94] font-bold'
-                                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                                }`}
-                                        >
-                                            <span className="text-sm">{option}</span>
-                                            {dateFilter === option && option !== 'Custom' && <Check className="w-4 h-4 text-[#CE8E94]" />}
-                                        </div>
-                                    ))}
-                                </div>
-                            </>
+                            <div className="absolute top-full mt-2 w-full bg-white border rounded-xl shadow-xl z-50">
+                                {(['All', 'Today', 'Week', 'Month', 'Custom'] as const).map(opt => (
+                                    <div key={opt} onClick={() => {
+                                        if (opt === 'Custom') setShowCustomDateModal(true);
+                                        else setDateFilter(opt);
+                                        setIsDateFilterOpen(false);
+                                    }} className="p-3 hover:bg-gray-50 cursor-pointer text-sm">
+                                        {opt}
+                                    </div>
+                                ))}
+                            </div>
                         )}
                     </div>
 
-                    <div className="relative w-full sm:w-[200px] group">
-                        {/* Status Filter Trigger */}
-                        <button
-                            onClick={() => setIsFilterOpen(!isFilterOpen)}
-                            className="w-full h-12 bg-white hover:bg-gray-50 text-gray-700 font-bold border border-gray-100 rounded-xl px-4 flex items-center justify-between shadow-sm hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#CE8E94]/20"
-                        >
-                            <span className="text-gray-800 truncate">
-                                {filterOptions.find(f => f.value === reportFilter)?.label}
-                            </span>
-                            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 group-hover:text-[#CE8E94] flex-shrink-0 ml-2 ${isFilterOpen ? 'rotate-180' : ''}`} />
+                    {/* Statü Filtresi */}
+                    <div className="relative min-w-[160px]">
+                        <button onClick={() => setIsFilterOpen(!isFilterOpen)} className="w-full h-12 bg-white border rounded-xl px-4 flex items-center justify-between shadow-sm">
+                            <span>{reportFilter}</span>
+                            <ChevronDown className="w-4 h-4 text-gray-400" />
                         </button>
-
-                        {/* Dropdown Menu */}
                         {isFilterOpen && (
-                            <>
-                                <div className="fixed inset-0 z-10" onClick={() => setIsFilterOpen(false)} />
-                                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200">
-                                    {filterOptions.map((option) => (
-                                        <div
-                                            key={option.value}
-                                            onClick={() => {
-                                                setReportFilter(option.value as any);
-                                                setIsFilterOpen(false);
-                                            }}
-                                            className={`px-4 py-3 cursor-pointer flex items-center justify-between transition-colors duration-200
-                                                ${reportFilter === option.value
-                                                    ? 'bg-[#CE8E94]/10 text-[#CE8E94] font-bold'
-                                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                                }`}
-                                        >
-                                            <span className="text-sm">{option.label}</span>
-                                            {reportFilter === option.value && <Check className="w-4 h-4 text-[#CE8E94]" />}
-                                        </div>
-                                    ))}
-                                </div>
-                            </>
+                            <div className="absolute top-full mt-2 w-full bg-white border rounded-xl shadow-xl z-50">
+                                {filterOptions.map(opt => (
+                                    <div key={opt.value} onClick={() => {
+                                        setReportFilter(opt.value as any);
+                                        setIsFilterOpen(false);
+                                    }} className="p-3 hover:bg-gray-50 cursor-pointer text-sm">
+                                        {opt.label}
+                                    </div>
+                                ))}
+                            </div>
                         )}
                     </div>
-                    <Button
-                        onClick={handleDownloadPDF}
-                        className="bg-[#CE8E94] hover:bg-[#B57A80] text-white h-12 w-full sm:w-[200px] rounded-xl flex items-center justify-center gap-2 shadow-lg transition transform active:scale-95 text-base font-semibold"
-                    >
-                        <Download className="w-5 h-5" /> <span>Download Report</span>
+
+                    <Button onClick={handleDownloadPDF} className="bg-[#CE8E94] hover:bg-[#B57A80] text-white h-12 rounded-xl flex gap-2">
+                        <Download className="w-5 h-5" /> Download PDF
                     </Button>
                 </div>
             </div>
 
-            {/* Üst Kartlar */}
+            {/* İstatistik Kartları */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-6 bg-white rounded-2xl shadow-md border border-gray-100">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-gray-500 font-medium text-sm">Total Bookings</p>
-                            <h3 className="text-3xl font-bold text-gray-800 mt-1">{totalBookings}</h3>
-                        </div>
-                        <div className="p-3 bg-blue-50 rounded-xl">
-                            <Calendar className="w-6 h-6 text-blue-500" />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="p-6 bg-white rounded-2xl shadow-md border border-gray-100">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-gray-500 font-medium text-sm">Total Members</p>
-                            <h3 className="text-3xl font-bold text-gray-800 mt-1">{totalUsers}</h3>
-                        </div>
-                        <div className="p-3 bg-purple-50 rounded-xl">
-                            <Users className="w-6 h-6 text-purple-500" />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="p-6 bg-white rounded-2xl shadow-md border border-gray-100">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-gray-500 font-medium text-sm">Occupancy Rate</p>
-                            <h3 className="text-3xl font-bold text-gray-800 mt-1">%{occupancyRate}</h3>
-                        </div>
-                        <div className="p-3 bg-green-50 rounded-xl">
-                            <TrendingUp className="w-6 h-6 text-green-500" />
-                        </div>
-                    </div>
-                </div>
+                <StatCard title="Total Bookings" value={totalBookings} icon={<Calendar className="text-blue-500" />} bg="bg-blue-50" />
+                <StatCard title="Total Members" value={totalUsers} icon={<Users className="text-purple-500" />} bg="bg-purple-50" />
+                <StatCard title="Occupancy Rate" value={`%${occupancyRate}`} icon={<TrendingUp className="text-green-500" />} bg="bg-green-50" />
             </div>
 
-            {/* Aylık Tablo */}
-            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                    <h3 className="text-xl font-bold text-gray-800">Monthly Performance ({reportFilter})</h3>
-                </div>
+            {/* Tablo */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6 border-b font-bold text-gray-800">Monthly Performance</div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-gray-50 text-gray-500 font-medium text-sm">
+                        <thead className="bg-gray-50 text-xs uppercase text-gray-500">
                             <tr>
-                                <th className="p-4 pl-6">Month</th>
-                                <th className="p-4">Total Sessions</th>
-                                <th className="p-4">Status</th>
+                                <th className="p-4">Month</th>
+                                <th className="p-4">Sessions</th>
+                                <th className="p-4">Status Filter</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y">
                             {tableMonths.map(month => (
-                                <tr key={month} className="hover:bg-gray-50 transition">
-                                    <td className="p-4 pl-6 font-bold text-gray-700">
+                                <tr key={month} className="hover:bg-gray-50">
+                                    <td className="p-4 font-semibold">
                                         {new Date(month + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                                     </td>
-                                    <td className="p-4 text-gray-600 font-medium">{monthlyStats[month]} sessions</td>
+                                    <td className="p-4">{filteredMonthlyStats[month]} sessions</td>
                                     <td className="p-4">
-                                        <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">Active</span>
+                                        <span className="px-2 py-1 bg-[#CE8E94]/10 text-[#CE8E94] text-xs font-bold rounded-md">
+                                            {reportFilter}
+                                        </span>
                                     </td>
                                 </tr>
                             ))}
-                            {sortedMonths.length === 0 && (
-                                <tr>
-                                    <td colSpan={3} className="p-8 text-center text-gray-400">No data available yet.</td>
-                                </tr>
-                            )}
                         </tbody>
                     </table>
                 </div>
             </div>
 
-
-            {/* Custom Date Range Modal */}
-            {
-                showCustomDateModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#CE8E94]/10 backdrop-blur-md animate-in fade-in duration-200">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
-                            <div className="flex justify-between items-center border-b border-gray-100 pb-4">
-                                <h3 className="text-lg font-bold text-gray-800">Select Date Range</h3>
-                                <button onClick={() => setShowCustomDateModal(false)} className="text-gray-400 hover:text-gray-600">
-                                    <span className="sr-only">Close</span>
-                                    ✕
-                                </button>
-                            </div>
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700">Start Date</label>
-                                    <input
-                                        type="date"
-                                        value={customStartDate}
-                                        onChange={(e) => setCustomStartDate(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#CE8E94]/20 text-gray-800 bg-white placeholder-gray-600"
-                                        style={{ colorScheme: 'light' }}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700">End Date</label>
-                                    <input
-                                        type="date"
-                                        value={customEndDate}
-                                        onChange={(e) => setCustomEndDate(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#CE8E94]/20 text-gray-800 bg-white placeholder-gray-600"
-                                        style={{ colorScheme: 'light' }}
-                                    />
-                                </div>
-                            </div>
-                            <div className="pt-2 flex gap-3">
-                                <Button
-                                    onClick={() => {
-                                        setDateFilter('All');
-                                        setShowCustomDateModal(false);
-                                    }}
-                                    className="flex-1 rounded-xl h-10 border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    onClick={() => {
-                                        if (customStartDate && customEndDate) {
-                                            setDateFilter('Custom');
-                                            setShowCustomDateModal(false);
-                                        }
-                                    }}
-                                    className="flex-1 bg-[#CE8E94] hover:bg-[#B57A80] text-white rounded-xl h-10"
-                                >
-                                    Apply
-                                </Button>
-                            </div>
+            {/* Custom Date Modal */}
+            {showCustomDateModal && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/20 backdrop-blur-sm p-4">
+                    <div className="bg-white p-6 rounded-2xl w-full max-w-sm shadow-2xl">
+                        <h4 className="font-bold mb-4">Custom Date Range</h4>
+                        <input type="date" value={customStartDate} onChange={e => setCustomStartDate(e.target.value)} className="w-full mb-3 p-2 border rounded-lg" />
+                        <input type="date" value={customEndDate} onChange={e => setCustomEndDate(e.target.value)} className="w-full mb-4 p-2 border rounded-lg" />
+                        <div className="flex gap-2">
+                            <Button onClick={() => setShowCustomDateModal(false)} className="flex-1 bg-gray-100 text-gray-700">Cancel</Button>
+                            <Button onClick={() => { setDateFilter('Custom'); setShowCustomDateModal(false); }} className="flex-1 bg-[#CE8E94] text-white">Apply</Button>
                         </div>
                     </div>
-                )
-            }
-        </div >
+                </div>
+            )}
+        </div>
     );
 };
+
+const StatCard = ({ title, value, icon, bg }: any) => (
+    <div className="p-6 bg-white rounded-2xl shadow-sm border border-gray-100 flex justify-between items-start">
+        <div>
+            <p className="text-gray-500 text-sm">{title}</p>
+            <h3 className="text-3xl font-bold mt-1">{value}</h3>
+        </div>
+        <div className={`p-3 rounded-xl ${bg}`}>{icon}</div>
+    </div>
+);

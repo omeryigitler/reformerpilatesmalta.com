@@ -16,6 +16,7 @@ import { AdminAnalytics } from './AdminAnalytics';
 import { FileUploadInput } from './FileUploadInput';
 import { Modal } from './Modal';
 import emailjs from '@emailjs/browser';
+import { ErrorBoundary } from './ErrorBoundary';
 
 interface AdminPanelProps {
     loggedInUser: UserType;
@@ -593,7 +594,9 @@ export const AdminPanel = ({
                 </div>
 
                 {activeTab === 'analytics' && (
-                    <AdminAnalytics slots={slots} users={users} currentLogo={managementState.logo} />
+                    <ErrorBoundary>
+                        <AdminAnalytics slots={slots} users={users} currentLogo={managementState.logo} />
+                    </ErrorBoundary>
                 )}
 
                 {activeTab === 'management' && (
