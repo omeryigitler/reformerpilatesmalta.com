@@ -75,9 +75,14 @@ export const AdminPanel = ({
         return slots.filter(slot => {
             // 1. Status Filter
             let statusMatch = true;
+
+            const isActuallyCompleted = slot.status === 'Completed' || isPastSlot(slot.date, slot.time);
+            const isActuallyActive = (slot.status === 'Booked' || slot.status === 'Active') && !isActuallyCompleted;
+
             if (statusFilter === 'All') statusMatch = true;
-            else if (statusFilter === 'Active') statusMatch = slot.status === 'Booked' || slot.status === 'Active';
-            else statusMatch = slot.status === statusFilter;
+            else if (statusFilter === 'Active') statusMatch = isActuallyActive;
+            else if (statusFilter === 'Completed') statusMatch = isActuallyCompleted;
+            else statusMatch = slot.status === statusFilter && !isActuallyCompleted;
 
             // 2. Date Filter
             let dateMatch = true;
@@ -974,8 +979,15 @@ export const AdminPanel = ({
                                                                     <div className="h-10 w-px bg-gray-200 hidden sm:block"></div>
 
                                                                     <div className="flex flex-col items-center sm:items-start flex-1">
-                                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full mb-1 ${slot.status === 'Booked' || slot.status === 'Active' ? 'bg-red-100 text-red-500' : slot.status === 'Completed' ? 'bg-gray-100 text-gray-500' : 'bg-green-100 text-green-600'}`}>
-                                                                            {slot.status === 'Booked' ? 'Active' : slot.status}
+                                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full mb-1 ${
+                                                                            // Overriding Logic: Past slots are always viewed as Completed
+                                                                            (isPastSlot(slot.date, slot.time) || slot.status === 'Completed')
+                                                                                ? 'bg-gray-100 text-gray-500'
+                                                                                : (slot.status === 'Booked' || slot.status === 'Active')
+                                                                                    ? 'bg-red-100 text-red-500'
+                                                                                    : 'bg-green-100 text-green-600'
+                                                                            }`}>
+                                                                            {(isPastSlot(slot.date, slot.time) || slot.status === 'Completed') ? 'Completed' : (slot.status === 'Booked' ? 'Active' : slot.status)}
                                                                         </span>
 
                                                                         <div className="flex items-center gap-1 max-w-[150px]">
