@@ -44,6 +44,32 @@ export const isPastDate = (dateString: string) => {
     return dateString < today;
 }
 
+export const getCurrentTimeMalta = () => {
+    const formatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: "Europe/Malta",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+    });
+    return formatter.format(new Date());
+};
+
+export const isPastSlot = (dateString: string, timeString: string) => {
+    if (!dateString || !timeString) return false;
+    const today = getTodayDate();
+    const now = getCurrentTimeMalta();
+
+    if (dateString < today) return true;
+    if (dateString > today) return false;
+
+    // If date is today, compare time
+    // Ensure both are comparable strings (HH:MM)
+    const slotTime = convertTime12to24(timeString);
+    const currentTime = convertTime12to24(now);
+
+    return slotTime < currentTime;
+}
+
 export const convertTime12to24 = (timeStr: string): string => {
     if (!timeStr) return "00:00";
 

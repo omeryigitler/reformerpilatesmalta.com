@@ -4,7 +4,7 @@ import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Slot } from "../types";
-import { getTodayDate, isPastDate } from "../utils/helpers";
+import { getTodayDate, isPastDate, isPastSlot } from "../utils/helpers";
 
 export const BookingCalendar = ({ slots, onSelectDate, selectedDate }: { slots: Slot[], onSelectDate: (date: string) => void, selectedDate: string }) => {
     const [currentMonth, setCurrentMonth] = useState("");
@@ -18,7 +18,7 @@ export const BookingCalendar = ({ slots, onSelectDate, selectedDate }: { slots: 
 
     const datesWithSlots = useMemo(() => {
         return slots
-            .filter(slot => slot.status === 'Available' && !isPastDate(slot.date))
+            .filter(slot => slot.status === 'Available' && !isPastSlot(slot.date, slot.time))
             .map(slot => slot.date);
     }, [slots]);
 

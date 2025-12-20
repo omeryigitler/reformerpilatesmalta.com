@@ -3,7 +3,7 @@
 import React from "react";
 import { Award, Clock } from "lucide-react";
 import { Slot } from "../types";
-import { isPastDate, formatDateDisplay } from "../utils/helpers";
+import { isPastSlot, formatDateDisplay } from "../utils/helpers";
 
 export const UserHistory = ({ slots, userName, userEmail }: { slots: Slot[], userName: string, userEmail: string }) => {
     // Geçmiş dersleri bul ve sırala (En yeniden eskiye)
@@ -18,7 +18,7 @@ export const UserHistory = ({ slots, userName, userEmail }: { slots: Slot[], use
                 const myName = userName.trim().toLowerCase();
                 isMatch = cleanBookedBy === myName;
             }
-            return isMatch && (isPastDate(slot.date) || slot.status === 'Completed');
+            return isMatch && (isPastSlot(slot.date, slot.time) || slot.status === 'Completed');
         })
         .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
 

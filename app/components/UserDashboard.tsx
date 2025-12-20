@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { User, LogOut, Calendar, Clock, Zap, Home, ShieldCheck } from 'lucide-react';
 import { UserType, Slot } from '../types';
-import { getTodayDate, isPastDate, formatDateDisplay } from '../utils/helpers';
+import { getTodayDate, isPastDate, isPastSlot, formatDateDisplay } from '../utils/helpers';
 import { useConfirm } from '../context/ConfirmContext';
 import { BookingCalendar } from './BookingCalendar';
 import { UserHistory } from './UserHistory';
@@ -33,7 +33,7 @@ export const UserDashboard = ({
     }, []);
     const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>('upcoming');
 
-    const futureSlots = slots.filter(slot => !isPastDate(slot.date));
+    const futureSlots = slots.filter(slot => !isPastSlot(slot.date, slot.time));
 
     // Filter out Completed slots from active bookings even if date is today/future
     const userBookings = futureSlots
