@@ -542,52 +542,6 @@ export const AdminPanel = ({
         }
     };
 
-    const handleResetAndSyncData = async () => {
-        showConfirm(
-            "This will scan all slots and match bookings with member emails. It will also standardize all slot IDs. Proceed?",
-            async () => {
-                showNotification("Starting synchronization...", "info");
-                let count = 0;
-                try {
-                    for (const slot of slots) {
-                        const isOccupied = slot.status === 'Booked' || slot.status === 'Active' || slot.status === 'Completed';
-
-                        // 1. Repair format (Standardize to YYYY-MM-DD_HH:MM)
-                        const legacyId = `${slot.date}-${slot.time}`;
-                        const standardId = `${slot.date}_${slot.time}`;
-
-                        let needsUpdate = false;
-                        let updatedSlot = { ...slot };
-
-                        // 2. Sync Email if missing
-                        if (isOccupied && slot.bookedBy && !slot.bookedByEmail) {
-                            const cleanName = slot.bookedBy.replace(' (Admin)', '').trim().toLowerCase();
-                            const user = users.find(u => `${u.firstName} ${u.lastName}`.trim().toLowerCase() === cleanName);
-                            if (user) {
-                                updatedSlot.bookedByEmail = user.email;
-                                needsUpdate = true;
-                            }
-                        }
-
-                        // Execute Repair if needed
-                        if (needsUpdate || slots.some(s => s.date === slot.date && s.time === slot.time && s !== slot)) {
-                            await setDoc(doc(db, "slots", standardId), updatedSlot);
-                            // Cleanup legacy if it exists as a separate document
-                            if (legacyId !== standardId) {
-                                await deleteDoc(doc(db, "slots", legacyId));
-                            }
-                            count++;
-                        }
-                    }
-                    showNotification(`Sync complete! ${count} slots repaired.`, "success");
-                } catch (e) {
-                    console.error(e);
-                    showNotification("Error during sync", "error");
-                }
-            },
-            "Database Sync & Repair"
-        );
-    };
 
     const openEditSlotModal = (slot: Slot) => {
         setEditingSlot(slot);
@@ -807,12 +761,6 @@ export const AdminPanel = ({
                                 className="flex-1 py-5 bg-gray-800 hover:bg-gray-900 text-white rounded-xl font-bold shadow-lg transition-colors text-xl transform active:scale-95 flex items-center justify-center gap-2"
                             >
                                 <Database className="w-6 h-6" /> Download Backup
-                            </Button>
-                            <Button
-                                onClick={handleResetAndSyncData}
-                                className="flex-1 py-5 bg-white text-[#CE8E94] border-2 border-[#CE8E94] hover:bg-[#CE8E94]/5 rounded-xl font-bold shadow-lg transition-all text-xl transform active:scale-95 flex items-center justify-center gap-2"
-                            >
-                                <Database className="w-6 h-6" /> Sync & Fix Database
                             </Button>
                         </div>
                     </div>
