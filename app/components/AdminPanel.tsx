@@ -9,7 +9,7 @@ import { db } from '../firebase';
 import { doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { useNotification } from '../context/NotificationContext';
 import { useConfirm } from '../context/ConfirmContext';
-import { formatDateDisplay, getTodayDate, convertTime12to24 } from '../utils/helpers';
+import { formatDateDisplay, getTodayDate, convertTime12to24, isPastSlot } from '../utils/helpers';
 import { BookingCalendar } from './BookingCalendar';
 import { updateExpiredSlots } from '../services/pilatesService';
 import { AdminAnalytics } from './AdminAnalytics';
@@ -69,7 +69,8 @@ export const AdminPanel = ({
 
     const filteredSlots = React.useMemo(() => {
         const now = new Date();
-        const todayStr = now.toISOString().split('T')[0];
+        // FIXED: Use Malta-safe date instead of UTC ISO string (which lags 1 hour behind)
+        const todayStr = getTodayDate();
 
         return slots.filter(slot => {
             // 1. Status Filter
