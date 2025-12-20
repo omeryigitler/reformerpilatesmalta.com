@@ -51,13 +51,21 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
         return str;
     };
 
+    // 0. Pre-normalize all slots for performance (Run once when slots change)
+    const normalizedSlots = React.useMemo(() => {
+        return slots.map(slot => ({
+            ...slot,
+            date: normalizeDate(slot.date) // Standardize to YYYY-MM-DD once
+        }));
+    }, [slots]);
+
     const dateFilteredSlots = React.useMemo(() => {
         const now = new Date();
         const todayStr = now.toISOString().split('T')[0];
 
-        return slots.filter(slot => {
+        return normalizedSlots.filter(slot => {
             if (!slot?.date) return false;
-            const slotDate = normalizeDate(slot.date);
+            const slotDate = slot.date; // Already normalized
 
             if (dateFilter === 'All') return true;
             if (dateFilter === 'Today') return slotDate === todayStr;

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { LogOut, Calendar, Users, TrendingUp, Edit3, Star, Award, Mail, Database, Clock, Plus, Trash2, SwitchCamera, Home, UserPlus, ShieldCheck, ChevronDown, Check, Search, FileText, ExternalLink, BadgeCheck, MessageSquareText, Phone, CalendarPlus, MapPin, ChevronRight, ArrowRight, User } from 'lucide-react';
+import { LogOut, Calendar, Users, TrendingUp, Edit3, Star, Award, Mail, Database, Clock, Plus, Trash2, SwitchCamera, Home, UserPlus, ShieldCheck, ChevronDown, Check, Search, FileText, ExternalLink, BadgeCheck, MessageSquareText, Phone, CalendarPlus, MapPin, ChevronRight, ArrowRight, User, AlertTriangle } from 'lucide-react';
 import { Switch } from "@/components/ui/switch";
 import { Slot, UserType, ManagementState } from '../types';
 import { db } from '../firebase';
@@ -48,15 +48,14 @@ export const AdminPanel = ({
         setNewSlotDate(getTodayDate());
     }, []);
 
-    // NEW: Auto-update expired slots (Protected from infinite loops)
-    const hasCheckedExpired = React.useRef(false);
-
-    React.useEffect(() => {
-        if (slots.length > 0 && !hasCheckedExpired.current) {
-            hasCheckedExpired.current = true;
+    // NEW: Auto-update removed for stability. 
+    // Manual trigger added in Management tab.
+    const handleCleanupExpiredSlots = () => {
+        showConfirm("Are you sure you want to mark all past 'Booked' slots as 'Completed'?", () => {
             updateExpiredSlots(slots);
-        }
-    }, [slots]);
+            showNotification("Cleanup process started.", "success");
+        });
+    };
 
     // NEW: Date Filter State
     const [dateFilter, setDateFilter] = useState<'All' | 'Today' | 'Week' | 'Month' | 'Custom'>('All');
@@ -131,8 +130,8 @@ export const AdminPanel = ({
     // --- HANDLERS ---
     // Unified Booking Logic
     const performBooking = async (slot: Slot, user: UserType) => {
-        const fullName = `${user.firstName} ${user.lastName}`;
-        const slotId = `${slot.date}_${slot.time}`;
+        const fullName = `${user.firstName} ${user.lastName} `;
+        const slotId = `${slot.date}_${slot.time} `;
 
         // CHECK: Prevent Double Booking
         const isSlotTaken = slots.some(s =>
@@ -176,7 +175,7 @@ export const AdminPanel = ({
                 'pqtdmtV_1xQxlCa0T'  // Public Key
             );
 
-            showNotification(`Slot assigned and email sent to ${user.firstName}!`, 'success');
+            showNotification(`Slot assigned and email sent to ${user.firstName} !`, 'success');
             return true;
         } catch (error) {
             console.error(error);
@@ -201,7 +200,7 @@ export const AdminPanel = ({
         if (!bookingForMember) return;
 
         showConfirm(
-            `Book ${formatDateDisplay(slot.date)} at ${slot.time} for ${bookingForMember.firstName}?`,
+            `Book ${formatDateDisplay(slot.date)} at ${slot.time} for ${bookingForMember.firstName} ? `,
             async () => {
                 const success = await performBooking(slot, bookingForMember);
                 if (success) {
@@ -437,10 +436,12 @@ export const AdminPanel = ({
         }
 
         const normalizedTime = newSlotTime.trim();
+        // Enforce YYYY-MM-DD format strictly
+        const normalizedDate = new Date(newSlotDate).toISOString().split('T')[0];
 
-        const newSlot: Slot = { date: newSlotDate, time: normalizedTime, status: 'Available', bookedBy: null, bookedByEmail: null };
+        const newSlot: Slot = { date: normalizedDate, time: normalizedTime, status: 'Available', bookedBy: null, bookedByEmail: null };
         try {
-            await setDoc(doc(db, "slots", `${newSlotDate}_${normalizedTime}`), newSlot);
+            await setDoc(doc(db, "slots", `${normalizedDate}_${normalizedTime}`), newSlot);
             setNewSlotTime('');
             showNotification('New slot added!', 'success');
         } catch (e) {
@@ -754,18 +755,27 @@ export const AdminPanel = ({
                             </div>
                         </div>
 
-                        <div className="flex flex-col md:flex-row gap-4 mt-10">
-                            <Button
-                                onClick={handleSaveManagement}
-                                className="flex-1 py-5 bg-[#CE8E94] hover:bg-[#B57A80] text-white rounded-xl font-bold shadow-lg transition-colors text-xl transform active:scale-95"
-                            >
-                                Save All Changes
-                            </Button>
-                            <Button
-                                onClick={handleDownloadBackup}
-                                className="flex-1 py-5 bg-gray-800 hover:bg-gray-900 text-white rounded-xl font-bold shadow-lg transition-colors text-xl transform active:scale-95 flex items-center justify-center gap-2"
-                            >
-                                <Database className="w-6 h-6" /> Download Backup
+                        {/* Maintenance Zone */}
+                        <div className="pt-6 border-t border-gray-200">
+                            <h3 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-3"><AlertTriangle className="w-6 h-6 text-orange-500" /> Maintenance Zone</h3>
+                            <div className="bg-orange-50 border border-orange-200 rounded-xl p-6">
+                                <h4 className="font-bold text-orange-800 mb-2">Cleanup Old Slots</h4>
+                                <p className="text-sm text-orange-700 mb-4">
+                                    Manually move past 'Booked' or 'Active' slots to 'Completed' status.
+                                    Use this if you see old bookings stuck in active state.
+                                </p>
+                                <Button
+                                    onClick={handleCleanupExpiredSlots}
+                                    className="bg-orange-500 hover:bg-orange-600 text-white font-bold"
+                                >
+                                    Run Cleanup Task
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end pt-6">
+                            <Button onClick={handleSaveManagement} className="bg-[#CE8E94] hover:bg-[#B57A80] text-white py-6 px-8 rounded-xl text-lg shadow-xl shadow-[#CE8E94]/20 font-bold transform hover:scale-105 transition-all">
+                                Save Changes
                             </Button>
                         </div>
                     </div>
