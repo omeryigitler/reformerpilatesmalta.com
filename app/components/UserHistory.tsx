@@ -18,6 +18,8 @@ export const UserHistory = ({ slots, userName, userEmail }: { slots: Slot[], use
                 const myName = userName.trim().toLowerCase();
                 isMatch = cleanBookedBy === myName;
             }
+            // Standardized Logic: History = Past (Time expired) OR Status Completed
+            // This captures "Active" bookings that just expired 1 second ago.
             return isMatch && (isPastSlot(slot.date, slot.time) || slot.status === 'Completed');
         })
         .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
@@ -53,6 +55,7 @@ export const UserHistory = ({ slots, userName, userEmail }: { slots: Slot[], use
                                     <span className="text-sm text-gray-500">{slot.time}</span>
                                 </div>
                                 <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
+                                    {/* Force "Completed" display if time passed, even if DB says otherwise */}
                                     Completed
                                 </span>
                             </div>

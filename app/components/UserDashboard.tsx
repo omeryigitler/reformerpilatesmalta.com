@@ -33,12 +33,15 @@ export const UserDashboard = ({
     }, []);
     const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>('upcoming');
 
+    // Standardized Logic: Active = Not Past + Not Completed
     const futureSlots = slots.filter(slot => !isPastSlot(slot.date, slot.time));
 
     // Filter out Completed slots from active bookings even if date is today/future
+    // Also ensures we strictly show only what hasn't passed in time
     const userBookings = futureSlots
         .filter(slot => {
             if (slot.status === 'Completed') return false;
+            // Double check for logic consistency - futureSlots already filters past time
             if (slot.bookedByEmail) return slot.bookedByEmail === loggedInUser.email;
 
             // Fallback for old data (Robust matching)

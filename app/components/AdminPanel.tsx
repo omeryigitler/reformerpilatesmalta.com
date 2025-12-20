@@ -400,24 +400,7 @@ export const AdminPanel = ({
         );
     };
 
-    const handleDownloadBackup = () => {
-        const backupData = {
-            timestamp: new Date().toISOString(),
-            users,
-            slots,
-            managementState
-        };
 
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-        const downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute("download", `pilates_backup_${new Date().toISOString().split('T')[0]}.json`);
-        document.body.appendChild(downloadAnchorNode);
-        downloadAnchorNode.click();
-        downloadAnchorNode.remove();
-
-        showNotification("Backup downloaded successfully!", "success");
-    };
 
     const handleAddSlot = async () => {
         const timeRegex = /^(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$|^([01]?[0-9]|2[0-3]):[0-5][0-9]$/i;
