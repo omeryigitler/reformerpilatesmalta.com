@@ -85,9 +85,10 @@ export const UserPanel = ({ existingUsers, addUser, onLogin, activePanel, setAct
             showNotification('Registration successful! Logging you in...', 'success');
 
             // Notify Admins about New User (Single trigger, CC handles distribution)
+            // Notify Admins about New User (Single trigger, CC handles distribution)
             emailjs.send(
-                'service_335c8mj',
-                'template_jf9q6tg',
+                process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
+                process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ADMIN!,
                 {
                     event_type: 'New User Registration',
                     user_name: `${newUser.firstName} ${newUser.lastName}`,
@@ -96,7 +97,7 @@ export const UserPanel = ({ existingUsers, addUser, onLogin, activePanel, setAct
                     event_date: newUser.registered,
                     event_time: 'N/A'
                 },
-                'pqtdmtV_1xQxlCa0T'
+                process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
             ).catch(err => console.error("Failed to send admin reg email:", err));
 
             // Check session manually to update UI immediately

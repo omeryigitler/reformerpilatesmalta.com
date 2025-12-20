@@ -304,8 +304,8 @@ function PilatesMaltaByGozde() {
 
             // 1. Email to User
             emailjs.send(
-                'service_335c8mj',
-                'template_lsuq5bc',
+                process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
+                process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_USER!,
                 {
                     to_name: loggedInUser.firstName,
                     to_email: loggedInUser.email,
@@ -318,13 +318,13 @@ function PilatesMaltaByGozde() {
                     maps_link: 'https://maps.app.goo.gl/YourGoogleMapsLinkHere',
                     website_url: 'https://www.reformerpilatesmalta.com'
                 },
-                'pqtdmtV_1xQxlCa0T'
+                process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
             ).catch(err => console.error("Failed to send user email:", err));
 
             // 2. Email to Admins (Notification via New Template with CC)
             emailjs.send(
-                'service_335c8mj',
-                'template_jf9q6tg', // New Admin Template ID
+                process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
+                process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ADMIN!, // New Admin Template ID
                 {
                     event_type: 'New Class Booking',
                     user_name: `${loggedInUser.firstName} ${loggedInUser.lastName}`,

@@ -158,8 +158,8 @@ export const AdminPanel = ({
             showNotification('Slot assigned! Sending email...', 'info');
 
             await emailjs.send(
-                'service_335c8mj',   // Service ID
-                'template_lsuq5bc',  // Template ID
+                process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,   // Service ID
+                process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_USER!,  // Template ID
                 {
                     to_name: user.firstName,
                     to_email: user.email,
@@ -524,7 +524,7 @@ export const AdminPanel = ({
                                     maps_link: 'https://maps.app.goo.gl/YourGoogleMapsLinkHere',
                                     website_url: 'https://www.reformerpilatesmalta.com'
                                 },
-                                'pqtdmtV_1xQxlCa0T'
+                                process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
                             ).catch(err => console.error("Email notify failed:", err));
                         } else {
                             console.warn(`Could not find user for email notification: ${bookedName}`);
