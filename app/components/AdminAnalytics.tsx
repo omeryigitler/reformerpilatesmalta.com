@@ -6,6 +6,7 @@ import { Calendar, Users, TrendingUp, Download, ChevronDown, Check } from "lucid
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Slot, UserType } from "../types";
+import { getTodayDate } from "../utils/helpers";
 
 export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots: Slot[], users: UserType[], currentLogo: string }) => {
     const [isMounted, setIsMounted] = React.useState(false);
@@ -61,7 +62,7 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
 
     const dateFilteredSlots = React.useMemo(() => {
         const now = new Date();
-        const todayStr = now.toISOString().split('T')[0];
+        const todayStr = getTodayDate();
 
         return normalizedSlots.filter(slot => {
             if (!slot?.date) return false;
@@ -203,7 +204,7 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
             styles: { fontSize: 8 }
         });
 
-        doc.save(`report-${new Date().toISOString().split('T')[0]}.pdf`);
+        doc.save(`report-${getTodayDate()}.pdf`);
     };
 
 

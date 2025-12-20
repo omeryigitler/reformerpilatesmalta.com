@@ -7,6 +7,7 @@ import { useNotification } from '../context/NotificationContext';
 import { Modal } from './Modal';
 import emailjs from '@emailjs/browser';
 import { registerUserAuth, loginUserAuth, resetPasswordAuth, getUserProfile } from '../services/pilatesService';
+import { getTodayDate } from '../utils/helpers';
 
 interface UserPanelProps {
     existingUsers: UserType[];
@@ -76,7 +77,7 @@ export const UserPanel = ({ existingUsers, addUser, onLogin, activePanel, setAct
             firstName: userForm.firstName.trim(),
             lastName: userForm.lastName.trim(),
             phone: phoneInput,
-            registered: new Date().toISOString().substring(0, 10)
+            registered: getTodayDate()
         };
 
         try {

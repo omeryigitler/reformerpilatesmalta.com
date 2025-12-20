@@ -1169,9 +1169,8 @@ export const AdminPanel = ({
                                     .filter(s => {
                                         if (bookingDateFilter === 'all') return true;
 
-                                        const slotDate = new Date(s.date);
-                                        const now = new Date();
-                                        const todayStr = now.toISOString().split('T')[0];
+                                        const todayStr = getTodayDate();
+                                        const now = new Date(); // Only used for Week/Time comparision if needed, but 'today' comparison must use standardized string
 
                                         if (bookingDateFilter === 'today') {
                                             return s.date === todayStr;

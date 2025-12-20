@@ -10,7 +10,7 @@ import {
     getDoc
 } from "firebase/firestore";
 import { Slot, UserType } from "../types";
-import { convertTime12to24 } from "../utils/helpers";
+import { convertTime12to24, getTodayDate } from "../utils/helpers";
 
 // --- X. GEÇMİŞ REZERVASYONLARI GÜNCELLEME ---
 export const updateExpiredSlots = async (slots: Slot[]) => {
@@ -163,7 +163,7 @@ export const registerUserAuth = async (user: UserType) => {
     const newUserWithDate = {
         ...user,
         uid: firebaseUser.uid, // UID'yi de ekleyelim, dursun.
-        registered: new Date().toISOString().substring(0, 10)
+        registered: getTodayDate()
     };
 
     // Şifreyi Firestore'a açık kaydetmeyelim! (Güvenlik)
@@ -208,7 +208,7 @@ export const registerUser = async (user: UserType) => {
     // sadece veri tabanına kayıt açmak (Authsuz) gerekir.
 
     // Geçici olarak eski usul devam:
-    const newUserWithDate = { ...user, registered: new Date().toISOString().substring(0, 10) };
+    const newUserWithDate = { ...user, registered: getTodayDate() };
     // Eski sistemde mail key idi, yeni sistemde UID key olmalı.
     // Admin panelinden eklenenlerde UID olmadığı için mecburen email kullanıyoruz.
     await setDoc(doc(db, "users", user.email), newUserWithDate);
