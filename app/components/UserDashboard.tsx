@@ -42,7 +42,11 @@ export const UserDashboard = ({
         .filter(slot => {
             if (slot.status === 'Completed') return false;
             // Double check for logic consistency - futureSlots already filters past time
-            if (slot.bookedByEmail) return slot.bookedByEmail === loggedInUser.email;
+
+            // Standardized Email Matching (Case-insensitive)
+            if (slot.bookedByEmail) {
+                return slot.bookedByEmail.toLowerCase() === loggedInUser.email.toLowerCase();
+            }
 
             // Fallback for old data (Robust matching)
             if (!slot.bookedBy) return false;

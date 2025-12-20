@@ -152,7 +152,7 @@ export const AdminPanel = ({
                 ...slot,
                 status: 'Booked',
                 bookedBy: `${fullName} (Admin)`,
-                bookedByEmail: user.email
+                bookedByEmail: user.email.trim().toLowerCase()
             });
 
             // 2. Send Email Notification
@@ -187,7 +187,7 @@ export const AdminPanel = ({
 
     const handleAssignSlot = async () => {
         if (!assigningSlot || !selectedUserEmailToAssign) return;
-        const userToAssign = users.find(u => u.email === selectedUserEmailToAssign);
+        const userToAssign = users.find(u => u.email.toLowerCase() === selectedUserEmailToAssign.toLowerCase());
         if (!userToAssign) return;
 
         const success = await performBooking(assigningSlot, userToAssign);
