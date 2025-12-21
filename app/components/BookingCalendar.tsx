@@ -96,7 +96,7 @@ export const BookingCalendar = ({ slots, onSelectDate, selectedDate }: { slots: 
             const isSelected = dateStr === selectedDate;
             const isPast = isPastDate(dateStr);
 
-            const baseClass = "p-2 md:p-4 rounded-full text-center font-bold transition-all duration-200 text-sm md:text-base flex items-center justify-center aspect-square";
+            const baseClass = "w-full aspect-square max-w-[40px] md:max-w-[48px] rounded-full flex items-center justify-center font-bold transition-all duration-200 text-sm md:text-base mx-auto";
             let colorClass = 'text-gray-700 hover:bg-gray-100 cursor-pointer';
 
             if (isPast) {
@@ -158,7 +158,7 @@ export const BookingCalendar = ({ slots, onSelectDate, selectedDate }: { slots: 
                 </div>
 
                 {/* HARDCODED HEADERS (FORCE RE-RENDER) TO ENSURE MON START */}
-                <div className="grid grid-cols-7 gap-1 md:gap-2">
+                <div className="grid grid-cols-7 gap-1 md:gap-2 justify-items-center items-center">
                     <div className="text-center text-xs md:text-sm font-bold text-gray-500 py-1 md:py-2 border-b-2 border-[#CE8E94]/30">Mon</div>
                     <div className="text-center text-xs md:text-sm font-bold text-gray-500 py-1 md:py-2 border-b-2 border-[#CE8E94]/30">Tue</div>
                     <div className="text-center text-xs md:text-sm font-bold text-gray-500 py-1 md:py-2 border-b-2 border-[#CE8E94]/30">Wed</div>
@@ -168,7 +168,7 @@ export const BookingCalendar = ({ slots, onSelectDate, selectedDate }: { slots: 
                     <div className="text-center text-xs md:text-sm font-bold text-gray-500 py-1 md:py-2 border-b-2 border-[#CE8E94]/30">Sun</div>
                 </div>
 
-                <div className="grid grid-cols-7 gap-1 md:gap-3 xl:gap-4">
+                <div className="grid grid-cols-7 gap-1 md:gap-3 xl:gap-4 justify-items-center items-center">
                     {renderDays()}
                 </div>
                 <div className="pt-4 flex justify-center gap-6 text-sm text-gray-600">
