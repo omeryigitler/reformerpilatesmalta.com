@@ -161,11 +161,17 @@ export const AdminPanel = ({
             });
 
             // 2. Send Email Notification
-            showNotification('Slot assigned! Sending email...', 'info');
+            // Check if it's a past slot (Silent Restoration)
+            const isPast = isPastSlot(slot.date, slot.time);
 
-            await sendUserBookingConfirmation(user, slot);
+            if (!isPast) {
+                showNotification('Slot assigned! Sending email...', 'info');
+                await sendUserBookingConfirmation(user, slot);
+                showNotification(`Slot assigned and email sent to ${user.firstName} !`, 'success');
+            } else {
+                showNotification(`Slot restored (Completed) without email to ${user.firstName}.`, 'success');
+            }
 
-            showNotification(`Slot assigned and email sent to ${user.firstName} !`, 'success');
             return true;
         } catch (error) {
             console.error(error);
@@ -375,8 +381,12 @@ export const AdminPanel = ({
                     const slotId = `${slot.date}_${slot.time}`;
 
                     // Check if slot is occupied (Booked/Active) to notify user
+                    // Check if slot is occupied (Booked/Active) to notify user
                     const isOccupied = slot.status === 'Booked' || slot.status === 'Active';
-                    if (isOccupied) {
+                    const isPast = isPastSlot(slot.date, slot.time);
+
+                    // Only send email if occupied AND in the future
+                    if (isOccupied && !isPast) {
                         // Attempt to find user to notify using robust matching
                         const bookedName = slot.bookedBy ? slot.bookedBy.replace(' (Admin)', '').trim().toLowerCase() : '';
 

@@ -1,11 +1,17 @@
 "use client";
 
-import React from "react";
-import { Upload } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Upload, Image as ImageIcon } from "lucide-react";
 import Image from "next/image";
 
 export const FileUploadInput = ({ label, onChange, previewUrl }: { label: string, onChange: (file: File) => void, previewUrl: string }) => {
     const inputId = `file-input-${label.replace(/\s/g, '-')}`;
+    const [imgError, setImgError] = useState(false);
+
+    useEffect(() => {
+        setImgError(false);
+    }, [previewUrl]);
+
     return (
         <div className="space-y-2">
             <label className="block text-sm font-bold text-gray-600 mb-2">{label}</label>
@@ -29,8 +35,19 @@ export const FileUploadInput = ({ label, onChange, previewUrl }: { label: string
                     className="hidden"
                 />
                 {previewUrl && (
-                    <div className="relative w-16 h-16 rounded-xl overflow-hidden border-4 border-[#CE8E94]/30 shadow-md">
-                        <Image src={previewUrl} alt="Preview" fill className="object-cover" />
+                    <div className="relative w-16 h-16 rounded-xl overflow-hidden border-4 border-[#CE8E94]/30 shadow-md bg-gray-50 flex items-center justify-center">
+                        {!imgError ? (
+                            <img
+                                src={previewUrl}
+                                alt="Preview"
+                                className="w-full h-full object-cover"
+                                onError={() => setImgError(true)}
+                            />
+                        ) : (
+                            <div className="flex flex-col items-center justify-center animate-pulse">
+                                <ImageIcon className="w-6 h-6 text-[#CE8E94]/40" />
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
