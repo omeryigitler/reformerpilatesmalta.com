@@ -488,23 +488,25 @@ export const AdminPanel = ({
                     const newSlot: Slot = { ...editingSlot, date: editFormData.date, time: editFormData.time.trim() };
                     await setDoc(doc(db, "slots", `${newSlot.date}_${newSlot.time}`), newSlot);
 
-                    // 4. Notify the user (Robust matching)
-                    if (editingSlot.bookedBy) {
-                        const bookedName = editingSlot.bookedBy.replace(' (Admin)', '').trim().toLowerCase();
-                        const user = users.find(u => {
-                            if (editingSlot.bookedByEmail) return u.email === editingSlot.bookedByEmail;
+                    // Standardized User Matching (Rule 3 & 4)
+                    const bookedByEmail = editingSlot.bookedByEmail ? editingSlot.bookedByEmail.trim().toLowerCase() : '';
+                    const bookedByName = editingSlot.bookedBy ? editingSlot.bookedBy.replace(' (Admin)', '').trim().toLowerCase() : '';
 
-                            const bookedName = editingSlot.bookedBy!.replace(' (Admin)', '').trim().toLowerCase();
-                            const fullName = `${u.firstName} ${u.lastName}`.trim().toLowerCase();
-                            return fullName === bookedName;
-                        });
+                    const user = users.find(u => {
+                        // Priority 1: Email Match (Unique ID)
+                        if (bookedByEmail && u.email.trim().toLowerCase() === bookedByEmail) return true;
 
-                        if (user) {
-                            showNotification(`Booking moved. Notifying ${user.firstName}...`, 'info');
-                            await sendUserRescheduleConfirmation(user, newSlot);
-                        } else {
-                            console.warn(`Could not find user for email notification: ${bookedName}`);
-                        }
+                        // Priority 2: Fallback to Name Match (Legacy support)
+                        const uName = `${u.firstName} ${u.lastName}`.trim().toLowerCase();
+                        return !bookedByEmail && uName === bookedByName;
+                    });
+
+                    if (user) {
+                        showNotification(`Booking moved. Notifying ${user.firstName}...`, 'info');
+                        await sendUserRescheduleConfirmation(user, newSlot);
+                    } else {
+                        console.warn(`[Standardization Fail] Could not match user for notification. Slot Info:`, editingSlot);
+                        // Optional: Notification to Admin that email failed
                     }
                 } else {
                     // Regular move for Available slots (Delete old, create new)
