@@ -49,14 +49,14 @@ const ConfirmModal = ({ state, hideConfirm }: { state: ConfirmState, hideConfirm
                     {state.showCancel && (
                         <Button
                             onClick={handleCancel}
-                            className="px-6 py-3 border border-gray-300 text-gray-700 bg-white rounded-xl font-bold hover:bg-gray-100 transition shadow-sm"
+                            className="px-6 py-3 border border-gray-300 text-gray-700 bg-white rounded-xl font-bold hover:bg-gray-50 transition-all shadow-sm transform active:scale-95"
                         >
                             Cancel
                         </Button>
                     )}
                     <Button
                         onClick={handleConfirm}
-                        className="px-6 py-3 bg-[#CE8E94] text-white rounded-xl font-bold hover:bg-[#B57A80] transition shadow-lg transform active:scale-95"
+                        className="px-6 py-3 bg-[#CE8E94] text-white rounded-xl font-bold hover:bg-[#B57A80] transition-all shadow-lg transform active:scale-95"
                     >
                         {state.confirmText}
                     </Button>

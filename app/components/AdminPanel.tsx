@@ -1124,7 +1124,7 @@ export const AdminPanel = ({
 
                 {/* Book For Member Modal (Reverse Flow) */}
                 {bookingForMember && (
-                    <Modal onClose={() => setBookingForMember(null)}>
+                    <Modal onClose={() => setBookingForMember(null)} showCloseIcon={false}>
                         <div className="space-y-6">
                             <div className="text-center border-b border-gray-100 pb-4">
                                 <h2 className="text-xl font-bold text-gray-800">Book for {bookingForMember?.firstName}</h2>
@@ -1205,6 +1205,12 @@ export const AdminPanel = ({
                                     )}
                                 {/* 7. Delete Actions (Danger Zone) */}
                             </div>
+                            <Button
+                                onClick={() => setBookingForMember(null)}
+                                className="w-full py-4 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-xl font-bold transition-all mt-4"
+                            >
+                                Close
+                            </Button>
                         </div>
                     </Modal>
                 )}
@@ -1384,7 +1390,7 @@ export const AdminPanel = ({
                                 <div className="flex gap-3 pt-2">
                                     <Button
                                         onClick={() => setEditingSlot(null)}
-                                        className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition"
+                                        className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-all"
                                     >
                                         Cancel
                                     </Button>
@@ -1505,7 +1511,7 @@ export const AdminPanel = ({
                 }
                 {/* History Modal */}
                 {historyViewer && (
-                    <Modal onClose={() => setHistoryViewer(null)}>
+                    <Modal onClose={() => setHistoryViewer(null)} showCloseIcon={false}>
                         <div className="space-y-4">
                             <div className="text-center border-b border-gray-100 pb-4">
                                 <h2 className="text-2xl font-bold text-gray-900">{historyViewer.type} Bookings</h2>
@@ -1548,7 +1554,7 @@ export const AdminPanel = ({
                             </div>
                             <Button
                                 onClick={() => setHistoryViewer(null)}
-                                className="w-full py-4 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-xl font-bold"
+                                className="w-full py-4 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-xl font-bold transition-all"
                             >
                                 Close
                             </Button>
