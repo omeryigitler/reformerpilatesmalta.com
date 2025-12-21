@@ -597,7 +597,7 @@ export const AdminPanel = ({
                                 </div>
                             </div>
                             <Switch
-                                checked={managementState.holidayMode}
+                                checked={managementState.holidayMode || false}
                                 onCheckedChange={(val) => setManagementState(prev => ({ ...prev, holidayMode: val }))}
                                 className="data-[state=checked]:bg-[#CE8E94]"
                             />
