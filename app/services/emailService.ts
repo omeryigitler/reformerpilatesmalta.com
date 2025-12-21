@@ -128,6 +128,8 @@ export const sendUserRescheduleConfirmation = async (user: UserType, newSlot: Sl
             message: `Your booking has been moved to ${formatDateDisplay(newSlot.date)} at ${newSlot.time}.`
         };
 
+        console.log("DEBUG: Sending Reschedule Email Payload:", templateParams); // DEBUG LOG
+
         await emailjs.send(SERVICE_ID, USER_TEMPLATE, templateParams, PUBLIC_KEY);
         console.log(`[EmailService] User Confirmation Sent: Reschedule`);
     } catch (error) {
