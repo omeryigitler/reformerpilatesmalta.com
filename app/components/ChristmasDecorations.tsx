@@ -7,31 +7,31 @@ export const Snowfall = () => (
         <style>{`
             @keyframes snowfall {
                 0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 0; }
-                20% { opacity: 0.8; }
-                80% { opacity: 0.6; }
-                100% { transform: translateY(110vh) translateX(30px) rotate(360deg); opacity: 0; }
+                10% { opacity: 0.95; }
+                90% { opacity: 0.8; }
+                100% { transform: translateY(110vh) translateX(50px) rotate(360deg); opacity: 0; }
             }
             .snowflake {
                 position: absolute;
                 top: -10px;
                 background: white;
                 border-radius: 50%;
-                filter: blur(1.5px);
+                filter: blur(1px);
                 animation: snowfall linear infinite;
-                box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+                box-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
             }
         `}</style>
-        {[...Array(40)].map((_, i) => (
+        {[...Array(120)].map((_, i) => (
             <div
                 key={i}
                 className="snowflake"
                 style={{
                     left: `${Math.random() * 100}%`,
-                    width: `${Math.random() * 4 + 2}px`,
-                    height: `${Math.random() * 4 + 2}px`,
-                    animationDuration: `${Math.random() * 8 + 12}s`,
+                    width: `${Math.random() * 8 + 2}px`,
+                    height: `${Math.random() * 8 + 2}px`,
+                    animationDuration: `${Math.random() * 5 + 8}s`,
                     animationDelay: `${Math.random() * 15}s`,
-                    opacity: Math.random() * 0.4 + 0.2
+                    opacity: Math.random() * 0.6 + 0.4
                 }}
             />
         ))}
@@ -40,26 +40,26 @@ export const Snowfall = () => (
 
 export const SantaHat = ({ className = "" }: { className?: string }) => (
     <div className={`pointer-events-none select-none z-[999] ${className}`}>
-        <svg viewBox="0 0 100 80" className="w-10 h-10 drop-shadow-[0_4px_6px_rgba(0,0,0,0.2)] overflow-visible">
-            {/* Red hat body - using brand-inspired pinkish red */}
+        <svg viewBox="0 0 100 80" className="w-full h-full drop-shadow-2xl overflow-visible filter">
+            {/* The classic red hat body */}
             <path
-                d="M50 5 L15 65 L85 65 Z"
-                fill="#CE8E94"
-                stroke="#B57A80"
-                strokeWidth="0.5"
+                d="M50 5 C30 5, 10 30, 15 65 L85 65 C90 30, 70 5, 50 5 Z"
+                fill="#ff1a1a"
+                stroke="#d40000"
+                strokeWidth="1.5"
             />
-            {/* White trim - slightly off-white for premium feel */}
+            {/* The white fluff trim */}
             <rect
-                x="10" y="60" width="80" height="15" rx="7"
-                fill="#f8f8f8"
-                className="opacity-95"
+                x="8" y="60" width="84" height="18" rx="9"
+                fill="#ffffff"
+                filter="drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
             />
-            {/* Pom pom */}
+            {/* The white pom pom */}
             <circle
-                cx="50" cy="8" r="8"
+                cx="50" cy="8" r="9"
                 fill="#ffffff"
                 className="animate-pulse"
-                style={{ animationDuration: '3s' }}
+                style={{ animationDuration: '2s' }}
             />
         </svg>
     </div>
