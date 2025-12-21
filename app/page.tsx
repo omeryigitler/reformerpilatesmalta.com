@@ -38,6 +38,7 @@ import dynamic from 'next/dynamic';
 // --- TYPE DEFINITIONS ---
 import { Slot, UserType, NotificationType, NotificationState } from "./types";
 import { getTodayDate, sortSlots, formatDateDisplay } from "./utils/helpers";
+import { sendUserBookingConfirmation, sendUserCancellationAlert, sendAdminAlert } from "./services/emailService";
 
 // --- DYNAMIC IMPORTS ---
 const AdminPanel = dynamic(() => import('./components/AdminPanel').then(mod => mod.AdminPanel), {
