@@ -35,7 +35,7 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
 
     // 1. Tarih Filtreleme Logic (Düzeltildi & Robust)
     // Helper: Normalize date to YYYY-MM-DD checks
-    const normalizeDate = (dateVal: any): string => {
+    const normalizeDate = (dateVal: string | number | Date): string => {
         if (!dateVal) return '';
         const str = String(dateVal).trim();
         // Handle DD.MM.YYYY
@@ -58,7 +58,7 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
             ...slot,
             date: normalizeDate(slot.date) // Standardize to YYYY-MM-DD once
         }));
-    }, [slots]);
+    }, [slots]); // methods inside are stable
 
     const dateFilteredSlots = React.useMemo(() => {
         const now = new Date();
@@ -97,7 +97,7 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
             }
             return true;
         });
-    }, [slots, dateFilter, customStartDate, customEndDate]);
+    }, [dateFilter, customStartDate, customEndDate, normalizedSlots]);
 
     // 2. Statü Filtreleme & İstatistikler
     const filteredSlots = React.useMemo(() => {
@@ -193,7 +193,7 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
         });
 
         // Detaylı Liste
-        const finalY = (doc as any).lastAutoTable.finalY + 15;
+        const finalY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
         doc.setFontSize(14).setTextColor(60).text("Session Details", 14, finalY);
 
         autoTable(doc, {
@@ -220,7 +220,6 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <h3 className="text-2xl font-bold text-gray-800">Performance Overview</h3>
                 <div className="flex flex-wrap gap-3 w-full lg:w-auto">
-                    {/* Tarih Filtresi */}
                     {/* Tarih Filtresi */}
                     <div className="relative min-w-[160px] group">
                         <button
@@ -255,7 +254,6 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
                     </div>
 
                     {/* Statü Filtresi */}
-                    {/* Statü Filtresi */}
                     <div className="relative min-w-[160px] group">
                         <button
                             onClick={() => setIsFilterOpen(!isFilterOpen)}
@@ -270,7 +268,7 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
                                 <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200">
                                     {filterOptions.map(opt => (
                                         <div key={opt.value} onClick={() => {
-                                            setReportFilter(opt.value as any);
+                                            setReportFilter(opt.value as 'All' | 'Active' | 'Completed');
                                             setIsFilterOpen(false);
                                         }} className={`px-4 py-3 cursor-pointer flex items-center justify-between transition-colors duration-200
                                             ${reportFilter === opt.value
@@ -349,7 +347,7 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
     );
 };
 
-const StatCard = ({ title, value, icon, bg }: any) => (
+const StatCard = ({ title, value, icon, bg }: { title: string, value: string | number, icon: React.ReactNode, bg: string }) => (
     <div className="p-6 bg-white rounded-2xl shadow-sm border border-gray-100 flex justify-between items-start">
         <div>
             <p className="text-gray-500 text-sm">{title}</p>

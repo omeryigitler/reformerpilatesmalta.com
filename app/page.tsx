@@ -2,9 +2,8 @@
 "use client";
 
 // Deployment Trigger: FORCE_V10_RESTORE_SERIAL_003
-import React, { useState, useEffect, createContext, useContext, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { listenToSlots, listenToUsers, bookSlotTransaction, cancelBookingTransaction, registerUser, logoutUserAuth } from "./services/pilatesService";
-import { createPortal } from "react-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,28 +18,21 @@ import {
     Twitter,
     User,
     LogOut,
-    CheckCircle,
-    AlertTriangle,
-    Info,
-    AlertCircle,
-    Calendar,
     Tag,
     Sparkles,
 } from "lucide-react";
 import { db, auth } from "./firebase";
 import {
-    onAuthStateChanged,
-    setPersistence,
-    browserLocalPersistence
+    onAuthStateChanged, Unsubscribe
 } from "firebase/auth";
-import { collection, doc, setDoc, onSnapshot, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
+import { doc, onSnapshot, getDoc } from "firebase/firestore";
 import dynamic from 'next/dynamic';
 
 // --- TYPE DEFINITIONS ---
-import { Slot, UserType, NotificationType, NotificationState } from "./types";
-import { getTodayDate, sortSlots, formatDateDisplay } from "./utils/helpers";
-import { sendUserBookingConfirmation, sendUserCancellationAlert, sendAdminAlert } from "./services/emailService";
-import { Snowfall, ChristmasTree } from "./components/ChristmasDecorations";
+import { Slot, UserType } from "./types";
+import { sortSlots, formatDateDisplay } from "./utils/helpers";
+import { sendUserBookingConfirmation, sendAdminAlert } from "./services/emailService";
+import { Snowfall, ChristmasTree, SantaHat } from "./components/ChristmasDecorations";
 
 // --- DYNAMIC IMPORTS ---
 const AdminPanel = dynamic(() => import('./components/AdminPanel').then(mod => mod.AdminPanel), {
@@ -53,7 +45,7 @@ const UserPanel = dynamic(() => import('./components/UserPanel').then(mod => mod
 
 // --- INITIAL DATA CONSTANTS ---
 const defaultHero = '/default-hero.jpg';
-const defaultLogo = '/icon.jpg';
+const defaultLogo = '/logo.jpg';
 
 const initialData = {
     heroTitle: 'Breathe. Move. Transform.',
@@ -103,12 +95,13 @@ function PilatesMaltaByGozde() {
     const [isClient, setIsClient] = useState(false);
 
     const [loggedInUser, setLoggedInUser] = useState<UserType | null>(null);
-    const [authModal, setAuthModal] = useState<string | null>(null); // Lifted state for UserPanel
+    const [authModal, setAuthModal] = useState<string | null>(null);
+    const [showChristmasTree, setShowChristmasTree] = useState(true);
 
     const [managementState, setManagementState] = useState(initialData);
     const [users, setUsers] = useState<UserType[]>([]);
     const [slots, setSlots] = useState<Slot[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+
 
     const [isAuthChecking, setIsAuthChecking] = useState(true);
 
@@ -130,7 +123,7 @@ function PilatesMaltaByGozde() {
     // --- LOAD DATA & AUTH FROM FIRESTORE ON STARTUP ---
     useEffect(() => {
         setIsClient(true);
-        let unsubAuth: any;
+        let unsubAuth: Unsubscribe | undefined;
 
         // 2. LocalStorage kontrolünü isClient true olduktan sonra yap
         const initAuth = async () => {
@@ -176,7 +169,6 @@ function PilatesMaltaByGozde() {
         // Subscribe to Slots (Needed for everyone)
         const slotsUnsub = listenToSlots((loadedSlots) => {
             setSlots(sortSlots(loadedSlots));
-            setIsLoading(false);
         });
 
         // Subscribe to Management (Needed for Logo/branding)
@@ -260,21 +252,13 @@ function PilatesMaltaByGozde() {
             setLoggedInUser(null);
             setCurrentView('main');
             showNotification('Successfully logged out.', 'info');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Logout error:", error);
             showNotification("Error logging out", "error");
         }
     }
 
-    const addUser = async (user: UserType) => {
-        try {
-            await registerUser(user);
-        } catch (e: any) {
-            console.error(e);
-            showNotification(`Error adding user: ${e.message}`, 'error');
-            throw e;
-        }
-    };
+
 
     const handleBookSlot = async (slotDate: string, slotTime: string) => {
         if (!loggedInUser) return showNotification('Please login first!', 'error');
@@ -305,13 +289,11 @@ function PilatesMaltaByGozde() {
             // --- SEND EMAIL NOTIFICATIONS ---
             // --- SEND EMAIL NOTIFICATIONS ---
             // 1. Email to User
-            await sendUserBookingConfirmation(loggedInUser, { date: slotDate, time: slotTime } as any);
-
-            // 2. Email to Admins
-            await sendAdminAlert('New Booking', loggedInUser, { date: slotDate, time: slotTime } as any);
+            await sendUserBookingConfirmation(loggedInUser, { date: slotDate, time: slotTime } as Slot);
+            await sendAdminAlert('New Booking', loggedInUser, { date: slotDate, time: slotTime } as Slot);
 
             showNotification(`Booking confirmed for ${slotTime} on ${formatDateDisplay(slotDate)}! Confirmation email sent.`, 'success');
-        } catch (e: any) {
+        } catch (e: unknown) {
             showNotification(typeof e === 'string' ? e : 'Error booking slot', 'error');
         }
     };
@@ -327,7 +309,7 @@ function PilatesMaltaByGozde() {
                 try {
                     await cancelBookingTransaction(slotDate, slotTime);
                     showNotification('Booking cancelled successfully.', 'success');
-                } catch (e) {
+                } catch (e: unknown) {
                     showNotification('Error cancelling booking', 'error');
                 }
             },
@@ -373,19 +355,22 @@ function PilatesMaltaByGozde() {
 
 
                 {/* SAFE HEADER SECTION (Logo + Login/Register) */}
-                <div id="main-header" className="w-full flex flex-col sm:flex-row justify-between items-center mb-10 border-b border-[#CE8E94]/20 pb-8 gap-6 sm:gap-0 transition-all duration-300">
+                <div id="main-header" className="w-full flex flex-col sm:flex-row justify-between items-center mb-10 border-b border-[#CE8E94]/20 pb-8 gap-6 sm:gap-0">
                     <div className="border-4 border-white rounded-full shadow-xl inline-block hover:scale-105 transition-transform duration-500 overflow-hidden bg-white">
-
                         <img
                             src={managementState.logo || defaultLogo}
                             alt="Logo"
-                            className="w-20 h-20 rounded-full object-cover"
+                            className="w-20 h-20 rounded-full object-cover shadow-sm"
                             onError={(e) => {
                                 const target = e.target as HTMLImageElement;
-                                target.src = defaultLogo;
+                                if (!target.src.includes(defaultLogo)) {
+                                    target.src = defaultLogo;
+                                } else {
+                                    // If fallback also fails, hide or show error placeholder to prevent loop
+                                    target.style.display = 'none';
+                                }
                             }}
                         />
-
                     </div>
 
 
@@ -409,8 +394,6 @@ function PilatesMaltaByGozde() {
                             </div>
                         ) : (
                             <UserPanel
-                                existingUsers={users}
-                                addUser={addUser}
                                 onLogin={handleSetLoggedInUser}
                                 activePanel={authModal}
                                 setActivePanel={setAuthModal}
@@ -422,19 +405,29 @@ function PilatesMaltaByGozde() {
                 <div className="flex flex-col lg:flex-row-reverse items-center gap-16 lg:gap-24">
 
                     <div className="w-full lg:w-1/2 flex justify-center">
-                        <div className="relative group w-full max-w-md lg:max-w-full">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-[#CE8E94] to-pink-200 rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
-                            {managementState.heroImage && (
-                                <img
-                                    src={managementState.heroImage || defaultHero}
-                                    alt="Hero"
-                                    onError={(e) => {
-                                        const target = e.target as HTMLImageElement;
-                                        target.src = defaultHero;
-                                    }}
-                                    className="relative w-full h-auto max-h-[600px] object-contain rounded-[2rem] shadow-2xl transform transition duration-500 hover:scale-[1.01]"
-                                />
-                            )}
+                        <div className="relative group w-full max-w-md lg:max-w-full flex justify-center">
+                            {/* Wrapper for tight logo/hat coupling - User specific structure */}
+                            <div className="relative inline-block mt-5"> {/* eye-wrapper equivalent */}
+                                <div className="absolute -inset-1 bg-gradient-to-r from-[#CE8E94] to-pink-200 rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+                                {(managementState.heroImage || managementState.holidayMode) && (
+                                    <img
+                                        src={managementState.holidayMode ? '/holiday-logo.png' : (managementState.heroImage || defaultHero)}
+                                        alt="Hero"
+                                        onError={(e) => {
+                                            const target = e.target as HTMLImageElement;
+                                            if (!target.src.includes(defaultHero)) {
+                                                target.src = defaultHero;
+                                            } else {
+                                                target.style.display = 'none';
+                                            }
+                                        }}
+                                        className="relative block w-full h-auto max-h-[600px] object-contain rounded-[2rem] shadow-2xl transition-transform duration-500 group-hover:scale-[1.01]"
+                                    />
+                                )}
+                                {managementState.holidayMode && (
+                                    <SantaHat className="absolute -top-[2%] left-[27%] w-[22%] -rotate-[22deg] z-[99] transition-all duration-[400ms] ease-[cubic-bezier(0.175,0.885,0.32,1.275)] origin-bottom pointer-events-none group-hover:-rotate-[42deg] group-hover:-translate-y-[5px] group-hover:scale-105" />
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -570,7 +563,9 @@ function PilatesMaltaByGozde() {
             </a>
 
             {managementState.holidayMode && <Snowfall />}
-            {managementState.holidayMode && <ChristmasTree />}
+            {managementState.holidayMode && showChristmasTree && (
+                <ChristmasTree onClick={() => setShowChristmasTree(false)} />
+            )}
         </div >
     );
 }

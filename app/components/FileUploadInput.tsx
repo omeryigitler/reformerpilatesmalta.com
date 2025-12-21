@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Upload } from "lucide-react";
+import Image from "next/image";
 
 export const FileUploadInput = ({ label, onChange, previewUrl }: { label: string, onChange: (file: File) => void, previewUrl: string }) => {
     const inputId = `file-input-${label.replace(/\s/g, '-')}`;
@@ -28,7 +29,9 @@ export const FileUploadInput = ({ label, onChange, previewUrl }: { label: string
                     className="hidden"
                 />
                 {previewUrl && (
-                    <img src={previewUrl} alt="Preview" className="w-16 h-16 object-cover rounded-xl border-4 border-[#CE8E94]/30 shadow-md" />
+                    <div className="relative w-16 h-16 rounded-xl overflow-hidden border-4 border-[#CE8E94]/30 shadow-md">
+                        <Image src={previewUrl} alt="Preview" fill className="object-cover" />
+                    </div>
                 )}
             </div>
         </div>

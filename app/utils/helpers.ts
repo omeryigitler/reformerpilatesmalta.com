@@ -83,7 +83,9 @@ export const convertTime12to24 = (timeStr: string): string => {
     }
 
     const [time, modifier] = timeStr.trim().split(' ');
-    let [hours, minutes] = time.split(':');
+    const parts = time.split(':');
+    let hours = parts[0];
+    const minutes = parts[1];
 
     if (hours === '12') {
         hours = '00';

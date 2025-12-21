@@ -1,4 +1,4 @@
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import {
     collection,
     doc,
@@ -9,6 +9,15 @@ import {
     setDoc,
     getDoc
 } from "firebase/firestore";
+import {
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut,
+    sendPasswordResetEmail,
+    setPersistence,
+    browserLocalPersistence,
+    updateProfile
+} from "firebase/auth";
 import { Slot, UserType } from "../types";
 import { convertTime12to24, getTodayDate } from "../utils/helpers";
 
@@ -116,7 +125,7 @@ export const bookSlotTransaction = async (slotDate: string, slotTime: string, us
             });
         });
         return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Rezervasyon hatası:", error);
         throw error; // Hatayı yukarı fırlat ki UI gösterebilsin
     }
@@ -140,8 +149,7 @@ export const cancelBookingTransaction = async (slotDate: string, slotTime: strin
 };
 
 // --- 5. KULLANICI İŞLEMLERİ (AUTH + FIRESTORE) ---
-import { auth } from "../firebase";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, setPersistence, browserLocalPersistence, updateProfile } from "firebase/auth";
+// --- 5. KULLANICI İŞLEMLERİ (AUTH + FIRESTORE) ---
 
 export const registerUserAuth = async (user: UserType) => {
     // Force persistence to LOCAL specifically

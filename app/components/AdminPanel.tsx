@@ -1,17 +1,17 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { LogOut, Calendar, Users, TrendingUp, Edit3, Star, Award, Mail, Database, Clock, Plus, Trash2, SwitchCamera, Home, UserPlus, ShieldCheck, ChevronDown, Check, Search, FileText, ExternalLink, BadgeCheck, MessageSquareText, Phone, CalendarPlus, MapPin, ChevronRight, ArrowRight, User, AlertTriangle, Sparkles } from 'lucide-react';
+import { LogOut, Calendar, Users, TrendingUp, Edit3, Star, Award, Mail, Clock, Plus, Trash2, Home, UserPlus, ShieldCheck, ChevronDown, Check, Search, FileText, MessageSquareText, CalendarPlus, User, Sparkles } from 'lucide-react';
 import { Switch } from "@/components/ui/switch";
 import { Slot, UserType, ManagementState } from '../types';
 import { db } from '../firebase';
 import { doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { useNotification } from '../context/NotificationContext';
 import { useConfirm } from '../context/ConfirmContext';
-import { formatDateDisplay, getTodayDate, convertTime12to24, isPastSlot } from '../utils/helpers';
+import { formatDateDisplay, getTodayDate, isPastSlot } from '../utils/helpers';
 import { BookingCalendar } from './BookingCalendar';
-import { updateExpiredSlots } from '../services/pilatesService';
+
 import { AdminAnalytics } from './AdminAnalytics';
 import { FileUploadInput } from './FileUploadInput';
 import { Modal } from './Modal';
@@ -45,18 +45,13 @@ export const AdminPanel = ({
     const [newSlotTime, setNewSlotTime] = useState('');
     const [newSlotDate, setNewSlotDate] = useState('');
 
-    React.useEffect(() => {
+    useEffect(() => {
         setNewSlotDate(getTodayDate());
     }, []);
 
     // NEW: Auto-update removed for stability. 
     // Manual trigger added in Management tab.
-    const handleCleanupExpiredSlots = () => {
-        showConfirm("Are you sure you want to mark all past 'Booked' slots as 'Completed'?", () => {
-            updateExpiredSlots(slots);
-            showNotification("Cleanup process started.", "success");
-        });
-    };
+
 
     // NEW: Date Filter State
     const [dateFilter, setDateFilter] = useState<'All' | 'Today' | 'Week' | 'Month' | 'Custom'>('Today');
@@ -68,18 +63,16 @@ export const AdminPanel = ({
     const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Completed' | 'Available'>('All');
     const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
 
-    const filteredSlots = React.useMemo(() => {
-        const now = new Date();
-        // FIXED: Use Malta-safe date instead of UTC ISO string (which lags 1 hour behind)
+    const { filteredSlots, groupedSlots } = useMemo(() => {
         const todayStr = getTodayDate();
+        const now = new Date();
 
-        return slots.filter(slot => {
+        const filtered = slots.filter(slot => {
             // 1. Status Filter
-            let statusMatch = true;
-
             const isActuallyCompleted = slot.status === 'Completed' || isPastSlot(slot.date, slot.time);
             const isActuallyActive = (slot.status === 'Booked' || slot.status === 'Active') && !isActuallyCompleted;
 
+            let statusMatch = true;
             if (statusFilter === 'All') statusMatch = true;
             else if (statusFilter === 'Active') statusMatch = isActuallyActive;
             else if (statusFilter === 'Completed') statusMatch = isActuallyCompleted;
@@ -94,13 +87,11 @@ export const AdminPanel = ({
             else if (dateFilter === 'Week') {
                 const sDate = new Date(slotDate);
                 const startOfWeek = new Date(now);
-                startOfWeek.setDate(now.getDate() - now.getDay() + 1); // Monday
+                startOfWeek.setDate(now.getDate() - now.getDay() + 1);
                 startOfWeek.setHours(0, 0, 0, 0);
-
                 const endOfWeek = new Date(startOfWeek);
-                endOfWeek.setDate(startOfWeek.getDate() + 6); // Sunday
+                endOfWeek.setDate(startOfWeek.getDate() + 6);
                 endOfWeek.setHours(23, 59, 59, 999);
-
                 dateMatch = sDate >= startOfWeek && sDate <= endOfWeek;
             }
             else if (dateFilter === 'Month') {
@@ -114,6 +105,14 @@ export const AdminPanel = ({
 
             return statusMatch && dateMatch;
         });
+
+        const grouped = filtered.reduce((groups, slot) => {
+            if (!groups[slot.date]) groups[slot.date] = [];
+            groups[slot.date].push(slot);
+            return groups;
+        }, {} as Record<string, Slot[]>);
+
+        return { filteredSlots: filtered, groupedSlots: grouped };
     }, [slots, statusFilter, dateFilter, customStartDate, customEndDate]);
 
     const [editingSlot, setEditingSlot] = useState<Slot | null>(null);
@@ -201,7 +200,7 @@ export const AdminPanel = ({
             "Confirm Booking"
         );
     };
-    const handleUpload = (field: string, file: File) => {
+    const handleUpload = (field: keyof ManagementState, file: File) => {
         if (!file) return;
         if (file.size > 800 * 1024) {
             showNotification('Image is too large! Please use an image under 800KB.', 'error');
@@ -211,7 +210,6 @@ export const AdminPanel = ({
         const reader = new FileReader();
         reader.onloadend = () => {
             const base64String = reader.result as string;
-            // @ts-ignore - dynamic key access
             setManagementState(prev => ({ ...prev, [field]: base64String }));
         };
         reader.onerror = () => {
@@ -305,9 +303,7 @@ export const AdminPanel = ({
         window.open(`mailto:${email}`, '_blank');
     };
 
-    // CRM HELPERS
     const getMemberStats = (email: string) => {
-        const userSlots = slots.filter(s => s.bookedBy && s.bookedBy.includes(users.find(u => u.email === email)?.firstName || ''));
         // A more robust check might be needed if names are not unique, but ID logic isn't fully there yet for 'bookedBy'.
         // Current logic relies on string containing Name.
         // Let's improve: The 'bookedBy' field stores "First Last" or "First Last (Admin)".
@@ -547,7 +543,7 @@ export const AdminPanel = ({
                             onClick={navigateToHome}
                             className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-xl text-sm font-bold hover:bg-gray-100 transition duration-300 flex items-center gap-2 w-full sm:w-auto justify-center relative group"
                         >
-                            {managementState.holidayMode && <SantaHat className="absolute -top-4 -left-4 w-9 h-9 -rotate-[25deg] z-20 drop-shadow-lg pointer-events-none group-hover:scale-110 transition-transform" />}
+                            {managementState.holidayMode && <SantaHat className="absolute -top-4 -left-3 w-8 h-8 -rotate-[15deg] z-20 transition-all duration-500 group-hover:-rotate-[35deg] group-hover:-translate-y-1" />}
                             <Home className="w-4 h-4" /> Home
                         </Button>
                         <Button
@@ -938,13 +934,7 @@ export const AdminPanel = ({
                                 {filteredSlots.length === 0 ? (
                                     <div className="text-center py-12 text-gray-400 italic">No slots found matching your filters.</div>
                                 ) : (
-                                    Object.entries(
-                                        filteredSlots.reduce((groups, slot) => {
-                                            if (!groups[slot.date]) groups[slot.date] = [];
-                                            groups[slot.date].push(slot);
-                                            return groups;
-                                        }, {} as Record<string, Slot[]>)
-                                    )
+                                    Object.entries(groupedSlots)
                                         .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime())
                                         .map(([date, slotsForDate]) => (
                                             <div key={date} className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100">
@@ -1140,7 +1130,7 @@ export const AdminPanel = ({
 
                                 {filteredUsers.length === 0 && (
                                     <div className="text-center py-12 text-gray-400">
-                                        No members found matching "{searchTerm}"
+                                        No members found matching &quot;{searchTerm}&quot;
                                     </div>
                                 )}
 
@@ -1161,7 +1151,7 @@ export const AdminPanel = ({
                                     {['today', 'week', 'all'].map((filter) => (
                                         <button
                                             key={filter}
-                                            onClick={() => setBookingDateFilter(filter as any)}
+                                            onClick={() => setBookingDateFilter(filter as 'today' | 'week' | 'all')}
                                             className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${bookingDateFilter === filter
                                                 ? 'bg-[#CE8E94] text-white shadow-md'
                                                 : 'bg-gray-100 text-gray-500 hover:bg-gray-200'

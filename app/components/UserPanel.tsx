@@ -10,14 +10,12 @@ import { getTodayDate } from '../utils/helpers';
 import { sendAdminAlert } from '../services/emailService';
 
 interface UserPanelProps {
-    existingUsers: UserType[];
-    addUser: (user: UserType) => Promise<void>;
     onLogin: (user: UserType) => void;
     activePanel: string | null;
     setActivePanel: (panel: string | null) => void;
 }
 
-export const UserPanel = ({ existingUsers, addUser, onLogin, activePanel, setActivePanel }: UserPanelProps) => {
+export const UserPanel = ({ onLogin, activePanel, setActivePanel }: UserPanelProps) => {
     const { showNotification } = useNotification();
     // activePanel state is now managed by parent
     const setActiveUserPanel = setActivePanel; // Alias for minimal code change below, or just replace usages.
@@ -92,13 +90,14 @@ export const UserPanel = ({ existingUsers, addUser, onLogin, activePanel, setAct
             onLogin(newUser);
             setActiveUserPanel(null);
             setUserForm({ firstName: '', lastName: '', phone: '', email: '', password: '', confirmPassword: '' });
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Registration Error:", error);
             let msg = 'Registration failed.';
-            if (error.code === 'auth/email-already-in-use') {
+            const err = error as { code?: string; message: string };
+            if (err.code === 'auth/email-already-in-use') {
                 msg = 'This email is already registered.';
             } else {
-                msg = error.message;
+                msg = err.message || msg;
             }
             setRegisterError(msg);
         } finally {
@@ -136,10 +135,11 @@ export const UserPanel = ({ existingUsers, addUser, onLogin, activePanel, setAct
                 showNotification('User profile not found in database.', 'error');
             }
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Login error:", error);
             let msg = 'Connection error. Please try again.';
-            if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+            const err = error as { code?: string };
+            if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
                 msg = 'Invalid email or password.';
             }
             setLoginError(msg);
@@ -163,11 +163,12 @@ export const UserPanel = ({ existingUsers, addUser, onLogin, activePanel, setAct
             await resetPasswordAuth(forgotEmail);
             setResetSuccess('Reset link sent! Please check your inbox and SPAM folder.');
             setForgotEmail('');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Reset error:", error);
-            if (error.code === 'auth/user-not-found') {
+            const err = error as { code?: string };
+            if (err.code === 'auth/user-not-found') {
                 setResetError('No user found with this email address.');
-            } else if (error.code === 'auth/invalid-email') {
+            } else if (err.code === 'auth/invalid-email') {
                 setResetError('Invalid email format. Please check your email.');
             } else {
                 setResetError('Error sending email. Please try again later.');

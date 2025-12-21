@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { User, LogOut, Calendar, Clock, Zap, Home, ShieldCheck } from 'lucide-react';
 import { UserType, Slot } from '../types';
-import { getTodayDate, isPastDate, isPastSlot, formatDateDisplay } from '../utils/helpers';
+import { getTodayDate, isPastSlot, formatDateDisplay } from '../utils/helpers';
 import { useConfirm } from '../context/ConfirmContext';
 import { BookingCalendar } from './BookingCalendar';
 import { UserHistory } from './UserHistory';
@@ -14,7 +14,6 @@ export const UserDashboard = ({
     loggedInUser,
     slots,
     handleBookSlot,
-    handleCancelBooking,
     onLogout,
     navigateToHome,
     holidayMode
@@ -22,7 +21,7 @@ export const UserDashboard = ({
     loggedInUser: UserType,
     slots: Slot[],
     handleBookSlot: (date: string, time: string) => void,
-    handleCancelBooking: (date: string, time: string) => void,
+    handleCancelBooking?: (date: string, time: string) => void,
     onLogout: () => void,
     navigateToHome: () => void,
     holidayMode?: boolean
@@ -78,7 +77,7 @@ export const UserDashboard = ({
                             onClick={navigateToHome}
                             className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-xl text-sm font-bold hover:bg-gray-100 transition duration-300 flex items-center gap-2 w-full sm:w-auto justify-center relative group"
                         >
-                            {holidayMode && <SantaHat className="absolute -top-4 -left-4 w-9 h-9 -rotate-[25deg] z-20 drop-shadow-lg pointer-events-none group-hover:scale-110 transition-transform" />}
+                            {holidayMode && <SantaHat className="absolute -top-3 -left-2 w-8 h-8 -rotate-[15deg] z-20 transition-all duration-500 group-hover:-rotate-[35deg] group-hover:-translate-y-1" />}
                             <Home className="w-4 h-4" /> Home
                         </Button>
                         <Button
