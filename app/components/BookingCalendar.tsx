@@ -132,45 +132,59 @@ export const BookingCalendar = ({ slots, onSelectDate, selectedDate }: { slots: 
     };
 
     return (
-        <div className="bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-white/50 space-y-4 h-full flex flex-col justify-between">
-            <div className="flex justify-between items-center mb-2 md:mb-4">
-                <Button onClick={() => handleMonthChange('prev')} className="p-2 md:p-3 rounded-full bg-gray-100 text-gray-700 hover:bg-[#CE8E94] hover:text-white transition shadow-md hover:shadow-lg">
-                    <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
-                </Button>
-                <h3 className="text-lg md:text-xl font-bold text-[#CE8E94]">{monthNames[monthIndex]} {year}</h3>
-                <Button onClick={() => handleMonthChange('next')} className="p-2 md:p-3 rounded-full bg-gray-100 text-gray-700 hover:bg-[#CE8E94] hover:text-white transition shadow-md hover:shadow-lg">
-                    <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
-                </Button>
-            </div>
-
-            {/* HARDCODED HEADERS (FORCE RE-RENDER) TO ENSURE MON START */}
-            <div className="grid grid-cols-7 gap-1 md:gap-2">
-                <div className="text-center text-xs md:text-sm font-bold text-gray-500 py-1 md:py-2 border-b-2 border-[#CE8E94]/30">Mon</div>
-                <div className="text-center text-xs md:text-sm font-bold text-gray-500 py-1 md:py-2 border-b-2 border-[#CE8E94]/30">Tue</div>
-                <div className="text-center text-xs md:text-sm font-bold text-gray-500 py-1 md:py-2 border-b-2 border-[#CE8E94]/30">Wed</div>
-                <div className="text-center text-xs md:text-sm font-bold text-gray-500 py-1 md:py-2 border-b-2 border-[#CE8E94]/30">Thu</div>
-                <div className="text-center text-xs md:text-sm font-bold text-gray-500 py-1 md:py-2 border-b-2 border-[#CE8E94]/30">Fri</div>
-                <div className="text-center text-xs md:text-sm font-bold text-gray-500 py-1 md:py-2 border-b-2 border-[#CE8E94]/30">Sat</div>
-                <div className="text-center text-xs md:text-sm font-bold text-gray-500 py-1 md:py-2 border-b-2 border-[#CE8E94]/30">Sun</div>
-            </div>
-
-            <div className="grid grid-cols-7 gap-1 md:gap-3 xl:gap-4">
-                {renderDays()}
-            </div>
-            <div className="pt-4 flex justify-center gap-6 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-                    <span>Slot Available</span>
+        <>
+            <style>{`
+                /* Safari-only fix to prevent calendar from expanding vertically */
+                @media not all and (min-resolution:.001dpcm) { 
+                    @supports (-webkit-appearance:none) { 
+                        .safari-container-fix { 
+                            max-width: 450px !important;
+                            margin: 0 auto !important;
+                            height: auto !important; 
+                            flex-grow: 0 !important;
+                        }
+                    }
+                }
+            `}</style>
+            <div className="bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-white/50 space-y-4 h-full flex flex-col justify-between safari-container-fix">
+                <div className="flex justify-between items-center mb-2 md:mb-4">
+                    <Button onClick={() => handleMonthChange('prev')} className="p-2 md:p-3 rounded-full bg-gray-100 text-gray-700 hover:bg-[#CE8E94] hover:text-white transition shadow-md hover:shadow-lg">
+                        <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
+                    </Button>
+                    <h3 className="text-lg md:text-xl font-bold text-[#CE8E94]">{monthNames[monthIndex]} {year}</h3>
+                    <Button onClick={() => handleMonthChange('next')} className="p-2 md:p-3 rounded-full bg-gray-100 text-gray-700 hover:bg-[#CE8E94] hover:text-white transition shadow-md hover:shadow-lg">
+                        <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
+                    </Button>
                 </div>
-                <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 border-2 border-[#CE8E94] rounded-full"></span>
-                    <span>Today</span>
+
+                {/* HARDCODED HEADERS (FORCE RE-RENDER) TO ENSURE MON START */}
+                <div className="grid grid-cols-7 gap-1 md:gap-2">
+                    <div className="text-center text-xs md:text-sm font-bold text-gray-500 py-1 md:py-2 border-b-2 border-[#CE8E94]/30">Mon</div>
+                    <div className="text-center text-xs md:text-sm font-bold text-gray-500 py-1 md:py-2 border-b-2 border-[#CE8E94]/30">Tue</div>
+                    <div className="text-center text-xs md:text-sm font-bold text-gray-500 py-1 md:py-2 border-b-2 border-[#CE8E94]/30">Wed</div>
+                    <div className="text-center text-xs md:text-sm font-bold text-gray-500 py-1 md:py-2 border-b-2 border-[#CE8E94]/30">Thu</div>
+                    <div className="text-center text-xs md:text-sm font-bold text-gray-500 py-1 md:py-2 border-b-2 border-[#CE8E94]/30">Fri</div>
+                    <div className="text-center text-xs md:text-sm font-bold text-gray-500 py-1 md:py-2 border-b-2 border-[#CE8E94]/30">Sat</div>
+                    <div className="text-center text-xs md:text-sm font-bold text-gray-500 py-1 md:py-2 border-b-2 border-[#CE8E94]/30">Sun</div>
                 </div>
-            </div>
-            {/* DEBUG INFO - REMOVE AFTER FIX */}
-            {/* <div className="text-[10px] text-center text-gray-300 font-mono">
+
+                <div className="grid grid-cols-7 gap-1 md:gap-3 xl:gap-4">
+                    {renderDays()}
+                </div>
+                <div className="pt-4 flex justify-center gap-6 text-sm text-gray-600">
+                    <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                        <span>Slot Available</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 border-2 border-[#CE8E94] rounded-full"></span>
+                        <span>Today</span>
+                    </div>
+                </div>
+                {/* DEBUG INFO - REMOVE AFTER FIX */}
+                {/* <div className="text-[10px] text-center text-gray-300 font-mono">
                 V3-FINAL | Offset: {startOffset} | Mon: {monthIndex + 1} | Yr: {year} | Today: {todayDate}
             </div> */}
-        </div>
-    );
+            </div>
+            );
 };
