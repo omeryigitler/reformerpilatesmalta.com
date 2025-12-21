@@ -1160,6 +1160,7 @@ export const AdminPanel = ({
                                         }
 
                                         if (bookingDateFilter === 'week') {
+                                            const slotDate = new Date(s.date);  // DEFINE IT
                                             const nextWeek = new Date(now);
                                             nextWeek.setDate(now.getDate() + 7);
                                             return slotDate >= now && slotDate <= nextWeek;
