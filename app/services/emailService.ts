@@ -58,6 +58,8 @@ export const sendAdminAlert = async (
 export const sendUserBookingConfirmation = async (user: UserType, slot: Slot) => {
     try {
         const templateParams = {
+            m_subject: 'Booking Confirmation - Reformer Pilates Malta',
+            status_message: `Great news! Your spot is confirmed. We can't wait to see you on the reformer at ${STUDIO_INFO.name}.`,
             to_name: user.firstName,
             to_email: user.email,
             studio_name: STUDIO_INFO.name,
@@ -68,7 +70,6 @@ export const sendUserBookingConfirmation = async (user: UserType, slot: Slot) =>
             studio_address: STUDIO_INFO.address,
             maps_link: STUDIO_INFO.maps_link,
             website_url: STUDIO_INFO.website,
-            // Hidden/Optional fields if template supports them for custom messages
             message: `Your booking for ${slot.date} at ${slot.time} is confirmed.`
         };
 
@@ -81,19 +82,16 @@ export const sendUserBookingConfirmation = async (user: UserType, slot: Slot) =>
 
 /**
  * Sends a Cancellation notification to the USER.
- * WARNING: The current User Template says "Great news! Your spot is confirmed."
- * We need to be careful. Ideally we need a separate template for Cancellations.
- * FOR NOW: We will use the same template but hopefully the user can distinguish via Subject line if we can set it?
- * Actually, the screenshot shows Subject: {{m_subject}}. So we CAN override the subject!
  */
 export const sendUserCancellationAlert = async (user: UserType, slot: Slot, reason: string = 'User Request') => {
     try {
         const templateParams = {
-            m_subject: 'Booking Cancellation - Reformer Pilates Malta', // OVERRIDE SUBJECT
+            m_subject: 'Booking Cancellation - Reformer Pilates Malta',
+            status_message: 'Important: Your booking has been cancelled.',
             to_name: user.firstName,
             to_email: user.email,
             studio_name: STUDIO_INFO.name,
-            class_name: `CANCELLED: Reformer Pilates (${reason})`, // Hack to show status in class name
+            class_name: `CANCELLED: Reformer Pilates (${reason})`,
             class_date: formatDateDisplay(slot.date),
             class_time: slot.time,
             instructor_name: STUDIO_INFO.instructor,
@@ -116,6 +114,7 @@ export const sendUserRescheduleConfirmation = async (user: UserType, newSlot: Sl
     try {
         const templateParams = {
             m_subject: 'Booking Rescheduled - Reformer Pilates Malta',
+            status_message: `Important: Your session has been rescheduled. We look forward to seeing you at the new time.`,
             to_name: user.firstName,
             to_email: user.email,
             studio_name: STUDIO_INFO.name,
