@@ -547,7 +547,7 @@ export const AdminPanel = ({
                             onClick={navigateToHome}
                             className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-xl text-sm font-bold hover:bg-gray-100 transition duration-300 flex items-center gap-2 w-full sm:w-auto justify-center relative group"
                         >
-                            {managementState.holidayMode && <SantaHat className="absolute -top-6 left-1/2 -translate-x-1/2 w-8 h-8 pointer-events-none group-hover:scale-110 transition-transform" />}
+                            {managementState.holidayMode && <SantaHat className="absolute -top-4 -left-3 w-10 h-10 pointer-events-none group-hover:scale-110 transition-transform -rotate-12" />}
                             <Home className="w-4 h-4" /> Home
                         </Button>
                         <Button
