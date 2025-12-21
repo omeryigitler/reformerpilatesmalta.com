@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { LogOut, Calendar, Users, TrendingUp, Edit3, Star, Award, Mail, Database, Clock, Plus, Trash2, SwitchCamera, Home, UserPlus, ShieldCheck, ChevronDown, Check, Search, FileText, ExternalLink, BadgeCheck, MessageSquareText, Phone, CalendarPlus, MapPin, ChevronRight, ArrowRight, User, AlertTriangle } from 'lucide-react';
+import { LogOut, Calendar, Users, TrendingUp, Edit3, Star, Award, Mail, Database, Clock, Plus, Trash2, SwitchCamera, Home, UserPlus, ShieldCheck, ChevronDown, Check, Search, FileText, ExternalLink, BadgeCheck, MessageSquareText, Phone, CalendarPlus, MapPin, ChevronRight, ArrowRight, User, AlertTriangle, Sparkles } from 'lucide-react';
 import { Switch } from "@/components/ui/switch";
 import { Slot, UserType, ManagementState } from '../types';
 import { db } from '../firebase';
@@ -17,6 +17,7 @@ import { FileUploadInput } from './FileUploadInput';
 import { Modal } from './Modal';
 import { sendUserBookingConfirmation, sendUserCancellationAlert, sendUserRescheduleConfirmation } from '../services/emailService';
 import { ErrorBoundary } from './ErrorBoundary';
+import { SantaHat } from './ChristmasDecorations';
 
 interface AdminPanelProps {
     loggedInUser: UserType;
@@ -544,8 +545,9 @@ export const AdminPanel = ({
                     <div className="flex flex-col sm:flex-row gap-3 items-end">
                         <Button
                             onClick={navigateToHome}
-                            className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-xl text-sm font-bold hover:bg-gray-100 transition duration-300 flex items-center gap-2 w-full sm:w-auto justify-center"
+                            className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-xl text-sm font-bold hover:bg-gray-100 transition duration-300 flex items-center gap-2 w-full sm:w-auto justify-center relative group"
                         >
+                            {managementState.holidayMode && <SantaHat className="absolute -top-6 left-1/2 -translate-x-1/2 w-8 h-8 pointer-events-none group-hover:scale-110 transition-transform" />}
                             <Home className="w-4 h-4" /> Home
                         </Button>
                         <Button
@@ -583,6 +585,24 @@ export const AdminPanel = ({
 
                 {activeTab === 'management' && (
                     <div className="space-y-10 p-6 md:p-8 rounded-[2rem] bg-white/50 border border-white/40">
+                        {/* Holiday Mode Toggle */}
+                        <div className="bg-white/80 backdrop-blur-sm p-6 rounded-3xl border border-[#CE8E94]/20 shadow-sm flex items-center justify-between group hover:shadow-md transition-shadow">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-[#CE8E94]/10 rounded-2xl text-[#CE8E94] group-hover:bg-[#CE8E94] group-hover:text-white transition-colors">
+                                    <Sparkles className="w-7 h-7" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-gray-800">Holiday Mode 🎄❄️</h3>
+                                    <p className="text-sm text-gray-500">Enable Christmas decorations and snowfall across the site.</p>
+                                </div>
+                            </div>
+                            <Switch
+                                checked={managementState.holidayMode}
+                                onCheckedChange={(val) => setManagementState(prev => ({ ...prev, holidayMode: val }))}
+                                className="data-[state=checked]:bg-[#CE8E94]"
+                            />
+                        </div>
+
                         <div>
                             <h3 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-3 border-b pb-2"><Edit3 className="w-6 h-6 text-[#CE8E94]" /> Hero Section Content</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

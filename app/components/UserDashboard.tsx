@@ -8,6 +8,7 @@ import { getTodayDate, isPastDate, isPastSlot, formatDateDisplay } from '../util
 import { useConfirm } from '../context/ConfirmContext';
 import { BookingCalendar } from './BookingCalendar';
 import { UserHistory } from './UserHistory';
+import { SantaHat } from './ChristmasDecorations';
 
 export const UserDashboard = ({
     loggedInUser,
@@ -15,14 +16,16 @@ export const UserDashboard = ({
     handleBookSlot,
     handleCancelBooking,
     onLogout,
-    navigateToHome
+    navigateToHome,
+    holidayMode
 }: {
     loggedInUser: UserType,
     slots: Slot[],
     handleBookSlot: (date: string, time: string) => void,
     handleCancelBooking: (date: string, time: string) => void,
     onLogout: () => void,
-    navigateToHome: () => void
+    navigateToHome: () => void,
+    holidayMode?: boolean
 }) => {
     const userName = `${loggedInUser.firstName} ${loggedInUser.lastName}`;
     const { showConfirm } = useConfirm();
@@ -73,8 +76,9 @@ export const UserDashboard = ({
                     <div className="flex flex-col sm:flex-row gap-3 items-end">
                         <Button
                             onClick={navigateToHome}
-                            className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-xl text-sm font-bold hover:bg-gray-100 transition duration-300 flex items-center gap-2 w-full sm:w-auto justify-center"
+                            className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-xl text-sm font-bold hover:bg-gray-100 transition duration-300 flex items-center gap-2 w-full sm:w-auto justify-center relative group"
                         >
+                            {holidayMode && <SantaHat className="absolute -top-6 left-1/2 -translate-x-1/2 w-8 h-8 pointer-events-none group-hover:scale-110 transition-transform" />}
                             <Home className="w-4 h-4" /> Home
                         </Button>
                         <Button
