@@ -1360,7 +1360,7 @@ export const AdminPanel = ({
                 {/* Edit Slot Modal */}
                 {
                     editingSlot && (
-                        <Modal onClose={() => setEditingSlot(null)}>
+                        <Modal onClose={() => setEditingSlot(null)} showCloseIcon={false}>
                             <div className="space-y-6">
                                 <div className="text-center">
                                     <h2 className="text-2xl font-bold text-[#CE8E94] mb-2">Edit Slot</h2>
