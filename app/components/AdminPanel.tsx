@@ -15,7 +15,7 @@ import { updateExpiredSlots } from '../services/pilatesService';
 import { AdminAnalytics } from './AdminAnalytics';
 import { FileUploadInput } from './FileUploadInput';
 import { Modal } from './Modal';
-import emailjs from '@emailjs/browser';
+import { sendUserBookingConfirmation, sendUserCancellationAlert, sendUserRescheduleConfirmation } from '../services/emailService';
 import { ErrorBoundary } from './ErrorBoundary';
 
 interface AdminPanelProps {
