@@ -186,5 +186,6 @@ export const BookingCalendar = ({ slots, onSelectDate, selectedDate }: { slots: 
                 V3-FINAL | Offset: {startOffset} | Mon: {monthIndex + 1} | Yr: {year} | Today: {todayDate}
             </div> */}
             </div>
-            );
+        </>
+    );
 };
