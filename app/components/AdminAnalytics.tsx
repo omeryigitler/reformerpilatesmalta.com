@@ -6,7 +6,7 @@ import { Calendar, Users, TrendingUp, Download, ChevronDown, Check } from "lucid
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Slot, UserType } from "../types";
-import { getTodayDate } from "../utils/helpers";
+import { getTodayDate, isPastSlot } from "../utils/helpers";
 
 export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots: Slot[], users: UserType[], currentLogo: string }) => {
     const [isMounted, setIsMounted] = React.useState(false);
@@ -102,8 +102,9 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
     // 2. Statü Filtreleme & İstatistikler
     const filteredSlots = React.useMemo(() => {
         return dateFilteredSlots.filter(slot => {
-            const isActive = slot.status === 'Booked' || slot.status === 'Active';
-            const isCompleted = slot.status === 'Completed';
+            const isActuallyPast = isPastSlot(slot.date, slot.time);
+            const isActive = (slot.status === 'Booked' || slot.status === 'Active') && !isActuallyPast;
+            const isCompleted = slot.status === 'Completed' || ((slot.status === 'Booked' || slot.status === 'Active') && isActuallyPast);
 
             if (reportFilter === 'Active') return isActive;
             if (reportFilter === 'Completed') return isCompleted;
@@ -198,9 +199,11 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
         autoTable(doc, {
             startY: finalY + 5,
             head: [['Date', 'Time', 'Client', 'Status']],
-            body: filteredSlots.sort((a, b) => normalizeDate(a.date).localeCompare(normalizeDate(b.date))).map(s => [
-                s.date, s.time, s.bookedBy || '-', s.status
-            ]),
+            body: filteredSlots.sort((a, b) => normalizeDate(a.date).localeCompare(normalizeDate(b.date))).map(s => {
+                const isActuallyPast = isPastSlot(s.date, s.time);
+                const displayStatus = ((s.status === 'Booked' || s.status === 'Active') && isActuallyPast) ? 'Completed' : s.status;
+                return [s.date, s.time, s.bookedBy || '-', displayStatus];
+            }),
             styles: { fontSize: 8 }
         });
 

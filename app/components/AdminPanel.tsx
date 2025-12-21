@@ -322,8 +322,8 @@ export const AdminPanel = ({
 
         return {
             total: mySlots.length,
-            active: mySlots.filter(s => s.status === 'Booked' || s.status === 'Active').length,
-            completed: mySlots.filter(s => s.status === 'Completed').length,
+            active: mySlots.filter(s => (s.status === 'Booked' || s.status === 'Active') && !isPastSlot(s.date, s.time)).length,
+            completed: mySlots.filter(s => s.status === 'Completed' || ((s.status === 'Booked' || s.status === 'Active') && isPastSlot(s.date, s.time))).length,
             history: mySlots.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) // Newest first
         };
     };
@@ -1514,16 +1514,22 @@ export const AdminPanel = ({
                             <div className="max-h-[60vh] overflow-y-auto pr-2 hide-scrollbar space-y-2">
                                 {getMemberStats(historyViewer.user.email).history
                                     .filter(s => {
+                                        const isEffectivelyCompleted = s.status === 'Completed' || ((s.status === 'Booked' || s.status === 'Active') && isPastSlot(s.date, s.time));
                                         if (historyViewer.type === 'Total') return true;
-                                        if (historyViewer.type === 'Active') return s.status === 'Booked' || s.status === 'Active';
-                                        if (historyViewer.type === 'Done') return s.status === 'Completed';
+                                        if (historyViewer.type === 'Active') return (s.status === 'Booked' || s.status === 'Active') && !isPastSlot(s.date, s.time);
+                                        if (historyViewer.type === 'Done') return isEffectivelyCompleted;
                                         return true;
                                     })
                                     .map((slot, i) => (
                                         <div key={i} className="flex justify-between items-center py-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors px-2">
                                             <div className="flex flex-col">
                                                 <span className="font-bold text-gray-900 text-lg">{new Date(slot.date).toLocaleDateString('en-US', { weekday: 'long' })}</span>
-                                                <span className="text-sm text-gray-500">{new Date(slot.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} • <span className="uppercase text-xs font-bold tracking-wider">{slot.status}</span></span>
+                                                <span className="text-sm text-gray-500">
+                                                    {new Date(slot.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} •
+                                                    <span className={`uppercase text-xs font-bold tracking-wider ml-1 ${((slot.status === 'Booked' || slot.status === 'Active') && isPastSlot(slot.date, slot.time)) || slot.status === 'Completed' ? 'text-gray-400' : 'text-[#CE8E94]'}`}>
+                                                        {((slot.status === 'Booked' || slot.status === 'Active') && isPastSlot(slot.date, slot.time)) ? 'Completed' : slot.status}
+                                                    </span>
+                                                </span>
                                             </div>
                                             <div className="text-xl font-black text-[#CE8E94] tracking-tight">
                                                 {slot.time}
@@ -1531,9 +1537,10 @@ export const AdminPanel = ({
                                         </div>
                                     ))}
                                 {getMemberStats(historyViewer.user.email).history.filter(s => {
+                                    const isEffectivelyCompleted = s.status === 'Completed' || ((s.status === 'Booked' || s.status === 'Active') && isPastSlot(s.date, s.time));
                                     if (historyViewer.type === 'Total') return true;
-                                    if (historyViewer.type === 'Active') return s.status === 'Booked' || s.status === 'Active';
-                                    if (historyViewer.type === 'Done') return s.status === 'Completed';
+                                    if (historyViewer.type === 'Active') return (s.status === 'Booked' || s.status === 'Active') && !isPastSlot(s.date, s.time);
+                                    if (historyViewer.type === 'Done') return isEffectivelyCompleted;
                                     return true;
                                 }).length === 0 && (
                                         <div className="text-center py-8 text-gray-400">No {historyViewer.type.toLowerCase()} bookings found.</div>
