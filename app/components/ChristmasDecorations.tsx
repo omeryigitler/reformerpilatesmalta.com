@@ -40,26 +40,26 @@ export const Snowfall = () => (
 
 export const SantaHat = ({ className = "" }: { className?: string }) => (
     <div className={`pointer-events-none select-none z-[999] ${className}`}>
-        <svg viewBox="0 0 100 80" className="w-full h-full drop-shadow-2xl overflow-visible filter">
-            {/* The classic red hat body */}
+        <svg viewBox="0 0 100 80" className="w-10 h-10 drop-shadow-[0_4px_6px_rgba(0,0,0,0.2)] overflow-visible">
+            {/* Red hat body */}
             <path
-                d="M50 5 C30 5, 10 30, 15 65 L85 65 C90 30, 70 5, 50 5 Z"
+                d="M50 5 L15 65 L85 65 Z"
                 fill="#ff1a1a"
-                stroke="#d40000"
-                strokeWidth="1.5"
+                stroke="#b57a80"
+                strokeWidth="0.5"
             />
-            {/* The white fluff trim */}
+            {/* White trim */}
             <rect
-                x="8" y="60" width="84" height="18" rx="9"
-                fill="#ffffff"
-                filter="drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
+                x="10" y="60" width="80" height="15" rx="7"
+                fill="#f8f8f8"
+                className="opacity-95"
             />
-            {/* The white pom pom */}
+            {/* Pom pom */}
             <circle
-                cx="50" cy="8" r="9"
+                cx="50" cy="8" r="8"
                 fill="#ffffff"
                 className="animate-pulse"
-                style={{ animationDuration: '2s' }}
+                style={{ animationDuration: '3s' }}
             />
         </svg>
     </div>
