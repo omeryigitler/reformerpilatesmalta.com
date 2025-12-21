@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { UserType } from '../types';
 import { useNotification } from '../context/NotificationContext';
 import { Modal } from './Modal';
-import emailjs from '@emailjs/browser';
 import { registerUserAuth, loginUserAuth, resetPasswordAuth, getUserProfile } from '../services/pilatesService';
 import { getTodayDate } from '../utils/helpers';
+import { sendAdminAlert } from '../services/emailService';
 
 interface UserPanelProps {
     existingUsers: UserType[];
@@ -85,21 +85,8 @@ export const UserPanel = ({ existingUsers, addUser, onLogin, activePanel, setAct
 
             showNotification('Registration successful! Logging you in...', 'success');
 
-            // Notify Admins about New User (Single trigger, CC handles distribution)
-            // Notify Admins about New User (Single trigger, CC handles distribution)
-            emailjs.send(
-                process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
-                process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ADMIN!,
-                {
-                    event_type: 'New User Registration',
-                    user_name: `${newUser.firstName} ${newUser.lastName}`,
-                    user_email: newUser.email,
-                    user_phone: newUser.phone,
-                    event_date: newUser.registered,
-                    event_time: 'N/A'
-                },
-                process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
-            ).catch(err => console.error("Failed to send admin reg email:", err));
+            // Notify Admins about New User
+            await sendAdminAlert('New Registration', newUser);
 
             // Check session manually to update UI immediately
             onLogin(newUser);

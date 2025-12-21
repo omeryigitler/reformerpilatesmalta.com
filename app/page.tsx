@@ -33,7 +33,6 @@ import {
     browserLocalPersistence
 } from "firebase/auth";
 import { collection, doc, setDoc, onSnapshot, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
-import emailjs from '@emailjs/browser';
 import dynamic from 'next/dynamic';
 
 // --- TYPE DEFINITIONS ---
@@ -300,41 +299,12 @@ function PilatesMaltaByGozde() {
             await bookSlotTransaction(slotDate, slotTime, loggedInUser);
 
             // --- SEND EMAIL NOTIFICATIONS ---
-            const adminEmails = ['omeryigitler@hotmail.com', 'info@reformerpilatesmalta.com']; // Add/Edit admin emails here
-
+            // --- SEND EMAIL NOTIFICATIONS ---
             // 1. Email to User
-            emailjs.send(
-                process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
-                process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_USER!,
-                {
-                    to_name: loggedInUser.firstName,
-                    to_email: loggedInUser.email,
-                    studio_name: 'Reformer Pilates Malta',
-                    class_name: 'Reformer Pilates',
-                    class_date: formatDateDisplay(slotDate),
-                    class_time: slotTime,
-                    instructor_name: 'Ömer YİĞİTLER',
-                    studio_address: 'Triq Il-Hgejjeg, San Giljan, Malta',
-                    maps_link: 'https://maps.app.goo.gl/YourGoogleMapsLinkHere',
-                    website_url: 'https://www.reformerpilatesmalta.com'
-                },
-                process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
-            ).catch(err => console.error("Failed to send user email:", err));
+            await sendUserBookingConfirmation(loggedInUser, { date: slotDate, time: slotTime } as any);
 
-            // 2. Email to Admins (Notification via New Template with CC)
-            emailjs.send(
-                process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
-                process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ADMIN!, // New Admin Template ID
-                {
-                    event_type: 'New Class Booking',
-                    user_name: `${loggedInUser.firstName} ${loggedInUser.lastName}`,
-                    user_email: loggedInUser.email,
-                    user_phone: loggedInUser.phone,
-                    event_date: formatDateDisplay(slotDate),
-                    event_time: slotTime
-                },
-                process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
-            ).catch(err => console.error("Failed to send admin email:", err));
+            // 2. Email to Admins
+            await sendAdminAlert('New Booking', loggedInUser, { date: slotDate, time: slotTime } as any);
 
             showNotification(`Booking confirmed for ${slotTime} on ${formatDateDisplay(slotDate)}! Confirmation email sent.`, 'success');
         } catch (e: any) {

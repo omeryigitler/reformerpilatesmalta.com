@@ -163,23 +163,7 @@ export const AdminPanel = ({
             // 2. Send Email Notification
             showNotification('Slot assigned! Sending email...', 'info');
 
-            await emailjs.send(
-                process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,   // Service ID
-                process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_USER!,  // Template ID
-                {
-                    to_name: user.firstName,
-                    to_email: user.email,
-                    studio_name: 'Reformer Pilates Malta',
-                    class_name: 'Reformer Pilates',
-                    class_date: formatDateDisplay(slot.date),
-                    class_time: slot.time,
-                    instructor_name: 'Ömer YİĞİTLER',
-                    studio_address: 'Triq Il-Hgejjeg, San Giljan, Malta',
-                    maps_link: 'https://maps.app.goo.gl/YourGoogleMapsLinkHere',
-                    website_url: 'https://www.reformerpilatesmalta.com'
-                },
-                process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!  // Public Key
-            );
+            await sendUserBookingConfirmation(user, slot);
 
             showNotification(`Slot assigned and email sent to ${user.firstName} !`, 'success');
             return true;
@@ -392,6 +376,25 @@ export const AdminPanel = ({
             async () => {
                 try {
                     const slotId = `${slot.date}_${slot.time}`;
+
+                    // Check if slot is occupied (Booked/Active) to notify user
+                    const isOccupied = slot.status === 'Booked' || slot.status === 'Active';
+                    if (isOccupied) {
+                        // Attempt to find user to notify using robust matching
+                        const bookedName = slot.bookedBy ? slot.bookedBy.replace(' (Admin)', '').trim().toLowerCase() : '';
+
+                        const userToNotify = users.find(u => {
+                            if (slot.bookedByEmail) return u.email.toLowerCase() === slot.bookedByEmail.toLowerCase();
+                            const fullName = `${u.firstName} ${u.lastName}`.trim().toLowerCase();
+                            return fullName === bookedName;
+                        });
+
+                        if (userToNotify) {
+                            showNotification(`Notifying ${userToNotify.firstName} of cancellation...`, 'info');
+                            await sendUserCancellationAlert(userToNotify, slot, 'Admin Deleted Slot');
+                        }
+                    }
+
                     await deleteDoc(doc(db, "slots", slotId));
                     showNotification("Slot deleted successfully", "success");
                 } catch (error) {
@@ -498,23 +501,7 @@ export const AdminPanel = ({
 
                         if (user) {
                             showNotification(`Booking moved. Notifying ${user.firstName}...`, 'info');
-                            await emailjs.send(
-                                process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
-                                process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_USER!,
-                                {
-                                    to_name: user.firstName,
-                                    to_email: user.email,
-                                    studio_name: 'Reformer Pilates Malta',
-                                    class_name: 'RESCHEDULED: Reformer Pilates Session',
-                                    class_date: formatDateDisplay(newSlot.date),
-                                    class_time: newSlot.time,
-                                    instructor_name: 'Ömer YİĞİTLER',
-                                    studio_address: 'Triq Il-Hgejjeg, San Giljan, Malta',
-                                    maps_link: 'https://maps.app.goo.gl/YourGoogleMapsLinkHere',
-                                    website_url: 'https://www.reformerpilatesmalta.com'
-                                },
-                                process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
-                            ).catch(err => console.error("Email notify failed:", err));
+                            await sendUserRescheduleConfirmation(user, newSlot);
                         } else {
                             console.warn(`Could not find user for email notification: ${bookedName}`);
                         }
