@@ -58,7 +58,7 @@ export const AdminPanel = ({
     };
 
     // NEW: Date Filter State
-    const [dateFilter, setDateFilter] = useState<'All' | 'Today' | 'Week' | 'Month' | 'Custom'>('All');
+    const [dateFilter, setDateFilter] = useState<'All' | 'Today' | 'Week' | 'Month' | 'Custom'>('Today');
     const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
     const [customStartDate, setCustomStartDate] = useState('');
     const [customEndDate, setCustomEndDate] = useState('');
