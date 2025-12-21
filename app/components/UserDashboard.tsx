@@ -78,7 +78,7 @@ export const UserDashboard = ({
                             onClick={navigateToHome}
                             className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-xl text-sm font-bold hover:bg-gray-100 transition duration-300 flex items-center gap-2 w-full sm:w-auto justify-center relative group"
                         >
-                            {holidayMode && <SantaHat className="absolute -top-4 -left-4 w-9 h-9 -rotate-[25deg] z-20 drop-shadow-lg pointer-events-none" />}
+                            {holidayMode && <SantaHat className="absolute -top-4 -left-3 w-10 h-10 pointer-events-none group-hover:scale-110 transition-transform -rotate-12" />}
                             <Home className="w-4 h-4" /> Home
                         </Button>
                         <Button
