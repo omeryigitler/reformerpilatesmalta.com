@@ -598,7 +598,14 @@ export const AdminPanel = ({
                             </div>
                             <Switch
                                 checked={managementState.holidayMode}
-                                onCheckedChange={(val) => setManagementState(prev => ({ ...prev, holidayMode: val }))}
+                                onCheckedChange={async (val) => {
+                                    setManagementState(prev => ({ ...prev, holidayMode: val }));
+                                    try {
+                                        await updateDoc(doc(db, "management", "settings"), { holidayMode: val });
+                                    } catch (e) {
+                                        console.error("Error auto-saving holiday mode:", e);
+                                    }
+                                }}
                                 className="data-[state=checked]:bg-[#CE8E94]"
                             />
                         </div>
