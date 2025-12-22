@@ -865,15 +865,16 @@ export const AdminPanel = ({
                         </div>
                         <div className="lg:col-span-1 flex flex-col justify-between space-y-6 bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-white/50 h-full">
                             {/* Fixed Height Header Area to prevent Jumping */}
-                            <div className="h-[88px] flex flex-col justify-center space-y-2 border-b border-gray-100 mb-2">
+                            <div className="h-[88px] flex flex-col justify-center space-y-2 mb-2">
                                 <label className="text-sm font-bold text-gray-600 block">Selected Date</label>
                                 {newSlotDate ? (
-                                    <div className="text-2xl font-bold text-gray-800 animate-in fade-in slide-in-from-top-1 duration-300">
+                                    <div className="text-2xl font-bold text-gray-800 text-center">
                                         {formatDateDisplay(newSlotDate)}
                                     </div>
                                 ) : (
-                                    <div className="h-8 flex items-center">
-                                        <div className="h-1 w-3/4 bg-gray-200 rounded-full"></div>
+                                    <div className="h-12 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center gap-2 px-4 text-gray-400">
+                                        <Calendar className="w-5 h-5 text-gray-300" />
+                                        <span className="text-sm font-medium text-gray-300">Select date from calendar</span>
                                     </div>
                                 )}
                             </div>
