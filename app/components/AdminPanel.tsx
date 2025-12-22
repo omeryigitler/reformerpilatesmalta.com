@@ -447,8 +447,6 @@ export const AdminPanel = ({
             "Are you sure you want to delete this slot? This action cannot be undone.",
             async () => {
                 try {
-                    const slotId = `${slot.date}_${slot.time}`;
-
                     // Check if slot is occupied (Booked/Active) to notify user
                     // Check if slot is occupied (Booked/Active) to notify user
                     const isOccupied = slot.status === 'Booked' || slot.status === 'Active';
@@ -471,7 +469,14 @@ export const AdminPanel = ({
                         }
                     }
 
-                    await deleteDoc(doc(db, "slots", slotId));
+                    // Attempt to delete ALL possible ID variations to ensure cleanup
+                    const possibleIds = [
+                        `${slot.date}_${slot.time}`,       // Standard
+                        `${slot.date}_${slot.time} `,      // Trailing space bug
+                        `${slot.date}-${slot.time}`        // Legacy format
+                    ];
+
+                    await Promise.all(possibleIds.map(id => deleteDoc(doc(db, "slots", id))));
                     showNotification("Slot deleted successfully", "success");
                 } catch (error) {
                     console.error("Error deleting slot:", error);
