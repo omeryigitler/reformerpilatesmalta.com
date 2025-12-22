@@ -209,7 +209,7 @@ export const AdminPanel = ({
     // Unified Booking Logic
     const performBooking = async (slot: Slot, user: UserType) => {
         const fullName = `${user.firstName} ${user.lastName} `;
-        const slotId = `${slot.date}_${slot.time} `;
+        const slotId = `${slot.date}_${slot.time}`;
 
         // CHECK: Prevent Double Booking
         const isSlotTaken = slots.some(s =>
