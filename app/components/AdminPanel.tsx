@@ -7,9 +7,6 @@ import { Switch } from "@/components/ui/switch";
 import { Slot, UserType, ManagementState } from '../types';
 import { db } from '../firebase';
 import { doc, setDoc, deleteDoc, updateDoc, addDoc, collection } from 'firebase/firestore';
-import { CustomSelect } from './ui/CustomSelect';
-import { DatePicker } from './ui/DatePicker';
-import { TIME_SLOTS } from '../utils/constants';
 import { useNotification } from '../context/NotificationContext';
 import { useConfirm } from '../context/ConfirmContext';
 import { formatDateDisplay, getTodayDate, isPastSlot } from '../utils/helpers';
@@ -523,18 +520,28 @@ export const AdminPanel = ({
     const handleUpdateSlot = async () => {
         if (!editingSlot) return;
 
-        const timeRegex = /^(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$|^([01]?[0-9]|2[0-3]):[0-5][0-9]$/i;
+        // Convert DD/MM/YYYY to YYYY-MM-DD
+        let dateToSave = editFormData.date;
+        if (editFormData.date.includes('/')) {
+            const parts = editFormData.date.split('/');
+            if (parts.length === 3) {
+                // Input: DD/MM/YYYY -> Output: YYYY-MM-DD
+                dateToSave = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+        }
+
+        const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
         if (!editFormData.time || !timeRegex.test(editFormData.time.trim())) {
-            showNotification('Please enter a valid time.', 'error');
+            showNotification('Please enter a valid 24-hour time (e.g. 14:30).', 'error');
             return;
         }
-        if (!editFormData.date) {
-            showNotification('Please select a date.', 'error');
+        if (!dateToSave || dateToSave.length !== 10) {
+            showNotification('Please enter a valid date (DD/MM/YYYY).', 'error');
             return;
         }
 
         const isCollision = slots.some(s =>
-            s.date === editFormData.date &&
+            s.date === dateToSave &&
             s.time.toLowerCase() === editFormData.time.trim().toLowerCase() &&
             !(s.date === editingSlot.date && s.time === editingSlot.time) &&
             (s.status === 'Booked' || s.status === 'Active' || s.status === 'Completed')
@@ -546,7 +553,7 @@ export const AdminPanel = ({
         }
 
         try {
-            if (editingSlot.date !== editFormData.date || editingSlot.time !== editFormData.time.trim()) {
+            if (editingSlot.date !== dateToSave || editingSlot.time !== editFormData.time.trim()) {
                 const isOccupied = editingSlot.status === 'Booked' || editingSlot.status === 'Active' || editingSlot.status === 'Completed';
 
                 if (isOccupied) {
@@ -564,10 +571,10 @@ export const AdminPanel = ({
                     });
 
                     // 3. Create/Update the NEW slot with existing booking info
-                    const newSlot: Slot = { ...editingSlot, date: editFormData.date, time: editFormData.time.trim() };
+                    const newSlot: Slot = { ...editingSlot, date: dateToSave, time: editFormData.time.trim() };
                     await setDoc(doc(db, "slots", `${newSlot.date}_${newSlot.time}`), newSlot);
 
-                    // Standardized User Matching (Rule 3 & 4)
+                    // Standardized User Matching
                     const bookedByEmail = editingSlot.bookedByEmail ? editingSlot.bookedByEmail.trim().toLowerCase() : '';
                     const bookedByName = editingSlot.bookedBy ? editingSlot.bookedBy.replace(' (Admin)', '').trim().toLowerCase() : '';
 
@@ -584,15 +591,12 @@ export const AdminPanel = ({
                         showNotification(`Booking moved. Notifying ${user.firstName}...`, 'info');
                         await sendUserRescheduleConfirmation(user, newSlot);
                     } else {
-                        console.warn(`[Standardization Fail] Could not match user for notification. Slot Info:`, editingSlot);
-                        // Optional: Notification to Admin that email failed
+                        showNotification('Slot updated locally (User not found for email sync)', 'info');
                     }
                 } else {
-                    // Regular move for Available slots (Delete old, create new)
+                    // Not Occupied -> Just move available slot
                     await deleteDoc(doc(db, "slots", `${editingSlot.date}_${editingSlot.time}`));
-                    await deleteDoc(doc(db, "slots", `${editingSlot.date}-${editingSlot.time}`));
-
-                    const newSlot: Slot = { ...editingSlot, date: editFormData.date, time: editFormData.time.trim() };
+                    const newSlot: Slot = { ...editingSlot, date: dateToSave, time: editFormData.time.trim() };
                     await setDoc(doc(db, "slots", `${newSlot.date}_${newSlot.time}`), newSlot);
                 }
             }
@@ -600,6 +604,7 @@ export const AdminPanel = ({
             setEditingSlot(null);
             showNotification('Slot updated successfully!', 'success');
         } catch (e) {
+            console.error(e);
             showNotification('Error updating slot', 'error');
         }
     };
@@ -607,7 +612,13 @@ export const AdminPanel = ({
 
     const openEditSlotModal = (slot: Slot) => {
         setEditingSlot(slot);
-        setEditFormData({ date: slot.date, time: slot.time });
+        // Format YYYY-MM-DD -> DD/MM/YYYY for manual input
+        let formattedDate = slot.date;
+        if (slot.date.includes('-')) {
+            const [y, m, d] = slot.date.split('-');
+            formattedDate = `${d}/${m}/${y}`;
+        }
+        setEditFormData({ date: formattedDate, time: slot.time });
     };
     return <div className="pilates-root min-h-screen flex flex-col items-center p-4 md:p-10 space-y-10 font-sans bg-[#FFF0E5]">
         <div className="w-full max-w-7xl px-8 md:px-16 py-10 bg-white/60 backdrop-blur-md rounded-[3rem] shadow-2xl border border-white/50 space-y-12">
@@ -1562,22 +1573,41 @@ export const AdminPanel = ({
                             </div>
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-600 mb-1">Date</label>
-                                    <DatePicker
+                                    <label className="block text-sm font-bold text-gray-600 mb-1">Date (DD/MM/YYYY)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="(DD/MM/YYYY)"
                                         value={editFormData.date}
-                                        onChange={date => setEditFormData(prev => ({ ...prev, date }))}
+                                        onChange={e => {
+                                            let val = e.target.value.replace(/\D/g, '');
+                                            if (val.length > 8) val = val.substring(0, 8);
+                                            let formatted = val;
+                                            if (val.length > 4) {
+                                                formatted = `${val.substring(0, 2)}/${val.substring(2, 4)}/${val.substring(4)}`;
+                                            } else if (val.length > 2) {
+                                                formatted = `${val.substring(0, 2)}/${val.substring(2)}`;
+                                            }
+                                            setEditFormData(prev => ({ ...prev, date: formatted }));
+                                        }}
                                         className={standardInputClass}
-                                        placeholder="Select Date"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-600 mb-1">Time</label>
-                                    <CustomSelect
-                                        options={TIME_SLOTS}
+                                    <label className="block text-sm font-bold text-gray-600 mb-1">Time (HH:MM)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="(HH:MM)"
                                         value={editFormData.time}
-                                        onChange={time => setEditFormData(prev => ({ ...prev, time }))}
+                                        onChange={e => {
+                                            let val = e.target.value.replace(/\D/g, '');
+                                            if (val.length > 4) val = val.substring(0, 4);
+                                            let formatted = val;
+                                            if (val.length > 2) {
+                                                formatted = `${val.substring(0, 2)}:${val.substring(2)}`;
+                                            }
+                                            setEditFormData(prev => ({ ...prev, time: formatted }));
+                                        }}
                                         className={standardInputClass}
-                                        placeholder="Select Time"
                                     />
                                 </div>
                             </div>
