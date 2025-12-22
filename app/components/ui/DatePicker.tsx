@@ -33,7 +33,7 @@ export const DatePicker = ({
                 setViewDate(date);
             }
         }
-    }, [isOpen]); // Reset to selected date when opening
+    }, [isOpen, value]); // Reset to selected date when opening
 
     // Close on outside click
     useEffect(() => {

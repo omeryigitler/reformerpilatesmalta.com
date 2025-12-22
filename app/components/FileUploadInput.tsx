@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { Upload, Image as ImageIcon } from "lucide-react";
-import Image from "next/image";
 
 export const FileUploadInput = ({ label, onChange, previewUrl }: { label: string, onChange: (file: File) => void, previewUrl: string }) => {
     const inputId = `file-input-${label.replace(/\s/g, '-')}`;
