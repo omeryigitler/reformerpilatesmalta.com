@@ -950,8 +950,8 @@ export const AdminPanel = ({
                                                         ${isTaken
                                                                         ? 'bg-red-50 text-red-400 border-red-100 cursor-not-allowed opacity-60'
                                                                         : newSlotTime === time
-                                                                            ? 'bg-green-600 text-white border-green-600 shadow-md transform scale-105'
-                                                                            : 'bg-white text-gray-600 border-gray-200 hover:border-green-300 hover:text-green-600'
+                                                                            ? 'bg-[#CE8E94] text-white border-[#CE8E94] shadow-md transform scale-105'
+                                                                            : 'bg-white text-gray-600 border-gray-200 hover:border-[#CE8E94] hover:text-[#CE8E94]'
                                                                     }
                                                     `}
                                                             >
@@ -976,7 +976,7 @@ export const AdminPanel = ({
                                                     <Switch
                                                         checked={isRecurring}
                                                         onCheckedChange={setIsRecurring}
-                                                        className="data-[state=checked]:bg-green-500"
+                                                        className="data-[state=checked]:bg-[#CE8E94]"
                                                     />
                                                 </div>
 
@@ -987,8 +987,8 @@ export const AdminPanel = ({
                                                                 key={weeks}
                                                                 onClick={() => setRecurringWeeks(weeks)}
                                                                 className={`py-2 rounded-xl text-xs font-bold transition-all border ${recurringWeeks === weeks
-                                                                    ? 'bg-green-600 text-white border-green-600 shadow-sm'
-                                                                    : 'bg-white text-gray-600 border-gray-200 hover:border-green-300'
+                                                                    ? 'bg-[#CE8E94] text-white border-[#CE8E94] shadow-sm'
+                                                                    : 'bg-white text-gray-600 border-gray-200 hover:border-[#CE8E94]'
                                                                     }`}
                                                             >
                                                                 {weeks} Weeks
