@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { LogOut, Calendar, Users, TrendingUp, Edit3, Star, Award, Mail, Clock, Plus, Trash2, Home, UserPlus, ShieldCheck, ChevronDown, Check, Search, FileText, MessageSquareText, CalendarPlus, User, Sparkles } from 'lucide-react';
 import { Switch } from "@/components/ui/switch";
 import { Slot, UserType, ManagementState } from '../types';
 import { db } from '../firebase';
-import { doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc, updateDoc, addDoc, collection } from 'firebase/firestore';
+import { CustomSelect } from './ui/CustomSelect';
+import { DatePicker } from './ui/DatePicker';
+import { TIME_SLOTS } from '../utils/constants';
 import { useNotification } from '../context/NotificationContext';
 import { useConfirm } from '../context/ConfirmContext';
 import { formatDateDisplay, getTodayDate, isPastSlot } from '../utils/helpers';
@@ -29,6 +32,29 @@ interface AdminPanelProps {
     navigateToHome: () => void;
 }
 
+// --- HELPER WRAPPER FOR HIGHLIGHTING ---
+const HighlightedText = ({ text, highlight }: { text: string, highlight: string }) => {
+    if (!highlight.trim()) {
+        return <>{text}</>;
+    }
+    const regex = new RegExp(`(${highlight})`, 'gi');
+    const parts = text.split(regex);
+
+    return (
+        <span>
+            {parts.map((part, i) =>
+                regex.test(part) ? (
+                    <span key={i} className="bg-yellow-200 text-gray-900 border-b-2 border-yellow-400 animate-pulse font-bold px-0.5 rounded-sm">
+                        {part}
+                    </span>
+                ) : (
+                    <span key={i}>{part}</span>
+                )
+            )}
+        </span>
+    );
+};
+
 export const AdminPanel = ({
     loggedInUser,
     slots,
@@ -42,17 +68,73 @@ export const AdminPanel = ({
     const { showConfirm } = useConfirm();
     const [activeTab, setActiveTab] = useState<'bookings' | 'members' | 'management' | 'analytics'>('bookings');
 
+    // --- PAST BOOKING LOGIC ---
+    const [pastSlotDate, setPastSlotDate] = useState('');
+    const [pastSlotTime, setPastSlotTime] = useState('');
+
+    const handleAddPastSlot = async () => {
+        if (!selectedMember || !pastSlotDate || !pastSlotTime) return;
+
+        // Convert DD/MM/YYYY to YYYY-MM-DD
+        let dateStr = pastSlotDate;
+        if (pastSlotDate.includes('/')) {
+            const parts = pastSlotDate.split('/');
+            if (parts.length === 3) {
+                // Input: DD/MM/YYYY -> Output: YYYY-MM-DD
+                dateStr = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+        }
+
+        // Validate Time (HH:MM)
+        const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+        if (!timeRegex.test(pastSlotTime)) {
+            showNotification("Invalid time format. Use HH:MM (e.g., 09:30)", "error");
+            return;
+        }
+
+        try {
+            // Check if slot exists
+            const existing = slots.find(s => s.date === dateStr && s.time === pastSlotTime);
+
+            if (existing) {
+                // If it exists and is available, we can just "book" it retroactively
+                if (existing.status === 'Available') {
+                    await updateDoc(doc(db, "slots", existing.id!), {
+                        status: 'Completed',
+                        bookedBy: `${selectedMember.firstName} ${selectedMember.lastName}`,
+                        bookedByEmail: selectedMember.email
+                    });
+                    showNotification("Existing slot converted to completed booking", "success");
+                } else {
+                    showNotification("Slot already exists and is not available", "error");
+                    return;
+                }
+            } else {
+                // Create new COMPLETED slot
+                await addDoc(collection(db, "slots"), {
+                    date: dateStr,
+                    time: pastSlotTime,
+                    status: 'Completed',
+                    bookedBy: `${selectedMember.firstName} ${selectedMember.lastName}`,
+                    bookedByEmail: selectedMember.email
+                });
+                showNotification("Past booking added successfully", "success");
+            }
+            // Reset
+            setPastSlotDate('');
+            setPastSlotTime('');
+        } catch (error) {
+            console.error("Error adding past slot", error);
+            showNotification("Failed to add past slot", "error");
+        }
+    };
+
     const [newSlotTime, setNewSlotTime] = useState('');
     const [newSlotDate, setNewSlotDate] = useState('');
-
-    useEffect(() => {
-        setNewSlotDate(getTodayDate());
-    }, []);
-
-    // NEW: Auto-update removed for stability. 
-    // Manual trigger added in Management tab.
-
-
+    // NEW: Recurring Slot State
+    const [isRecurring, setIsRecurring] = useState(false);
+    const [recurringWeeks, setRecurringWeeks] = useState(4); // Default 4 weeks
+    const [isPastBookingOpen, setIsPastBookingOpen] = useState(false); // Collapsible Past Booking
     // NEW: Date Filter State
     const [dateFilter, setDateFilter] = useState<'All' | 'Today' | 'Week' | 'Month' | 'Custom'>('Today');
     const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
@@ -63,11 +145,11 @@ export const AdminPanel = ({
     const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Completed' | 'Available'>('All');
     const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
 
-    const { filteredSlots, groupedSlots } = useMemo(() => {
+    const filteredSlots = useMemo(() => {
         const todayStr = getTodayDate();
         const now = new Date();
 
-        const filtered = slots.filter(slot => {
+        return slots.filter(slot => {
             // 1. Status Filter
             const isActuallyCompleted = slot.status === 'Completed' || isPastSlot(slot.date, slot.time);
             const isActuallyActive = (slot.status === 'Booked' || slot.status === 'Active') && !isActuallyCompleted;
@@ -105,14 +187,6 @@ export const AdminPanel = ({
 
             return statusMatch && dateMatch;
         });
-
-        const grouped = filtered.reduce((groups, slot) => {
-            if (!groups[slot.date]) groups[slot.date] = [];
-            groups[slot.date].push(slot);
-            return groups;
-        }, {} as Record<string, Slot[]>);
-
-        return { filteredSlots: filtered, groupedSlots: grouped };
     }, [slots, statusFilter, dateFilter, customStartDate, customEndDate]);
 
     const [editingSlot, setEditingSlot] = useState<Slot | null>(null);
@@ -419,32 +493,63 @@ export const AdminPanel = ({
 
 
     const handleAddSlot = async () => {
-        const timeRegex = /^(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$|^([01]?[0-9]|2[0-3]):[0-5][0-9]$/i;
+        // Strict 24-Hour Format Validation (HH:MM)
+        const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
 
-        if (!newSlotTime || !timeRegex.test(newSlotTime.trim())) {
-            showNotification('Please enter a valid time (e.g., 09:00 AM or 15:30).', 'error');
+        if (!timeRegex.test(newSlotTime)) {
+            showNotification('Please enter a valid time (e.g., 09:00 or 15:30).', 'error');
             return;
         }
         if (!newSlotDate) {
             showNotification('Please select a date for the slot.', 'error');
             return;
         }
-        if (slots.some(s => s.date === newSlotDate && s.time.toLowerCase() === newSlotTime.trim().toLowerCase())) {
-            showNotification(`A slot for ${newSlotDate} at ${newSlotTime.trim()} already exists.`, 'error');
-            return;
-        }
 
         const normalizedTime = newSlotTime.trim();
-        // Enforce YYYY-MM-DD format strictly
-        const normalizedDate = new Date(newSlotDate).toISOString().split('T')[0];
+        const initialDateObj = new Date(newSlotDate);
 
-        const newSlot: Slot = { date: normalizedDate, time: normalizedTime, status: 'Available', bookedBy: null, bookedByEmail: null };
-        try {
-            await setDoc(doc(db, "slots", `${normalizedDate}_${normalizedTime}`), newSlot);
+        // Calculate iterations
+        const iterations = isRecurring ? recurringWeeks : 1;
+        let addedCount = 0;
+        let collisionCount = 0;
+
+        for (let i = 0; i < iterations; i++) {
+            // Calculate target date for this iteration
+            // We use simple date arithmetic. Be careful with timezones, but since newSlotDate is YYYY-MM-DD string...
+            // Best way: create Date object, add Days, get YYYY-MM-DD string back.
+            const targetDateObj = new Date(initialDateObj);
+            targetDateObj.setDate(initialDateObj.getDate() + (i * 7));
+
+            // Format back to YYYY-MM-DD
+            const year = targetDateObj.getFullYear();
+            const month = String(targetDateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(targetDateObj.getDate()).padStart(2, '0');
+            const targetDateStr = `${year}-${month}-${day}`;
+
+            // Check collision locally
+            if (slots.some(s => s.date === targetDateStr && s.time.toLowerCase() === normalizedTime.toLowerCase())) {
+                collisionCount++;
+                continue; // Skip this week if occupied
+            }
+
+            const newSlot: Slot = { date: targetDateStr, time: normalizedTime, status: 'Available', bookedBy: null, bookedByEmail: null };
+
+            try {
+                await setDoc(doc(db, "slots", `${targetDateStr}_${normalizedTime}`), newSlot);
+                addedCount++;
+            } catch (e) {
+                console.error("Error creating slot", e);
+            }
+        }
+
+        if (addedCount > 0) {
             setNewSlotTime('');
-            showNotification('New slot added!', 'success');
-        } catch (e) {
-            showNotification('Error adding slot', 'error');
+            // Optional: setIsRecurring(false); // Keep it active for bulk adding? Maybe safer to reset.
+            showNotification(`Success! ${addedCount} slots added. (${collisionCount} skipped due to collision)`, 'success');
+        } else if (collisionCount > 0) {
+            showNotification(`All ${collisionCount} slots already existed!`, 'error');
+        } else {
+            showNotification('Error adding slots', 'error');
         }
     };
 
@@ -537,59 +642,60 @@ export const AdminPanel = ({
         setEditingSlot(slot);
         setEditFormData({ date: slot.date, time: slot.time });
     };
-    const rootClasses = "pilates-root min-h-screen flex flex-col items-center p-4 md:p-10 space-y-10 font-sans bg-[#FFF0E5]";
-    return (
-        <div className={rootClasses}>
-            <div className="w-full max-w-7xl px-8 md:px-16 py-10 bg-white/60 backdrop-blur-md rounded-[3rem] shadow-2xl border border-white/50 space-y-12">
-                {/* ... header ... */}
+    return <div className="pilates-root min-h-screen flex flex-col items-center p-4 md:p-10 space-y-10 font-sans bg-[#FFF0E5]">
+        <div className="w-full max-w-7xl px-8 md:px-16 py-10 bg-white/60 backdrop-blur-md rounded-[3rem] shadow-2xl border border-white/50 space-y-12">
+            {/* ... header ... */}
 
 
-                <div className="flex justify-between items-start md:items-center border-b border-[#CE8E94]/20 pb-6">
-                    <h1 className="text-4xl font-bold text-[#CE8E94] flex items-center gap-3">
-                        Admin Panel
-                    </h1>
-                    <div className="flex flex-col sm:flex-row gap-3 items-end">
-                        <Button
-                            onClick={navigateToHome}
-                            className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-xl text-sm font-bold hover:bg-gray-100 transition duration-300 flex items-center gap-2 w-full sm:w-auto justify-center relative group"
-                        >
-                            {managementState.holidayMode && <SantaHat className="absolute -top-4 -left-3 w-8 h-8 -rotate-[15deg] z-20 transition-all duration-500 group-hover:-rotate-[35deg] group-hover:-translate-y-1" />}
-                            <Home className="w-4 h-4" /> Home
-                        </Button>
-                        <Button
-                            onClick={handleLogout}
-                            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-red-100 hover:text-red-500 transition duration-300 flex items-center gap-2 w-full sm:w-auto justify-center"
-                        >
-                            <LogOut className="w-4 h-4" /> Logout
-                        </Button>
-                    </div>
+            <div className="flex justify-between items-start md:items-center border-b border-[#CE8E94]/20 pb-6">
+                <h1 className="text-4xl font-bold text-[#CE8E94] flex items-center gap-3">
+                    Admin Panel
+                </h1>
+                <div className="flex flex-col sm:flex-row gap-3 items-end">
+                    <Button
+                        onClick={navigateToHome}
+                        className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-xl text-sm font-bold hover:bg-gray-100 transition duration-300 flex items-center gap-2 w-full sm:w-auto justify-center relative group"
+                    >
+                        {managementState.holidayMode && <SantaHat className="absolute -top-4 -left-3 w-8 h-8 -rotate-[15deg] z-20 transition-all duration-500 group-hover:-rotate-[35deg] group-hover:-translate-y-1" />}
+                        <Home className="w-4 h-4" /> Home
+                    </Button>
+                    <Button
+                        onClick={handleLogout}
+                        className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-red-100 hover:text-red-500 transition duration-300 flex items-center gap-2 w-full sm:w-auto justify-center"
+                    >
+                        <LogOut className="w-4 h-4" /> Logout
+                    </Button>
                 </div>
+            </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 w-full max-w-4xl mx-auto">
-                    {(['bookings', 'members', 'analytics', 'management'] as const).map(tab => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`flex flex-col items-center justify-center p-4 rounded-2xl transition-all duration-300 border-2 ${activeTab === tab ? 'bg-white border-[#CE8E94] shadow-lg scale-105' : 'bg-white/50 border-transparent hover:bg-white hover:shadow-md'}`}
-                        >
-                            <div className={`p-3 rounded-full mb-2 ${activeTab === tab ? 'bg-[#CE8E94] text-white' : 'bg-gray-100 text-gray-500'}`}>
-                                {tab === 'bookings' && <Calendar className="w-6 h-6" />}
-                                {tab === 'members' && <Users className="w-6 h-6" />}
-                                {tab === 'analytics' && <TrendingUp className="w-6 h-6" />}
-                                {tab === 'management' && <Edit3 className="w-6 h-6" />}
-                            </div>
-                            <span className={`font-bold capitalize ${activeTab === tab ? 'text-[#CE8E94]' : 'text-gray-500'}`}>{tab}</span>
-                        </button>
-                    ))}
-                </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 w-full max-w-4xl mx-auto">
+                {(['bookings', 'members', 'analytics', 'management'] as const).map(tab => (
+                    <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={`flex flex-col items-center justify-center p-4 rounded-2xl transition-all duration-300 border-2 ${activeTab === tab ? 'bg-white border-[#CE8E94] shadow-lg scale-105' : 'bg-white/50 border-transparent hover:bg-white hover:shadow-md'}`}
+                    >
+                        <div className={`p-3 rounded-full mb-2 ${activeTab === tab ? 'bg-[#CE8E94] text-white' : 'bg-gray-100 text-gray-500'}`}>
+                            {tab === 'bookings' && <Calendar className="w-6 h-6" />}
+                            {tab === 'members' && <Users className="w-6 h-6" />}
+                            {tab === 'analytics' && <TrendingUp className="w-6 h-6" />}
+                            {tab === 'management' && <Edit3 className="w-6 h-6" />}
+                        </div>
+                        <span className={`font-bold capitalize ${activeTab === tab ? 'text-[#CE8E94]' : 'text-gray-500'}`}>{tab}</span>
+                    </button>
+                ))}
+            </div>
 
-                {activeTab === 'analytics' && (
+            {
+                activeTab === 'analytics' && (
                     <ErrorBoundary>
                         <AdminAnalytics slots={slots} users={users} currentLogo={managementState.logo} />
                     </ErrorBoundary>
-                )}
+                )
+            }
 
-                {activeTab === 'management' && (
+            {
+                activeTab === 'management' && (
                     <div className="space-y-10 p-6 md:p-8 rounded-[2rem] bg-white/50 border border-white/40">
                         {/* Holiday Mode Toggle */}
                         <div className="bg-white/80 backdrop-blur-sm p-6 rounded-3xl border border-[#CE8E94]/20 shadow-sm flex items-center justify-between group hover:shadow-md transition-shadow">
@@ -768,15 +874,17 @@ export const AdminPanel = ({
 
 
 
-                        <div className="flex justify-end pt-6">
+                        <div className="flex justify-end pt-6 items-center">
                             <Button onClick={handleSaveManagement} className="bg-[#CE8E94] hover:bg-[#B57A80] text-white py-6 px-8 rounded-xl text-lg shadow-xl shadow-[#CE8E94]/20 font-bold transform hover:scale-105 transition-all">
                                 Save Changes
                             </Button>
                         </div>
                     </div>
-                )}
+                )
+            }
 
-                {activeTab === 'bookings' && (
+            {
+                activeTab === 'bookings' && (
                     <div className="space-y-10 p-6 md:p-8 rounded-[2rem] bg-white/50 border border-white/40">
                         <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-3 border-b pb-2"><Clock className="w-6 h-6 text-[#CE8E94]" /> Class Schedule Management</h3>
 
@@ -789,7 +897,7 @@ export const AdminPanel = ({
                                     selectedDate={newSlotDate}
                                 />
                             </div>
-                            <div className="lg:col-span-1 flex flex-col justify-between space-y-6 bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-white/50 h-full">
+                            <div className="lg:col-span-1 flex flex-col justify-between space-y-4 bg-white p-5 rounded-[2rem] shadow-xl border border-white/50 h-full">
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-gray-600">Selected Date</label>
                                     <div className="text-2xl font-bold text-gray-800 border-b pb-2 border-gray-200">
@@ -797,57 +905,124 @@ export const AdminPanel = ({
                                     </div>
                                 </div>
 
-                                {/* Quick Time Selection Grid */}
-                                <div className="space-y-3">
-                                    <label className="text-sm font-bold text-gray-600">
-                                        Quick Time Select
-                                    </label>
-                                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-                                        {['07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'].map(time => {
-                                            const isTaken = slots.some(s => s.date === newSlotDate && s.time === time && (s.status === 'Booked' || s.status === 'Active' || s.status === 'Completed'));
-                                            return (
-                                                <button
-                                                    key={time}
-                                                    disabled={isTaken}
-                                                    onClick={() => setNewSlotTime(time)}
-                                                    className={`
+                                <div className="space-y-4 relative">
+                                    <label className="text-sm font-bold text-gray-600">Select Time</label>
+
+                                    <div className="bg-white/80 backdrop-blur-sm p-8 rounded-[2.5rem] shadow-xl border border-white/60 relative overflow-hidden">
+                                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-300 to-emerald-400"></div>
+                                        <h3 className="text-2xl font-bold mb-8 text-gray-800 flex items-center gap-3">
+                                            <div className="p-3 bg-green-100 rounded-2xl text-green-600">
+                                                <CalendarPlus className="w-6 h-6" />
+                                            </div>
+                                            Add New Slot
+                                        </h3>
+
+                                        <div className="space-y-6">
+                                            {/* Date Picker */}
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-bold text-gray-600 ml-1">Select Date</label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="date"
+                                                        value={newSlotDate}
+                                                        onChange={(e) => setNewSlotDate(e.target.value)}
+                                                        className={standardInputClass}
+                                                        style={{ colorScheme: 'light' }} // Force light calendar icon
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Quick Time Selection Grid */}
+                                            <div className="space-y-3">
+                                                <label className="text-sm font-bold text-gray-600">
+                                                    Quick Time Select
+                                                </label>
+                                                <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                                                    {['07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'].map(time => {
+                                                        const isTaken = slots.some(s => s.date === newSlotDate && s.time === time && (s.status === 'Booked' || s.status === 'Active' || s.status === 'Completed'));
+                                                        return (
+                                                            <button
+                                                                key={time}
+                                                                disabled={isTaken}
+                                                                onClick={() => setNewSlotTime(time)}
+                                                                className={`
                                                         py-2 px-1 text-sm font-bold rounded-lg transition-all duration-200 border
                                                         ${isTaken
-                                                            ? 'bg-red-50 text-red-400 border-red-100 cursor-not-allowed opacity-60'
-                                                            : newSlotTime === time
-                                                                ? 'bg-[#CE8E94] text-white border-[#CE8E94] shadow-md transform scale-105'
-                                                                : 'bg-white text-gray-600 border-gray-200 hover:border-[#CE8E94] hover:text-[#CE8E94]'
-                                                        }
+                                                                        ? 'bg-red-50 text-red-400 border-red-100 cursor-not-allowed opacity-60'
+                                                                        : newSlotTime === time
+                                                                            ? 'bg-green-600 text-white border-green-600 shadow-md transform scale-105'
+                                                                            : 'bg-white text-gray-600 border-gray-200 hover:border-green-300 hover:text-green-600'
+                                                                    }
                                                     `}
-                                                >
-                                                    {time}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
+                                                            >
+                                                                {time}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
 
-                                <div className="space-y-2 relative">
-                                    <label className="text-sm font-bold text-gray-600">Custom Time</label>
-                                    <div className="relative">
-                                        <Clock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                                        <input
-                                            type="text"
-                                            placeholder="e.g., 04:25 or 10:30"
-                                            value={newSlotTime}
-                                            onChange={e => setNewSlotTime(e.target.value)}
-                                            className={`${standardInputClass} block text-lg py-4 pl-12`}
-                                        />
-                                    </div>
-                                    <p className="text-xs text-gray-400">Type manually for custom times (e.g. 04:25)</p>
-                                </div>
+                                            <div className="space-y-4 pt-2 border-t border-gray-100">
+                                                <div className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`p-2 rounded-lg ${isRecurring ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-500'}`}>
+                                                            <CalendarPlus className="w-5 h-5" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-bold text-gray-700">Recurring Slot</p>
+                                                            <p className="text-xs text-gray-500">Repeat for multiple weeks</p>
+                                                        </div>
+                                                    </div>
+                                                    <Switch
+                                                        checked={isRecurring}
+                                                        onCheckedChange={setIsRecurring}
+                                                        className="data-[state=checked]:bg-green-500"
+                                                    />
+                                                </div>
 
-                                <Button
-                                    onClick={handleAddSlot}
-                                    className="w-full py-4 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-bold shadow-md transition-colors text-lg flex items-center justify-center"
-                                >
-                                    <Plus className="w-6 h-6 mr-2" /> Add Slot
-                                </Button>
+                                                {isRecurring && (
+                                                    <div className="grid grid-cols-4 gap-2">
+                                                        {[2, 4, 8, 12].map((weeks) => (
+                                                            <button
+                                                                key={weeks}
+                                                                onClick={() => setRecurringWeeks(weeks)}
+                                                                className={`py-2 rounded-xl text-xs font-bold transition-all border ${recurringWeeks === weeks
+                                                                    ? 'bg-green-600 text-white border-green-600 shadow-sm'
+                                                                    : 'bg-white text-gray-600 border-gray-200 hover:border-green-300'
+                                                                    }`}
+                                                            >
+                                                                {weeks} Weeks
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="space-y-2 relative">
+                                                <label className="text-sm font-bold text-gray-600">Custom Time</label>
+                                                <div className="relative">
+                                                    <Clock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                                                    <input
+                                                        type="text"
+                                                        placeholder="e.g., 04:25 or 10:30"
+                                                        value={newSlotTime}
+                                                        onChange={e => setNewSlotTime(e.target.value)}
+                                                        className={`${standardInputClass} block text-lg py-4 pl-12`}
+                                                    />
+                                                </div>
+                                                <p className="text-xs text-gray-400">Type manually for custom times (e.g. 04:25)</p>
+                                            </div>
+
+                                            <Button
+                                                onClick={handleAddSlot}
+                                                className="w-full py-4 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-bold shadow-md transition-colors text-lg flex items-center justify-center"
+                                            >
+                                                <Plus className="w-6 h-6 mr-2" /> Add Slot
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                </div>
                             </div>
                         </div>
 
@@ -944,7 +1119,13 @@ export const AdminPanel = ({
                                 {filteredSlots.length === 0 ? (
                                     <div className="text-center py-12 text-gray-400 italic">No slots found matching your filters.</div>
                                 ) : (
-                                    Object.entries(groupedSlots)
+                                    Object.entries(
+                                        filteredSlots.reduce((groups, slot) => {
+                                            if (!groups[slot.date]) groups[slot.date] = [];
+                                            groups[slot.date].push(slot);
+                                            return groups;
+                                        }, {} as Record<string, Slot[]>)
+                                    )
                                         .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime())
                                         .map(([date, slotsForDate]) => (
                                             <div key={date} className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100">
@@ -962,7 +1143,8 @@ export const AdminPanel = ({
                                                 </div>
 
                                                 {/* Compact Slots Grid */}
-                                                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                                                {/* Compact Slots Grid - Adjusted to 4 columns for large screens */}
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                                     {slotsForDate
                                                         .sort((a, b) => {
                                                             // Custom sort to handle AM/PM correctly if needed, but lexicographical is usually okay for 24h or consistent format. 
@@ -1052,204 +1234,211 @@ export const AdminPanel = ({
                             </div>
                         </div>
                     </div>
+
                 )}
-
-                {activeTab === 'members' && (
-                    <div className="space-y-6 p-6 md:p-8 rounded-[2rem] bg-white/50 border border-white/40">
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-200/50 pb-6">
-                            <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-3"><Users className="w-6 h-6 text-[#CE8E94]" /> Member Management</h3>
-                            <div className="relative w-full md:w-72">
-                                <input
-                                    type="text"
-                                    placeholder="Search by name or email..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 text-gray-900 placeholder:text-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#CE8E94]/20 shadow-sm"
-                                />
-                                <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-12 text-xs font-bold uppercase text-gray-400 pb-2 px-4 gap-4">
-                                <div className="col-span-12 md:col-span-5 xl:col-span-4 text-center xl:text-left md:pl-0 xl:pl-2">User info</div>
-                                <div className="hidden md:block md:col-span-2 xl:col-span-3 text-center">Status</div>
-                                <div className="hidden md:block md:col-span-2 xl:col-span-3 text-center">Stats</div>
-                                <div className="hidden md:block md:col-span-3 xl:col-span-2 text-center xl:text-right pr-0 xl:pr-2">Actions</div>
-                            </div>
-
-                            <div className="space-y-3">
-                                {filteredUsers.map((user, idx) => {
-                                    const stats = getMemberStats(user.email);
-                                    const badges = getMemberBadges(user, stats);
-
-                                    return (
-                                        <div key={idx} className="grid grid-cols-12 items-center p-6 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all group gap-4 relative">
-                                            {/* User Info */}
-                                            <div className="col-span-12 md:col-span-5 xl:col-span-4 flex flex-col md:flex-row items-center gap-3 md:gap-4 min-w-0 text-center md:text-center xl:text-left md:justify-center xl:justify-start">
-                                                <div className={`w-14 h-14 xl:w-16 xl:h-16 flex-shrink-0 rounded-full flex items-center justify-center font-bold text-sm bg-[#CE8E94]/10 border border-[#CE8E94]/20 shadow-sm text-[#CE8E94]`}>
-                                                    <User className="w-7 h-7 xl:w-8 xl:h-8" />
-                                                </div>
-                                                <div className="min-w-0 flex-1 w-full md:w-auto">
-                                                    <div className="flex flex-col md:flex-row items-center gap-1 md:gap-2 mb-0.5 justify-center md:justify-center xl:justify-start">
-                                                        <h4 className="font-bold text-gray-800 truncate text-base xl:text-xl font-sans">{user.firstName} {user.lastName}</h4>
-                                                        {user.role === 'admin' && <span className="text-[10px] xl:text-xs font-bold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-100">ADMIN</span>}
-                                                    </div>
-                                                    <p className="text-xs xl:text-sm text-gray-500 truncate">{user.email}</p>
-                                                    {/* Mobile Badges */}
-                                                    <div className="flex md:hidden flex-wrap justify-center gap-1 mt-2">
-                                                        {badges.map((b, i) => (
-                                                            <span key={i} className={`text-[10px] font-bold px-2 py-0.5 rounded border border-transparent ${b.color}`}>{b.label}</span>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Status / Badges (Desktop) */}
-                                            <div className="hidden md:flex md:col-span-2 xl:col-span-3 flex-wrap gap-2 items-center justify-center">
-                                                {badges.map((b, i) => (
-                                                    <span key={i} className={`text-xs xl:text-sm font-bold px-4 py-1.5 xl:px-5 xl:py-2 rounded-full border border-transparent ${b.color}`}>{b.label}</span>
-                                                ))}
-                                                {user.role !== 'admin' && badges.length === 0 && <span className="text-xs xl:text-sm font-bold px-4 py-1.5 xl:px-5 xl:py-2 rounded-full bg-gray-50 text-gray-400 border border-gray-100">Member</span>}
-                                            </div>
-
-                                            {/* Stats (Desktop) */}
-                                            <div className="hidden md:block md:col-span-2 xl:col-span-3 text-center">
-                                                <div className="flex flex-col items-center">
-                                                    <span className="text-lg xl:text-3xl font-bold text-gray-700 font-sans">{stats.total}</span>
-                                                    <span className="text-[10px] xl:text-xs text-gray-400 uppercase tracking-wider">Bookings</span>
-                                                </div>
-                                            </div>
-
-                                            {/* Actions */}
-                                            <div className="col-span-12 md:col-span-3 xl:col-span-2 flex justify-center md:justify-center xl:justify-end mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-gray-100">
-                                                <Button
-                                                    onClick={() => {
-                                                        setSelectedMember(user);
-                                                        setMemberNotes(user.adminNotes || '');
-                                                    }}
-                                                    className="w-full md:w-auto bg-[#CE8E94] hover:bg-[#b57a80] text-white text-xs xl:text-sm font-bold px-6 py-2.5 xl:px-8 xl:py-3 rounded-xl shadow-sm transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2 font-sans"
-                                                >
-                                                    Manage
-                                                    <ChevronDown className="w-3 h-3" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-
-                                {filteredUsers.length === 0 && (
-                                    <div className="text-center py-12 text-gray-400">
-                                        No members found matching &quot;{searchTerm}&quot;
-                                    </div>
-                                )}
-
-                            </div>
+            {activeTab === 'members' && (
+                <div className="space-y-6 p-6 md:p-8 rounded-[2rem] bg-white/50 border border-white/40">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-200/50 pb-6">
+                        <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-3"><Users className="w-6 h-6 text-[#CE8E94]" /> Member Management</h3>
+                        <div className="relative w-full md:w-72">
+                            <input
+                                type="text"
+                                placeholder="Search by name or email..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 text-gray-900 placeholder:text-gray-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#CE8E94]/20 shadow-sm"
+                            />
+                            <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                         </div>
                     </div>
-                )}
 
-                {/* Book For Member Modal (Reverse Flow) */}
-                {bookingForMember && (
-                    <Modal onClose={() => setBookingForMember(null)} showCloseIcon={false}>
-                        <div className="space-y-6">
-                            <div className="text-center border-b border-gray-100 pb-4">
-                                <h2 className="text-xl font-bold text-gray-800">Book for {bookingForMember?.firstName}</h2>
-                                <p className="text-xs text-gray-400 mb-3">Select an available slot below</p>
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-12 text-xs font-bold uppercase text-gray-400 pb-2 px-4 gap-4">
+                            <div className="col-span-12 md:col-span-5 xl:col-span-4 text-center xl:text-left md:pl-0 xl:pl-2">User info</div>
+                            <div className="hidden md:block md:col-span-2 xl:col-span-3 text-center">Status</div>
+                            <div className="hidden md:block md:col-span-2 xl:col-span-3 text-center">Stats</div>
+                            <div className="hidden md:block md:col-span-3 xl:col-span-2 text-center xl:text-right pr-0 xl:pr-2">Actions</div>
+                        </div>
 
-                                <div className="flex justify-center gap-2">
-                                    {['today', 'week', 'all'].map((filter) => (
-                                        <button
-                                            key={filter}
-                                            onClick={() => setBookingDateFilter(filter as 'today' | 'week' | 'all')}
-                                            className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${bookingDateFilter === filter
-                                                ? 'bg-[#CE8E94] text-white shadow-md'
-                                                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                                                }`}
-                                        >
-                                            {filter === 'all' ? 'All' : filter === 'today' ? 'Today' : 'This Week'}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+                        <div className="space-y-3">
+                            {filteredUsers.map((user, idx) => {
+                                const stats = getMemberStats(user.email);
+                                const badges = getMemberBadges(user, stats);
 
-                            <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-2 hide-scrollbar">
-                                {/* Removed duplicate generic empty check to rely on the specific one below */}
-
-                                {slots
-                                    .filter(s => s.status === 'Available')
-                                    .filter(s => {
-                                        if (bookingDateFilter === 'all') return true;
-
-                                        const todayStr = getTodayDate();
-                                        const now = new Date(); // Only used for Week/Time comparision if needed, but 'today' comparison must use standardized string
-
-                                        if (bookingDateFilter === 'today') {
-                                            return s.date === todayStr;
-                                        }
-
-                                        if (bookingDateFilter === 'week') {
-                                            const slotDate = new Date(s.date);  // DEFINE IT
-                                            const nextWeek = new Date(now);
-                                            nextWeek.setDate(now.getDate() + 7);
-                                            return slotDate >= now && slotDate <= nextWeek;
-                                        }
-                                        return true;
-                                    })
-                                    .sort((a, b) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime())
-                                    .map((slot, i) => (
-                                        <div key={i} className="flex justify-between items-center py-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors px-2">
-                                            <div className="flex flex-col">
-                                                <span className="font-bold text-gray-900 text-lg">{new Date(slot.date).toLocaleDateString('en-US', { weekday: 'long' })}</span>
-                                                <span className="text-sm text-gray-500">{new Date(slot.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} • {slot.time}</span>
+                                return (
+                                    <div key={idx} className="grid grid-cols-12 items-center p-6 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all group gap-4 relative">
+                                        {/* User Info */}
+                                        <div className="col-span-12 md:col-span-5 xl:col-span-4 flex flex-col md:flex-row items-center gap-3 md:gap-4 min-w-0 text-center md:text-center xl:text-left md:justify-center xl:justify-start">
+                                            <div className={`w-14 h-14 xl:w-16 xl:h-16 flex-shrink-0 rounded-full flex items-center justify-center font-bold text-sm bg-[#CE8E94]/10 border border-[#CE8E94]/20 shadow-sm text-[#CE8E94]`}>
+                                                <User className="w-7 h-7 xl:w-8 xl:h-8" />
                                             </div>
+                                            <div className="min-w-0 flex-1 w-full md:w-auto">
+                                                <div className="flex flex-col md:flex-row items-center gap-1 md:gap-2 mb-0.5 justify-center md:justify-center xl:justify-start">
+                                                    <h4 className="font-bold text-gray-800 truncate text-base xl:text-xl font-sans">
+                                                        <HighlightedText text={`${user.firstName} ${user.lastName}`} highlight={searchTerm} />
+                                                    </h4>
+                                                    {user.role === 'admin' && <span className="text-[10px] xl:text-xs font-bold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-100">ADMIN</span>}
+                                                </div>
+                                                <p className="text-xs xl:text-sm text-gray-500 truncate">
+                                                    <HighlightedText text={user.email} highlight={searchTerm} />
+                                                </p>
+                                                {/* Mobile Badges */}
+                                                <div className="flex md:hidden flex-wrap justify-center gap-1 mt-2">
+                                                    {badges.map((b, i) => (
+                                                        <span key={i} className={`text-[10px] font-bold px-2 py-0.5 rounded border border-transparent ${b.color}`}>{b.label}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Status / Badges (Desktop) */}
+                                        <div className="hidden md:flex md:col-span-2 xl:col-span-3 flex-wrap gap-2 items-center justify-center">
+                                            {badges.map((b, i) => (
+                                                <span key={i} className={`text-xs xl:text-sm font-bold px-4 py-1.5 xl:px-5 xl:py-2 rounded-full border border-transparent ${b.color}`}>{b.label}</span>
+                                            ))}
+                                            {user.role !== 'admin' && badges.length === 0 && <span className="text-xs xl:text-sm font-bold px-4 py-1.5 xl:px-5 xl:py-2 rounded-full bg-gray-50 text-gray-400 border border-gray-100">Member</span>}
+                                        </div>
+
+                                        {/* Stats (Desktop) */}
+                                        <div className="hidden md:block md:col-span-2 xl:col-span-3 text-center">
+                                            <div className="flex flex-col items-center">
+                                                <span className="text-lg xl:text-3xl font-bold text-gray-700 font-sans">{stats.total}</span>
+                                                <span className="text-[10px] xl:text-xs text-gray-400 uppercase tracking-wider">Bookings</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="col-span-12 md:col-span-3 xl:col-span-2 flex justify-center md:justify-center xl:justify-end mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-gray-100">
                                             <Button
-                                                onClick={() => handleBookForMember(slot)}
-                                                className="bg-[#CE8E94] text-white hover:bg-[#b57a80] rounded-full px-6 py-2 text-xs font-bold transition-transform active:scale-95 shadow-md shadow-[#CE8E94]/20"
+                                                onClick={() => {
+                                                    setSelectedMember(user);
+                                                    setMemberNotes(user.adminNotes || '');
+                                                }}
+                                                className="w-full md:w-auto bg-[#CE8E94] hover:bg-[#b57a80] text-white text-xs xl:text-sm font-bold px-6 py-2.5 xl:px-8 xl:py-3 rounded-xl shadow-sm transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2 font-sans"
                                             >
-                                                Book
+                                                Manage
+                                                <ChevronDown className="w-3 h-3" />
                                             </Button>
                                         </div>
-                                    ))}
+                                    </div>
+                                )
+                            })}
 
-                                {slots.filter(s => s.status === 'Available').filter(s => {
+                            {filteredUsers.length === 0 && (
+                                <div className="text-center py-12 text-gray-400">
+                                    No members found matching &quot;{searchTerm}&quot;
+                                </div>
+                            )}
+
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Book For Member Modal (Reverse Flow) */}
+            {bookingForMember && (
+                <Modal onClose={() => setBookingForMember(null)} showCloseIcon={false}>
+                    <div className="space-y-6">
+                        <div className="text-center border-b border-gray-100 pb-4">
+                            <h2 className="text-xl font-bold text-gray-800">Book for {bookingForMember?.firstName}</h2>
+                            <p className="text-xs text-gray-400 mb-3">Select an available slot below</p>
+
+                            <div className="flex justify-center gap-2">
+                                {['today', 'week', 'all'].map((filter) => (
+                                    <button
+                                        key={filter}
+                                        onClick={() => setBookingDateFilter(filter as 'today' | 'week' | 'all')}
+                                        className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${bookingDateFilter === filter
+                                            ? 'bg-[#CE8E94] text-white shadow-md'
+                                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                            }`}
+                                    >
+                                        {filter === 'all' ? 'All' : filter === 'today' ? 'Today' : 'This Week'}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-2 hide-scrollbar">
+                            {/* Removed duplicate generic empty check to rely on the specific one below */}
+
+                            {slots
+                                .filter(s => s.status === 'Available')
+                                .filter(s => {
                                     if (bookingDateFilter === 'all') return true;
-                                    const slotDate = new Date(s.date);
-                                    const now = new Date();
-                                    const todayStr = now.toISOString().split('T')[0];
-                                    if (bookingDateFilter === 'today') return s.date === todayStr;
+
+                                    const todayStr = getTodayDate();
+                                    const now = new Date(); // Only used for Week/Time comparision if needed, but 'today' comparison must use standardized string
+
+                                    if (bookingDateFilter === 'today') {
+                                        return s.date === todayStr;
+                                    }
+
                                     if (bookingDateFilter === 'week') {
+                                        const slotDate = new Date(s.date);  // DEFINE IT
                                         const nextWeek = new Date(now);
                                         nextWeek.setDate(now.getDate() + 7);
                                         return slotDate >= now && slotDate <= nextWeek;
                                     }
                                     return true;
-                                }).length === 0 && (
-                                        <div className="flex flex-col items-center justify-center py-12 opacity-50">
-                                            <Calendar className="w-12 h-12 text-gray-300 mb-2" />
-                                            <p className="text-sm font-bold text-gray-400">No available slots found for {bookingDateFilter}.</p>
+                                })
+                                .sort((a, b) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime())
+                                .map((slot, i) => (
+                                    <div key={i} className="flex justify-between items-center py-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors px-2">
+                                        <div className="flex flex-col">
+                                            <span className="font-bold text-gray-900 text-lg">{new Date(slot.date).toLocaleDateString('en-US', { weekday: 'long' })}</span>
+                                            <span className="text-sm text-gray-500">{new Date(slot.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} • {slot.time}</span>
                                         </div>
-                                    )}
-                                {/* 7. Delete Actions (Danger Zone) */}
-                            </div>
-                            <Button
-                                onClick={() => setBookingForMember(null)}
-                                className="w-full py-4 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-xl font-bold transition-all mt-4"
-                            >
-                                Close
-                            </Button>
-                        </div>
-                    </Modal>
-                )}
+                                        <Button
+                                            onClick={() => handleBookForMember(slot)}
+                                            className="bg-[#CE8E94] text-white hover:bg-[#b57a80] rounded-full px-6 py-2 text-xs font-bold transition-transform active:scale-95 shadow-md shadow-[#CE8E94]/20"
+                                        >
+                                            Book
+                                        </Button>
+                                    </div>
+                                ))}
 
-                {/* Member Details CRM Modal */}
-                {selectedMember && (
+                            {slots.filter(s => s.status === 'Available').filter(s => {
+                                if (bookingDateFilter === 'all') return true;
+                                const slotDate = new Date(s.date);
+                                const now = new Date();
+                                const todayStr = now.toISOString().split('T')[0];
+                                if (bookingDateFilter === 'today') return s.date === todayStr;
+                                if (bookingDateFilter === 'week') {
+                                    const nextWeek = new Date(now);
+                                    nextWeek.setDate(now.getDate() + 7);
+                                    return slotDate >= now && slotDate <= nextWeek;
+                                }
+                                return true;
+                            }).length === 0 && (
+                                    <div className="flex flex-col items-center justify-center py-12 opacity-50">
+                                        <Calendar className="w-12 h-12 text-gray-300 mb-2" />
+                                        <p className="text-sm font-bold text-gray-400">No available slots found for {bookingDateFilter}.</p>
+                                    </div>
+                                )}
+                            {/* 7. Delete Actions (Danger Zone) */}
+                            <div className="pt-4">
+                                <Button
+                                    onClick={() => setBookingForMember(null)}
+                                    className="w-full py-4 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-xl font-bold transition-all"
+                                >
+                                    Close
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </Modal>
+            )
+            }
+
+            {/* Member Details CRM Modal */}
+            {
+                selectedMember && (
                     <Modal onClose={() => setSelectedMember(null)}>
                         <div className="space-y-4 md:space-y-5 pr-1">
 
-                            {/* 1. Header & Profile (Clean Centered) */}
-                            <div className="flex flex-col items-center justify-center text-center pb-2">
-                                <h2 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tighter uppercase mb-2 md:mb-4 font-sans leading-none">{selectedMember?.firstName} <br className="md:hidden" /> {selectedMember?.lastName}</h2>
+                            <div className="flex flex-col items-center justify-center text-center pb-1">
+                                <h2 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tighter uppercase mb-1 font-sans leading-none">{selectedMember?.firstName} {selectedMember?.lastName}</h2>
 
                                 {/* Badge Row */}
                                 <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-4 md:mb-6">
@@ -1280,72 +1469,138 @@ export const AdminPanel = ({
                             <div className="w-full h-px bg-gray-100"></div>
 
                             {/* 2. Stats Row (Interactive & Large) */}
-                            <div className="flex justify-around items-center py-0">
+                            {/* 2. Stats Row (Interactive & Large) */}
+                            {/* 2. Stats Row (Interactive Boxes) */}
+                            <div className="grid grid-cols-3 gap-2 px-1">
                                 <button
                                     onClick={() => setHistoryViewer({ type: 'Total', user: selectedMember! })}
-                                    className="flex flex-col items-center group cursor-pointer p-2 rounded-2xl hover:bg-gray-50 transition-colors"
+                                    className="flex flex-col items-center group cursor-pointer p-2 rounded-xl border border-gray-100 hover:border-[#CE8E94]/50 hover:bg-[#CE8E94]/5 transition-all shadow-sm"
                                 >
-                                    <div className="text-4xl font-black text-gray-900 group-hover:text-[#CE8E94] transition-colors tracking-tight">{getMemberStats(selectedMember?.email ?? '').total}</div>
-                                    <div className="text-[10px] font-bold text-[#CE8E94] opacity-60 uppercase tracking-widest mt-1 group-hover:opacity-100">Total</div>
+                                    <div className="text-2xl font-black text-gray-900 group-hover:text-[#CE8E94] transition-colors tracking-tight">{getMemberStats(selectedMember?.email ?? '').total}</div>
+                                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest group-hover:text-[#CE8E94]">Total</div>
                                 </button>
-                                <div className="w-px h-12 bg-gray-100"></div>
+
                                 <button
                                     onClick={() => setHistoryViewer({ type: 'Active', user: selectedMember! })}
-                                    className="flex flex-col items-center group cursor-pointer p-2 rounded-2xl hover:bg-gray-50 transition-colors"
+                                    className="flex flex-col items-center group cursor-pointer p-2 rounded-xl border border-gray-100 hover:border-[#CE8E94]/50 hover:bg-[#CE8E94]/5 transition-all shadow-sm"
                                 >
-                                    <div className="text-4xl font-black text-gray-900 group-hover:text-[#CE8E94] transition-colors tracking-tight">{getMemberStats(selectedMember?.email ?? '').active}</div>
-                                    <div className="text-[10px] font-bold text-[#CE8E94] opacity-60 uppercase tracking-widest mt-1 group-hover:opacity-100">Active</div>
+                                    <div className="text-2xl font-black text-gray-900 group-hover:text-[#CE8E94] transition-colors tracking-tight">{getMemberStats(selectedMember?.email ?? '').active}</div>
+                                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest group-hover:text-[#CE8E94]">Active</div>
                                 </button>
-                                <div className="w-px h-12 bg-gray-100"></div>
+
                                 <button
                                     onClick={() => setHistoryViewer({ type: 'Done', user: selectedMember! })}
-                                    className="flex flex-col items-center group cursor-pointer p-2 rounded-2xl hover:bg-gray-50 transition-colors"
+                                    className="flex flex-col items-center group cursor-pointer p-2 rounded-xl border border-gray-100 hover:border-[#CE8E94]/50 hover:bg-[#CE8E94]/5 transition-all shadow-sm"
                                 >
-                                    <div className="text-4xl font-black text-gray-300 group-hover:text-[#CE8E94] transition-colors tracking-tight">{getMemberStats(selectedMember?.email ?? '').completed}</div>
-                                    <div className="text-[10px] font-bold text-[#CE8E94] opacity-60 uppercase tracking-widest mt-1 group-hover:opacity-100">Done</div>
+                                    <div className="text-2xl font-black text-gray-300 group-hover:text-[#CE8E94] transition-colors tracking-tight">{getMemberStats(selectedMember?.email ?? '').completed}</div>
+                                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest group-hover:text-[#CE8E94]">Done</div>
                                 </button>
                             </div>
 
                             {/* 3. Compact Action Grid */}
-                            <div className="grid grid-cols-4 gap-3 px-2">
-                                {/* Book Action (Primary - Wide) */}
+                            <div className="grid grid-cols-4 gap-2 px-1">
+                                {/* 1. WhatsApp (Left - Small) */}
+                                {selectedMember?.phone ? (
+                                    <div
+                                        onClick={() => handleSendWhatsApp(selectedMember.phone, selectedMember.firstName)}
+                                        className="col-span-1 bg-[#CE8E94]/5 text-[#CE8E94] p-2 rounded-xl border border-[#CE8E94]/20 hover:bg-[#CE8E94]/10 cursor-pointer flex flex-col items-center justify-center gap-0.5 transition-all"
+                                    >
+                                        <MessageSquareText className="w-4 h-4" />
+                                        <span className="text-[10px] font-bold">WhatsApp</span>
+                                    </div>
+                                ) : (
+                                    <div className="col-span-1 bg-gray-50 text-gray-300 p-2 rounded-xl border border-gray-100 flex flex-col items-center justify-center gap-0.5 cursor-not-allowed">
+                                        <MessageSquareText className="w-4 h-4" />
+                                        <span className="text-[10px] font-bold">No Phone</span>
+                                    </div>
+                                )}
+
+                                {/* 2. Book Action (Center - Wide) */}
                                 <div
                                     onClick={() => {
                                         setBookingForMember(selectedMember);
                                         setSelectedMember(null);
                                     }}
-                                    className="col-span-4 bg-[#CE8E94] text-white p-4 rounded-2xl shadow-lg shadow-[#CE8E94]/20 cursor-pointer flex items-center justify-center gap-3 hover:bg-[#b07278] hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                    className="col-span-2 bg-[#CE8E94] text-white p-3 rounded-xl shadow-lg shadow-[#CE8E94]/20 cursor-pointer flex items-center justify-center gap-2 hover:bg-[#b07278] active:scale-95 transition-all"
                                 >
-                                    <CalendarPlus className="w-6 h-6" />
-                                    <div>
-                                        <div className="font-bold text-lg">Book Class</div>
-                                    </div>
+                                    <CalendarPlus className="w-5 h-5" />
+                                    <div className="font-bold text-sm">Book Class</div>
                                 </div>
 
-                                {/* WhatsApp (Icon Button) */}
-                                {selectedMember?.phone ? (
-                                    <div
-                                        onClick={() => handleSendWhatsApp(selectedMember.phone, selectedMember.firstName)}
-                                        className="col-span-2 bg-[#CE8E94]/5 text-[#CE8E94] p-3 rounded-xl border border-[#CE8E94]/20 hover:bg-[#CE8E94]/10 cursor-pointer flex flex-col items-center justify-center gap-1 transition-all"
-                                    >
-                                        <MessageSquareText className="w-5 h-5" />
-                                        <span className="text-xs font-bold">WhatsApp</span>
-                                    </div>
-                                ) : (
-                                    <div className="col-span-2 bg-gray-50 text-gray-300 p-3 rounded-xl border border-gray-100 flex flex-col items-center justify-center gap-1 cursor-not-allowed">
-                                        <MessageSquareText className="w-5 h-5" />
-                                        <span className="text-xs font-bold">No Phone</span>
-                                    </div>
-                                )}
-
-                                {/* Email (Icon Button) */}
+                                {/* 3. Email (Right - Small) */}
                                 <div
                                     onClick={() => handleSendEmail(selectedMember?.email || '')}
-                                    className="col-span-2 bg-[#CE8E94]/5 text-[#CE8E94] p-3 rounded-xl border border-[#CE8E94]/20 hover:bg-[#CE8E94]/10 cursor-pointer flex flex-col items-center justify-center gap-1 transition-all"
+                                    className="col-span-1 bg-[#CE8E94]/5 text-[#CE8E94] p-2 rounded-xl border border-[#CE8E94]/20 hover:bg-[#CE8E94]/10 cursor-pointer flex flex-col items-center justify-center gap-0.5 transition-all"
                                 >
-                                    <Mail className="w-5 h-5" />
-                                    <span className="text-xs font-bold">Email</span>
+                                    <Mail className="w-4 h-4" />
+                                    <span className="text-[10px] font-bold">Email</span>
                                 </div>
+                            </div>
+
+                            {/* --- ADD PAST BOOKING ACCORDION --- */}
+                            <div className="pt-4 border-t border-gray-100">
+                                <button
+                                    onClick={() => setIsPastBookingOpen(!isPastBookingOpen)}
+                                    className="w-full flex items-center justify-between text-sm font-bold text-gray-700 bg-gray-50 p-3 rounded-xl hover:bg-gray-100 transition-colors"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <Calendar className="w-4 h-4 text-[#CE8E94]" />
+                                        <span>Add Past Booking</span>
+                                    </div>
+                                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isPastBookingOpen ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {isPastBookingOpen && (
+                                    <div className="bg-gray-50 p-3 rounded-xl rounded-t-none space-y-3 animate-in slide-in-from-top-2 fade-in duration-200 border-t border-gray-100/50">
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Date (DD/MM/YYYY)</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="(DD/MM/YYYY)"
+                                                    value={pastSlotDate}
+                                                    onChange={e => {
+                                                        let val = e.target.value.replace(/\D/g, '');
+                                                        if (val.length > 8) val = val.substring(0, 8);
+                                                        let formatted = val;
+                                                        if (val.length > 4) {
+                                                            formatted = `${val.substring(0, 2)}/${val.substring(2, 4)}/${val.substring(4)}`;
+                                                        } else if (val.length > 2) {
+                                                            formatted = `${val.substring(0, 2)}/${val.substring(2)}`;
+                                                        }
+                                                        setPastSlotDate(formatted);
+                                                    }}
+                                                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#CE8E94] outline-none text-sm font-sans font-bold text-gray-700 placeholder:font-normal placeholder:text-gray-400"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Time (HH:MM)</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="(HH:MM)"
+                                                    value={pastSlotTime}
+                                                    onChange={e => {
+                                                        let val = e.target.value.replace(/\D/g, '');
+                                                        if (val.length > 4) val = val.substring(0, 4);
+                                                        let formatted = val;
+                                                        if (val.length > 2) {
+                                                            formatted = `${val.substring(0, 2)}:${val.substring(2)}`;
+                                                        }
+                                                        setPastSlotTime(formatted);
+                                                    }}
+                                                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#CE8E94] outline-none text-sm font-sans font-bold text-gray-700 placeholder:font-normal placeholder:text-gray-400"
+                                                />
+                                            </div>
+                                        </div>
+                                        <Button
+                                            className="w-full h-9 bg-gray-800 text-white hover:bg-gray-900 text-xs rounded-lg"
+                                            disabled={pastSlotDate.length !== 10 || pastSlotTime.length !== 5}
+                                            onClick={handleAddPastSlot}
+                                        >
+                                            Add to History
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Admin Notes CRM (Condensed) */}
@@ -1384,211 +1639,211 @@ export const AdminPanel = ({
                     </Modal>
                 )}
 
-                {/* Edit Slot Modal */}
-                {
-                    editingSlot && (
-                        <Modal onClose={() => setEditingSlot(null)} showCloseIcon={false}>
-                            <div className="space-y-6">
-                                <div className="text-center">
-                                    <h2 className="text-2xl font-bold text-[#CE8E94] mb-2">Edit Slot</h2>
-                                    <p className="text-gray-500">Update date and time for this slot.</p>
+            {/* Edit Slot Modal */}
+            {
+                editingSlot && (
+                    <Modal onClose={() => setEditingSlot(null)} showCloseIcon={false}>
+                        <div className="space-y-6">
+                            <div className="text-center">
+                                <h2 className="text-2xl font-bold text-[#CE8E94] mb-2">Edit Slot</h2>
+                                <p className="text-gray-500">Update date and time for this slot.</p>
+                            </div>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-600 mb-1">Date</label>
+                                    <DatePicker
+                                        value={editFormData.date}
+                                        onChange={date => setEditFormData(prev => ({ ...prev, date }))}
+                                        className={standardInputClass}
+                                        placeholder="Select Date"
+                                    />
                                 </div>
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-600 mb-1">Date</label>
-                                        <input
-                                            type="date"
-                                            value={editFormData.date}
-                                            onChange={e => setEditFormData(prev => ({ ...prev, date: e.target.value }))}
-                                            className={standardInputClass}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-600 mb-1">Time</label>
-                                        <input
-                                            type="text"
-                                            value={editFormData.time}
-                                            onChange={e => setEditFormData(prev => ({ ...prev, time: e.target.value }))}
-                                            className={standardInputClass}
-                                            placeholder="e.g. 09:00 AM"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="flex gap-3 pt-2">
-                                    <Button
-                                        onClick={() => setEditingSlot(null)}
-                                        className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-all"
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        onClick={handleUpdateSlot}
-                                        className="flex-1 py-3 bg-[#CE8E94] text-white rounded-xl font-bold hover:bg-[#B57A80] transition shadow-md"
-                                    >
-                                        Save Changes
-                                    </Button>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-600 mb-1">Time</label>
+                                    <CustomSelect
+                                        options={TIME_SLOTS}
+                                        value={editFormData.time}
+                                        onChange={time => setEditFormData(prev => ({ ...prev, time }))}
+                                        className={standardInputClass}
+                                        placeholder="Select Time"
+                                    />
                                 </div>
                             </div>
-                        </Modal>
-                    )
-                }
-
-                {/* Assign Slot Modal */}
-                {
-                    assigningSlot && (
-                        <Modal onClose={() => { setAssigningSlot(null); setSelectedUserEmailToAssign(''); }}>
-                            <div className="space-y-6">
-                                <div className="text-center">
-                                    <h2 className="text-2xl font-bold text-[#CE8E94] mb-2">Assign Slot</h2>
-                                    <p className="text-gray-500">
-                                        Assign <strong>{formatDateDisplay(assigningSlot.date)}</strong> at <strong>{assigningSlot.time}</strong> to a member.
-                                    </p>
-                                </div>
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-600 mb-1">Select Member</label>
-                                        <select
-                                            value={selectedUserEmailToAssign}
-                                            onChange={(e) => setSelectedUserEmailToAssign(e.target.value)}
-                                            className={standardInputClass}
-                                        >
-                                            <option value="">-- Choose a Member --</option>
-                                            {users.filter(u => u.role !== 'admin').map((user) => (
-                                                <option key={user.email} value={user.email}>
-                                                    {user.firstName} {user.lastName} ({user.email})
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-                                <div className="flex gap-3 pt-2">
-                                    <Button
-                                        onClick={() => { setAssigningSlot(null); setSelectedUserEmailToAssign(''); }}
-                                        className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition"
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        onClick={handleAssignSlot}
-                                        disabled={!selectedUserEmailToAssign}
-                                        className="flex-1 py-3 bg-[#CE8E94] text-white rounded-xl font-bold hover:bg-[#B57A80] transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        Assign Member
-                                    </Button>
-                                </div>
-                            </div>
-                        </Modal>
-                    )
-                }
-
-
-                {/* Custom Date Range Modal for Admin Slots Filtering */}
-                {
-                    showCustomDateModal && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#CE8E94]/10 backdrop-blur-md animate-in fade-in duration-200">
-                            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
-                                <h3 className="text-xl font-bold text-gray-800">Select Date Range</h3>
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="text-xs font-bold text-gray-500 uppercase">Start Date</label>
-                                        <input
-                                            type="date"
-                                            value={customStartDate}
-                                            onChange={(e) => setCustomStartDate(e.target.value)}
-                                            className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#CE8E94]/20 outline-none text-gray-800 bg-white placeholder-gray-600"
-                                            style={{ colorScheme: 'light' }}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-bold text-gray-500 uppercase">End Date</label>
-                                        <input
-                                            type="date"
-                                            value={customEndDate}
-                                            onChange={(e) => setCustomEndDate(e.target.value)}
-                                            className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#CE8E94]/20 outline-none text-gray-800 bg-white placeholder-gray-600"
-                                            style={{ colorScheme: 'light' }}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="flex gap-2 pt-2">
-                                    <Button
-                                        onClick={() => {
-                                            setShowCustomDateModal(false);
-                                            setDateFilter('All');
-                                        }}
-                                        className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700"
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        onClick={() => {
-                                            if (customStartDate && customEndDate) {
-                                                setDateFilter('Custom');
-                                                setShowCustomDateModal(false);
-                                            }
-                                        }}
-                                        className="flex-1 bg-[#CE8E94] hover:bg-[#B57A80] text-white"
-                                    >
-                                        Apply
-                                    </Button>
-                                </div>
+                            <div className="flex gap-3 pt-2">
+                                <Button
+                                    onClick={() => setEditingSlot(null)}
+                                    className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-all"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={handleUpdateSlot}
+                                    className="flex-1 py-3 bg-[#CE8E94] text-white rounded-xl font-bold hover:bg-[#B57A80] transition shadow-md"
+                                >
+                                    Save Changes
+                                </Button>
                             </div>
                         </div>
-                    )
-                }
-                {/* History Modal */}
-                {historyViewer && (
-                    <Modal onClose={() => setHistoryViewer(null)} showCloseIcon={false}>
-                        <div className="space-y-4">
-                            <div className="text-center border-b border-gray-100 pb-4">
-                                <h2 className="text-2xl font-bold text-gray-900">{historyViewer.type} Bookings</h2>
-                                <p className="text-sm text-gray-500">History for {historyViewer.user.firstName}</p>
+                    </Modal>
+                )
+            }
+
+            {/* Assign Slot Modal */}
+            {
+                assigningSlot && (
+                    <Modal onClose={() => { setAssigningSlot(null); setSelectedUserEmailToAssign(''); }}>
+                        <div className="space-y-6">
+                            <div className="text-center">
+                                <h2 className="text-2xl font-bold text-[#CE8E94] mb-2">Assign Slot</h2>
+                                <p className="text-gray-500">
+                                    Assign <strong>{formatDateDisplay(assigningSlot.date)}</strong> at <strong>{assigningSlot.time}</strong> to a member.
+                                </p>
                             </div>
-                            <div className="max-h-[60vh] overflow-y-auto pr-2 hide-scrollbar space-y-2">
-                                {getMemberStats(historyViewer.user.email).history
-                                    .filter(s => {
-                                        const isEffectivelyCompleted = s.status === 'Completed' || ((s.status === 'Booked' || s.status === 'Active') && isPastSlot(s.date, s.time));
-                                        if (historyViewer.type === 'Total') return true;
-                                        if (historyViewer.type === 'Active') return (s.status === 'Booked' || s.status === 'Active') && !isPastSlot(s.date, s.time);
-                                        if (historyViewer.type === 'Done') return isEffectivelyCompleted;
-                                        return true;
-                                    })
-                                    .map((slot, i) => (
-                                        <div key={i} className="flex justify-between items-center py-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors px-2">
-                                            <div className="flex flex-col">
-                                                <span className="font-bold text-gray-900 text-lg">{new Date(slot.date).toLocaleDateString('en-US', { weekday: 'long' })}</span>
-                                                <span className="text-sm text-gray-500">
-                                                    {new Date(slot.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} •
-                                                    <span className={`uppercase text-xs font-bold tracking-wider ml-1 ${((slot.status === 'Booked' || slot.status === 'Active') && isPastSlot(slot.date, slot.time)) || slot.status === 'Completed' ? 'text-gray-400' : 'text-[#CE8E94]'}`}>
-                                                        {((slot.status === 'Booked' || slot.status === 'Active') && isPastSlot(slot.date, slot.time)) ? 'Completed' : slot.status}
-                                                    </span>
-                                                </span>
-                                            </div>
-                                            <div className="text-xl font-black text-[#CE8E94] tracking-tight">
-                                                {slot.time}
-                                            </div>
-                                        </div>
-                                    ))}
-                                {getMemberStats(historyViewer.user.email).history.filter(s => {
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-600 mb-1">Select Member</label>
+                                    <select
+                                        value={selectedUserEmailToAssign}
+                                        onChange={(e) => setSelectedUserEmailToAssign(e.target.value)}
+                                        className={standardInputClass}
+                                    >
+                                        <option value="">-- Choose a Member --</option>
+                                        {users.filter(u => u.role !== 'admin').map((user) => (
+                                            <option key={user.email} value={user.email}>
+                                                {user.firstName} {user.lastName} ({user.email})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="flex gap-3 pt-2">
+                                <Button
+                                    onClick={() => { setAssigningSlot(null); setSelectedUserEmailToAssign(''); }}
+                                    className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={handleAssignSlot}
+                                    disabled={!selectedUserEmailToAssign}
+                                    className="flex-1 py-3 bg-[#CE8E94] text-white rounded-xl font-bold hover:bg-[#B57A80] transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Assign Member
+                                </Button>
+                            </div>
+                        </div>
+                    </Modal>
+                )
+            }
+
+
+            {/* Custom Date Range Modal for Admin Slots Filtering */}
+            {
+                showCustomDateModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#CE8E94]/10 backdrop-blur-md animate-in fade-in duration-200">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
+                            <h3 className="text-xl font-bold text-gray-800">Select Date Range</h3>
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="text-xs font-bold text-gray-500 uppercase">Start Date</label>
+                                    <input
+                                        type="date"
+                                        value={customStartDate}
+                                        onChange={(e) => setCustomStartDate(e.target.value)}
+                                        className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#CE8E94]/20 outline-none text-gray-800 bg-white placeholder-gray-600"
+                                        style={{ colorScheme: 'light' }}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-gray-500 uppercase">End Date</label>
+                                    <input
+                                        type="date"
+                                        value={customEndDate}
+                                        onChange={(e) => setCustomEndDate(e.target.value)}
+                                        className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#CE8E94]/20 outline-none text-gray-800 bg-white placeholder-gray-600"
+                                        style={{ colorScheme: 'light' }}
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex gap-2 pt-2">
+                                <Button
+                                    onClick={() => {
+                                        setShowCustomDateModal(false);
+                                        setDateFilter('All');
+                                    }}
+                                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={() => {
+                                        if (customStartDate && customEndDate) {
+                                            setDateFilter('Custom');
+                                            setShowCustomDateModal(false);
+                                        }
+                                    }}
+                                    className="flex-1 bg-[#CE8E94] hover:bg-[#B57A80] text-white"
+                                >
+                                    Apply
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+            {/* History Modal */}
+            {historyViewer && (
+                <Modal onClose={() => setHistoryViewer(null)} showCloseIcon={false}>
+                    <div className="space-y-4">
+                        <div className="text-center border-b border-gray-100 pb-4">
+                            <h2 className="text-2xl font-bold text-gray-900">{historyViewer.type} Bookings</h2>
+                            <p className="text-sm text-gray-500">History for {historyViewer.user.firstName}</p>
+                        </div>
+                        <div className="max-h-[60vh] overflow-y-auto pr-2 hide-scrollbar space-y-2">
+                            {getMemberStats(historyViewer.user.email).history
+                                .filter(s => {
                                     const isEffectivelyCompleted = s.status === 'Completed' || ((s.status === 'Booked' || s.status === 'Active') && isPastSlot(s.date, s.time));
                                     if (historyViewer.type === 'Total') return true;
                                     if (historyViewer.type === 'Active') return (s.status === 'Booked' || s.status === 'Active') && !isPastSlot(s.date, s.time);
                                     if (historyViewer.type === 'Done') return isEffectivelyCompleted;
                                     return true;
-                                }).length === 0 && (
-                                        <div className="text-center py-8 text-gray-400">No {historyViewer.type.toLowerCase()} bookings found.</div>
-                                    )}
-                            </div>
-                            <Button
-                                onClick={() => setHistoryViewer(null)}
-                                className="w-full py-4 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-xl font-bold transition-all"
-                            >
-                                Close
-                            </Button>
+                                })
+                                .map((slot, i) => (
+                                    <div key={i} className="flex justify-between items-center py-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors px-2">
+                                        <div className="flex flex-col">
+                                            <span className="font-bold text-gray-900 text-lg">{new Date(slot.date).toLocaleDateString('en-US', { weekday: 'long' })}</span>
+                                            <span className="text-sm text-gray-500">
+                                                {new Date(slot.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} •
+                                                <span className={`uppercase text-xs font-bold tracking-wider ml-1 ${((slot.status === 'Booked' || slot.status === 'Active') && isPastSlot(slot.date, slot.time)) || slot.status === 'Completed' ? 'text-gray-400' : 'text-[#CE8E94]'}`}>
+                                                    {((slot.status === 'Booked' || slot.status === 'Active') && isPastSlot(slot.date, slot.time)) ? 'Completed' : slot.status}
+                                                </span>
+                                            </span>
+                                        </div>
+                                        <div className="text-xl font-black text-[#CE8E94] tracking-tight">
+                                            {slot.time}
+                                        </div>
+                                    </div>
+                                ))}
+                            {getMemberStats(historyViewer.user.email).history.filter(s => {
+                                const isEffectivelyCompleted = s.status === 'Completed' || ((s.status === 'Booked' || s.status === 'Active') && isPastSlot(s.date, s.time));
+                                if (historyViewer.type === 'Total') return true;
+                                if (historyViewer.type === 'Active') return (s.status === 'Booked' || s.status === 'Active') && !isPastSlot(s.date, s.time);
+                                if (historyViewer.type === 'Done') return isEffectivelyCompleted;
+                                return true;
+                            }).length === 0 && (
+                                    <div className="text-center py-8 text-gray-400">No {historyViewer.type.toLowerCase()} bookings found.</div>
+                                )}
                         </div>
-                    </Modal>
-                )}
-            </div>
-        </div >
-    );
+                        <Button
+                            onClick={() => setHistoryViewer(null)}
+                            className="w-full py-4 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-xl font-bold transition-all"
+                        >
+                            Close
+                        </Button>
+                    </div>
+                </Modal>
+            )}
+        </div>
+    </div>
+        ;
 };
