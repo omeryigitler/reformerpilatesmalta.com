@@ -3,7 +3,7 @@
 
 // Deployment Trigger: FORCE_V10_RESTORE_SERIAL_003
 import { useState, useEffect, useCallback } from "react";
-import { listenToSlots, listenToUsers, bookSlotTransaction, cancelBookingTransaction, registerUser, logoutUserAuth } from "./services/pilatesService";
+import { listenToSlots, listenToUsers, bookSlotTransaction, cancelBookingTransaction, logoutUserAuth } from "./services/pilatesService";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -67,10 +67,7 @@ const initialData = {
     holidayMode: false
 };
 
-const initialUsers: UserType[] = [
-    { email: 'omeryigitler@hotmail.com', password: '123456', role: 'admin', firstName: 'Ömer', lastName: 'Yiğitler', phone: '+356 9988 7766', registered: '2025-12-05' },
-    { email: 'gozde@mail.com', password: '123456', role: 'admin', firstName: 'Gözde', lastName: 'Arslan', phone: '+356 555 5678', registered: '2025-12-03' },
-];
+
 // --- CONTEXT IMPORTS ---
 import { NotificationProvider, useNotification } from "./context/NotificationContext";
 import { ConfirmProvider, useConfirm } from "./context/ConfirmContext";
@@ -199,17 +196,17 @@ function PilatesMaltaByGozde() {
 
         const usersUnsub = listenToUsers((loadedUsers) => {
             // Check for missing initial admins and create them
-            initialUsers.forEach(initialAdmin => {
-                const found = loadedUsers.find(u => u.email === initialAdmin.email);
-                if (!found) {
-                    console.log(`Auto-creating admin: ${initialAdmin.email}`);
-                    registerUser(initialAdmin);
-                } else if (found.password !== initialAdmin.password) {
-                    // Start of optional password sync
-                    // console.log(`Resetting password for ${initialAdmin.email} to default.`);
-                    // registerUser({ ...found, password: initialAdmin.password });
-                }
-            });
+            // initialUsers.forEach(initialAdmin => {
+            //     const found = loadedUsers.find(u => u.email === initialAdmin.email);
+            //     if (!found) {
+            //         console.log(`Auto-creating admin: ${initialAdmin.email}`);
+            //         registerUser(initialAdmin);
+            //     } else if (found.password !== initialAdmin.password) {
+            //         // Start of optional password sync
+            //         // console.log(`Resetting password for ${initialAdmin.email} to default.`);
+            //         // registerUser({ ...found, password: initialAdmin.password });
+            //     }
+            // });
             setUsers(loadedUsers);
         });
 

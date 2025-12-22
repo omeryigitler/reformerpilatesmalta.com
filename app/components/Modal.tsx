@@ -23,7 +23,7 @@ export const Modal = ({ children, onClose, showCloseIcon = true }: { children: R
             {/* Arka plan overlay - tıklayınca kapanır */}
             <div className="absolute inset-0" onClick={onClose}></div>
 
-            <div className="relative bg-white rounded-[2rem] shadow-2xl w-full max-w-lg p-8 md:p-10 animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto z-10">
+            <div className="relative bg-white rounded-[2rem] shadow-2xl w-full max-w-lg p-8 md:p-10 animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto scrollbar-hide z-10">
                 {showCloseIcon && (
                     <button
                         onClick={onClose}

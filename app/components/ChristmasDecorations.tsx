@@ -93,7 +93,7 @@ export const ChristmasTree = React.memo(({ onClick }: { onClick?: () => void }) 
         onClick={onClick}
         className="fixed bottom-5 left-[12.5%] -translate-x-1/2 z-[9999] pointer-events-auto cursor-pointer select-none animate-in slide-in-from-bottom duration-1000"
     >
-        <svg viewBox="0 0 100 150" className="w-32 h-48 md:w-64 md:h-96 drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] overflow-visible">
+        <svg viewBox="0 0 100 150" className="w-24 h-36 md:w-64 md:h-96 drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] overflow-visible">
             <rect x="42" y="125" width="16" height="15" fill="#5D4037" />
             <path d="M10 125 L50 85 L90 125 Z" fill="#2D4A27" />
             <path d="M20 95 L50 65 L80 95 Z" fill="#3D5A34" />

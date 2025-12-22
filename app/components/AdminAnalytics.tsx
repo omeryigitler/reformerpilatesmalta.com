@@ -156,9 +156,19 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
         };
 
         try {
-            const logoBase64 = await loadImage(currentLogo);
+            const logoToUse = currentLogo || '/logo.jpg';
+            const logoBase64 = await loadImage(logoToUse);
             doc.addImage(logoBase64, 'PNG', 14, 10, 24, 24);
-        } catch (e) { console.error("Logo error:", e); }
+        } catch (e) {
+            console.error("Logo error:", e);
+            // Fallback retry with default logo if first attempt failed
+            try {
+                const defaultLogoBase64 = await loadImage('/logo.jpg');
+                doc.addImage(defaultLogoBase64, 'PNG', 14, 10, 24, 24);
+            } catch (err) {
+                console.error("Default logo error:", err);
+            }
+        }
 
         doc.setFont("helvetica", "bold").setFontSize(22).setTextColor(...brandColor);
         doc.text("Reformer Pilates Malta", 42, 22);

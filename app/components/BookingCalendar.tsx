@@ -96,7 +96,7 @@ export const BookingCalendar = ({ slots, onSelectDate, selectedDate }: { slots: 
             const isSelected = dateStr === selectedDate;
             const isPast = isPastDate(dateStr);
 
-            const baseClass = "w-full aspect-square max-w-[40px] md:max-w-[48px] rounded-full flex items-center justify-center font-bold transition-all duration-200 text-sm md:text-base mx-auto";
+            const baseClass = "w-full aspect-square max-w-[40px] md:max-w-[48px] rounded-full flex items-center justify-center font-bold font-sans transition-all duration-200 text-base mx-auto";
             let colorClass = 'text-gray-700 hover:bg-gray-100 cursor-pointer';
 
             if (isPast) {

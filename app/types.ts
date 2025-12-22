@@ -4,6 +4,7 @@ export type Slot = {
     status: 'Available' | 'Booked' | 'Active' | 'Completed';
     bookedBy: string | null;
     bookedByEmail: string | null;
+    id?: string;
 }
 
 export type UserType = {
