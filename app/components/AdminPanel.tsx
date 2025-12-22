@@ -1022,215 +1022,215 @@ export const AdminPanel = ({
                                         </div>
                                     </div>
 
-                                </div>
-                            </div>
-                        </div>
+                                    <div className="space-y-6 mt-10">
+                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pb-2">
+                                            <h4 className="text-xl font-bold text-gray-700">Current Slots ({filteredSlots.length})</h4>
+                                            <div className="flex flex-col md:flex-row gap-3 w-full sm:w-auto">
+                                                {/* Date Filter Dropdown */}
+                                                <div className="relative w-full sm:w-[200px] group">
+                                                    <button
+                                                        onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
+                                                        className="w-full h-12 bg-white hover:bg-gray-50 text-gray-700 font-bold border border-gray-100 rounded-xl px-4 flex items-center justify-between shadow-sm hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#CE8E94]/20"
+                                                    >
+                                                        <span className="text-gray-800 truncate">
+                                                            {dateFilter === 'Custom' && customStartDate ? 'Custom Range' : dateFilter === 'All' ? 'All Dates' : dateFilter}
+                                                        </span>
+                                                        <Calendar className={`w-4 h-4 text-gray-400 transition-transform duration-300 group-hover:text-[#CE8E94] flex-shrink-0 ml-2 ${isDateFilterOpen ? 'rotate-180' : ''}`} />
+                                                    </button>
 
-                        <div className="space-y-6 mt-10">
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pb-2">
-                                <h4 className="text-xl font-bold text-gray-700">Current Slots ({filteredSlots.length})</h4>
-                                <div className="flex flex-col md:flex-row gap-3 w-full sm:w-auto">
-                                    {/* Date Filter Dropdown */}
-                                    <div className="relative w-full sm:w-[200px] group">
-                                        <button
-                                            onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
-                                            className="w-full h-12 bg-white hover:bg-gray-50 text-gray-700 font-bold border border-gray-100 rounded-xl px-4 flex items-center justify-between shadow-sm hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#CE8E94]/20"
-                                        >
-                                            <span className="text-gray-800 truncate">
-                                                {dateFilter === 'Custom' && customStartDate ? 'Custom Range' : dateFilter === 'All' ? 'All Dates' : dateFilter}
-                                            </span>
-                                            <Calendar className={`w-4 h-4 text-gray-400 transition-transform duration-300 group-hover:text-[#CE8E94] flex-shrink-0 ml-2 ${isDateFilterOpen ? 'rotate-180' : ''}`} />
-                                        </button>
-
-                                        {isDateFilterOpen && (
-                                            <>
-                                                <div className="fixed inset-0 z-10" onClick={() => setIsDateFilterOpen(false)} />
-                                                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200">
-                                                    {(['All', 'Today', 'Week', 'Month', 'Custom'] as const).map((option) => (
-                                                        <div
-                                                            key={option}
-                                                            onClick={() => {
-                                                                if (option === 'Custom') {
-                                                                    setShowCustomDateModal(true);
-                                                                    setIsDateFilterOpen(false);
-                                                                } else {
-                                                                    setDateFilter(option);
-                                                                    setIsDateFilterOpen(false);
-                                                                }
-                                                            }}
-                                                            className={`px-4 py-3 cursor-pointer flex items-center justify-between transition-colors duration-200
+                                                    {isDateFilterOpen && (
+                                                        <>
+                                                            <div className="fixed inset-0 z-10" onClick={() => setIsDateFilterOpen(false)} />
+                                                            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200">
+                                                                {(['All', 'Today', 'Week', 'Month', 'Custom'] as const).map((option) => (
+                                                                    <div
+                                                                        key={option}
+                                                                        onClick={() => {
+                                                                            if (option === 'Custom') {
+                                                                                setShowCustomDateModal(true);
+                                                                                setIsDateFilterOpen(false);
+                                                                            } else {
+                                                                                setDateFilter(option);
+                                                                                setIsDateFilterOpen(false);
+                                                                            }
+                                                                        }}
+                                                                        className={`px-4 py-3 cursor-pointer flex items-center justify-between transition-colors duration-200
                                                                 ${dateFilter === option && option !== 'Custom'
-                                                                    ? 'bg-[#CE8E94]/10 text-[#CE8E94] font-bold'
-                                                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                                                }`}
-                                                        >
-                                                            <span className="text-sm">{option === 'All' ? 'All Dates' : option}</span>
-                                                            {dateFilter === option && option !== 'Custom' && <Check className="w-4 h-4 text-[#CE8E94]" />}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-
-                                    {/* Status Filter Dropdown */}
-                                    <div className="relative w-full sm:w-[200px] group">
-                                        <button
-                                            onClick={() => setIsStatusFilterOpen(!isStatusFilterOpen)}
-                                            className="w-full h-12 bg-white hover:bg-gray-50 text-gray-700 font-bold border border-gray-100 rounded-xl px-4 flex items-center justify-between shadow-sm hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#CE8E94]/20"
-                                        >
-                                            <span className="text-gray-800 truncate">
-                                                {statusFilter === 'All' ? 'All Statuses' : statusFilter === 'Completed' ? 'Completed Only' : statusFilter === 'Active' ? 'Active Only' : 'Available Only'}
-                                            </span>
-                                            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 group-hover:text-[#CE8E94] flex-shrink-0 ml-2 ${isStatusFilterOpen ? 'rotate-180' : ''}`} />
-                                        </button>
-
-                                        {isStatusFilterOpen && (
-                                            <>
-                                                <div className="fixed inset-0 z-10" onClick={() => setIsStatusFilterOpen(false)} />
-                                                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200">
-                                                    {(['All', 'Active', 'Available', 'Completed'] as const).map((option) => (
-                                                        <div
-                                                            key={option}
-                                                            onClick={() => {
-                                                                setStatusFilter(option);
-                                                                setIsStatusFilterOpen(false);
-                                                            }}
-                                                            className={`px-4 py-3 cursor-pointer flex items-center justify-between transition-colors duration-200
-                                                                ${statusFilter === option
-                                                                    ? 'bg-[#CE8E94]/10 text-[#CE8E94] font-bold'
-                                                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                                                }`}
-                                                        >
-                                                            <span className="text-sm">
-                                                                {option === 'All' ? 'All Statuses' : option === 'Completed' ? 'Completed Only' : option === 'Active' ? 'Active Only' : 'Available Only'}
-                                                            </span>
-                                                            {statusFilter === option && <Check className="w-4 h-4 text-[#CE8E94]" />}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-6 max-h-[800px] overflow-y-auto pr-2 custom-scrollbar">
-                                {filteredSlots.length === 0 ? (
-                                    <div className="text-center py-12 text-gray-400 italic">No slots found matching your filters.</div>
-                                ) : (
-                                    Object.entries(
-                                        filteredSlots.reduce((groups, slot) => {
-                                            if (!groups[slot.date]) groups[slot.date] = [];
-                                            groups[slot.date].push(slot);
-                                            return groups;
-                                        }, {} as Record<string, Slot[]>)
-                                    )
-                                        .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime())
-                                        .map(([date, slotsForDate]) => (
-                                            <div key={date} className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100">
-                                                {/* Date Header */}
-                                                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-                                                    <div className="bg-[#CE8E94]/10 text-[#CE8E94] p-3 rounded-xl">
-                                                        <Calendar className="w-6 h-6" />
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="text-xl font-bold text-gray-800">
-                                                            {new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-                                                        </h3>
-                                                        <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">{slotsForDate.length} Slots</p>
-                                                    </div>
-                                                </div>
-
-                                                {/* Compact Slots Grid */}
-                                                {/* Compact Slots Grid - Adjusted to 4 columns for large screens */}
-                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                                    {slotsForDate
-                                                        .sort((a, b) => {
-                                                            // Custom sort to handle AM/PM correctly if needed, but lexicographical is usually okay for 24h or consistent format. 
-                                                            // Assuming format is consistent. Simple string compare for now.
-                                                            // Actually, let's try to be smart about time sorting if formats vary.
-                                                            return a.time.localeCompare(b.time);
-                                                        })
-                                                        .map((slot, idx) => (
-                                                            <div key={idx} className="flex flex-col sm:flex-row items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-white hover:shadow-md transition-all border border-gray-100 hover:border-[#CE8E94]/30 group">
-
-                                                                <div className="flex items-center gap-4 w-full sm:w-auto">
-                                                                    <div className="text-2xl font-black text-gray-700 w-24 text-center sm:text-left">{slot.time}</div>
-
-                                                                    <div className="h-10 w-px bg-gray-200 hidden sm:block"></div>
-
-                                                                    <div className="flex flex-col items-center sm:items-start flex-1">
-                                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full mb-1 ${
-                                                                            // Overriding Logic: Past slots are always viewed as Completed
-                                                                            (isPastSlot(slot.date, slot.time) || slot.status === 'Completed')
-                                                                                ? 'bg-gray-100 text-gray-500'
-                                                                                : (slot.status === 'Booked' || slot.status === 'Active')
-                                                                                    ? 'bg-red-100 text-red-500'
-                                                                                    : 'bg-green-100 text-green-600'
-                                                                            }`}>
-                                                                            {(isPastSlot(slot.date, slot.time) || slot.status === 'Completed') ? 'Completed' : (slot.status === 'Booked' ? 'Active' : slot.status)}
-                                                                        </span>
-
-                                                                        <div className="flex items-center gap-1 max-w-[150px]">
-                                                                            {slot.bookedBy ? (
-                                                                                slot.bookedBy.includes('(Admin)') ? (
-                                                                                    <span className="text-xs font-bold text-blue-600 truncate flex items-center gap-1" title={slot.bookedBy}>
-                                                                                        <ShieldCheck className="w-3 h-3" /> {slot.bookedBy.replace(' (Admin)', '')}
-                                                                                    </span>
-                                                                                ) : (
-                                                                                    <span className="text-xs font-bold text-gray-600 truncate" title={slot.bookedBy}>
-                                                                                        {slot.bookedBy}
-                                                                                    </span>
-                                                                                )
-                                                                            ) : (
-                                                                                <span className="text-xs text-gray-400">No Booking</span>
-                                                                            )}
-                                                                        </div>
+                                                                                ? 'bg-[#CE8E94]/10 text-[#CE8E94] font-bold'
+                                                                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                                                            }`}
+                                                                    >
+                                                                        <span className="text-sm">{option === 'All' ? 'All Dates' : option}</span>
+                                                                        {dateFilter === option && option !== 'Custom' && <Check className="w-4 h-4 text-[#CE8E94]" />}
                                                                     </div>
-                                                                </div>
-
-                                                                {/* Actions Toolbar - Always Visible or on Hover */}
-                                                                <div className="flex items-center gap-3 mt-4 sm:mt-0 w-full sm:w-auto justify-center sm:justify-end">
-                                                                    <Switch
-                                                                        checked={slot.status === 'Available'}
-                                                                        onCheckedChange={() => handleToggleSlotStatus(slot.date, slot.time)}
-                                                                        disabled={(slot.status === 'Booked' || slot.status === 'Active' || slot.status === 'Completed') && slot.bookedBy !== `Admin Action - ${loggedInUser?.firstName}`}
-                                                                        className="data-[state=checked]:bg-green-500"
-                                                                    />
-
-                                                                    <div className="flex bg-white rounded-xl shadow-sm border border-gray-100 p-1">
-                                                                        {slot.status === 'Available' && (
-                                                                            <button
-                                                                                onClick={() => setAssigningSlot(slot)}
-                                                                                className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                                                                                title="Assign"
-                                                                            >
-                                                                                <UserPlus className="w-4 h-4" />
-                                                                            </button>
-                                                                        )}
-                                                                        <button
-                                                                            onClick={() => openEditSlotModal(slot)}
-                                                                            className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                                                                            title="Edit"
-                                                                        >
-                                                                            <Edit3 className="w-4 h-4" />
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => handleDeleteSlot(slot)}
-                                                                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                                                            title="Delete"
-                                                                        >
-                                                                            <Trash2 className="w-4 h-4" />
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
+                                                                ))}
                                                             </div>
-                                                        ))}
+                                                        </>
+                                                    )}
+                                                </div>
+
+                                                {/* Status Filter Dropdown */}
+                                                <div className="relative w-full sm:w-[200px] group">
+                                                    <button
+                                                        onClick={() => setIsStatusFilterOpen(!isStatusFilterOpen)}
+                                                        className="w-full h-12 bg-white hover:bg-gray-50 text-gray-700 font-bold border border-gray-100 rounded-xl px-4 flex items-center justify-between shadow-sm hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#CE8E94]/20"
+                                                    >
+                                                        <span className="text-gray-800 truncate">
+                                                            {statusFilter === 'All' ? 'All Statuses' : statusFilter === 'Completed' ? 'Completed Only' : statusFilter === 'Active' ? 'Active Only' : 'Available Only'}
+                                                        </span>
+                                                        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 group-hover:text-[#CE8E94] flex-shrink-0 ml-2 ${isStatusFilterOpen ? 'rotate-180' : ''}`} />
+                                                    </button>
+
+                                                    {isStatusFilterOpen && (
+                                                        <>
+                                                            <div className="fixed inset-0 z-10" onClick={() => setIsStatusFilterOpen(false)} />
+                                                            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200">
+                                                                {(['All', 'Active', 'Available', 'Completed'] as const).map((option) => (
+                                                                    <div
+                                                                        key={option}
+                                                                        onClick={() => {
+                                                                            setStatusFilter(option);
+                                                                            setIsStatusFilterOpen(false);
+                                                                        }}
+                                                                        className={`px-4 py-3 cursor-pointer flex items-center justify-between transition-colors duration-200
+                                                                ${statusFilter === option
+                                                                                ? 'bg-[#CE8E94]/10 text-[#CE8E94] font-bold'
+                                                                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                                                            }`}
+                                                                    >
+                                                                        <span className="text-sm">
+                                                                            {option === 'All' ? 'All Statuses' : option === 'Completed' ? 'Completed Only' : option === 'Active' ? 'Active Only' : 'Available Only'}
+                                                                        </span>
+                                                                        {statusFilter === option && <Check className="w-4 h-4 text-[#CE8E94]" />}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </div>
-                                        ))
-                                )}
+                                        </div>
+
+                                        <div className="space-y-6 max-h-[800px] overflow-y-auto pr-2 custom-scrollbar">
+                                            {filteredSlots.length === 0 ? (
+                                                <div className="text-center py-12 text-gray-400 italic">No slots found matching your filters.</div>
+                                            ) : (
+                                                Object.entries(
+                                                    filteredSlots.reduce((groups, slot) => {
+                                                        if (!groups[slot.date]) groups[slot.date] = [];
+                                                        groups[slot.date].push(slot);
+                                                        return groups;
+                                                    }, {} as Record<string, Slot[]>)
+                                                )
+                                                    .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime())
+                                                    .map(([date, slotsForDate]) => (
+                                                        <div key={date} className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100">
+                                                            {/* Date Header */}
+                                                            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+                                                                <div className="bg-[#CE8E94]/10 text-[#CE8E94] p-3 rounded-xl">
+                                                                    <Calendar className="w-6 h-6" />
+                                                                </div>
+                                                                <div>
+                                                                    <h3 className="text-xl font-bold text-gray-800">
+                                                                        {new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                                                                    </h3>
+                                                                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">{slotsForDate.length} Slots</p>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Compact Slots Grid */}
+                                                            {/* Compact Slots Grid - Adjusted to 4 columns for large screens */}
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                                                {slotsForDate
+                                                                    .sort((a, b) => {
+                                                                        // Custom sort to handle AM/PM correctly if needed, but lexicographical is usually okay for 24h or consistent format. 
+                                                                        // Assuming format is consistent. Simple string compare for now.
+                                                                        // Actually, let's try to be smart about time sorting if formats vary.
+                                                                        return a.time.localeCompare(b.time);
+                                                                    })
+                                                                    .map((slot, idx) => (
+                                                                        <div key={idx} className="flex flex-col sm:flex-row items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-white hover:shadow-md transition-all border border-gray-100 hover:border-[#CE8E94]/30 group">
+
+                                                                            <div className="flex items-center gap-4 w-full sm:w-auto">
+                                                                                <div className="text-2xl font-black text-gray-700 w-24 text-center sm:text-left">{slot.time}</div>
+
+                                                                                <div className="h-10 w-px bg-gray-200 hidden sm:block"></div>
+
+                                                                                <div className="flex flex-col items-center sm:items-start flex-1">
+                                                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full mb-1 ${
+                                                                                        // Overriding Logic: Past slots are always viewed as Completed
+                                                                                        (isPastSlot(slot.date, slot.time) || slot.status === 'Completed')
+                                                                                            ? 'bg-gray-100 text-gray-500'
+                                                                                            : (slot.status === 'Booked' || slot.status === 'Active')
+                                                                                                ? 'bg-red-100 text-red-500'
+                                                                                                : 'bg-green-100 text-green-600'
+                                                                                        }`}>
+                                                                                        {(isPastSlot(slot.date, slot.time) || slot.status === 'Completed') ? 'Completed' : (slot.status === 'Booked' ? 'Active' : slot.status)}
+                                                                                    </span>
+
+                                                                                    <div className="flex items-center gap-1 max-w-[150px]">
+                                                                                        {slot.bookedBy ? (
+                                                                                            slot.bookedBy.includes('(Admin)') ? (
+                                                                                                <span className="text-xs font-bold text-blue-600 truncate flex items-center gap-1" title={slot.bookedBy}>
+                                                                                                    <ShieldCheck className="w-3 h-3" /> {slot.bookedBy.replace(' (Admin)', '')}
+                                                                                                </span>
+                                                                                            ) : (
+                                                                                                <span className="text-xs font-bold text-gray-600 truncate" title={slot.bookedBy}>
+                                                                                                    {slot.bookedBy}
+                                                                                                </span>
+                                                                                            )
+                                                                                        ) : (
+                                                                                            <span className="text-xs text-gray-400">No Booking</span>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            {/* Actions Toolbar - Always Visible or on Hover */}
+                                                                            <div className="flex items-center gap-3 mt-4 sm:mt-0 w-full sm:w-auto justify-center sm:justify-end">
+                                                                                <Switch
+                                                                                    checked={slot.status === 'Available'}
+                                                                                    onCheckedChange={() => handleToggleSlotStatus(slot.date, slot.time)}
+                                                                                    disabled={(slot.status === 'Booked' || slot.status === 'Active' || slot.status === 'Completed') && slot.bookedBy !== `Admin Action - ${loggedInUser?.firstName}`}
+                                                                                    className="data-[state=checked]:bg-green-500"
+                                                                                />
+
+                                                                                <div className="flex bg-white rounded-xl shadow-sm border border-gray-100 p-1">
+                                                                                    {slot.status === 'Available' && (
+                                                                                        <button
+                                                                                            onClick={() => setAssigningSlot(slot)}
+                                                                                            className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                                                                            title="Assign"
+                                                                                        >
+                                                                                            <UserPlus className="w-4 h-4" />
+                                                                                        </button>
+                                                                                    )}
+                                                                                    <button
+                                                                                        onClick={() => openEditSlotModal(slot)}
+                                                                                        className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                                                                                        title="Edit"
+                                                                                    >
+                                                                                        <Edit3 className="w-4 h-4" />
+                                                                                    </button>
+                                                                                    <button
+                                                                                        onClick={() => handleDeleteSlot(slot)}
+                                                                                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                                                        title="Delete"
+                                                                                    >
+                                                                                        <Trash2 className="w-4 h-4" />
+                                                                                    </button>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </div>
