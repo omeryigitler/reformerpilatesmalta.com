@@ -491,10 +491,10 @@ export const AdminPanel = ({
 
 
     const handleAddSlot = async () => {
-        const timeRegex = /^(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$|^([01]?[0-9]|2[0-3]):[0-5][0-9]$/i;
+        const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/; // Strict 24h format
 
         if (!newSlotTime || !timeRegex.test(newSlotTime.trim())) {
-            showNotification('Please enter a valid time (e.g., 09:00 AM or 15:30).', 'error');
+            showNotification('Please enter a valid 24-hour time (e.g., 14:30 or 09:00).', 'error');
             return;
         }
         if (!newSlotDate) {
@@ -855,8 +855,8 @@ export const AdminPanel = ({
                     <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-3 border-b pb-2"><Clock className="w-6 h-6 text-[#CE8E94]" /> Class Schedule Management</h3>
 
                     <h4 className="text-xl font-bold text-[#CE8E94] mb-4">Add New Slot</h4>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-                        <div className="lg:col-span-1 space-y-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div className="lg:col-span-1 space-y-4 h-full">
                             <BookingCalendar
                                 slots={slots}
                                 onSelectDate={setNewSlotDate}
@@ -864,11 +864,18 @@ export const AdminPanel = ({
                             />
                         </div>
                         <div className="lg:col-span-1 flex flex-col justify-between space-y-6 bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-white/50 h-full">
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-600">Selected Date</label>
-                                <div className="text-2xl font-bold text-gray-800 border-b pb-2 border-gray-200">
-                                    {formatDateDisplay(newSlotDate)}
-                                </div>
+                            {/* Fixed Height Header Area to prevent Jumping */}
+                            <div className="h-[88px] flex flex-col justify-center space-y-2 border-b border-gray-100 mb-2">
+                                <label className="text-sm font-bold text-gray-600 block">Selected Date</label>
+                                {newSlotDate ? (
+                                    <div className="text-2xl font-bold text-gray-800 animate-in fade-in slide-in-from-top-1 duration-300">
+                                        {formatDateDisplay(newSlotDate)}
+                                    </div>
+                                ) : (
+                                    <div className="h-8 flex items-center">
+                                        <div className="h-1 w-3/4 bg-gray-200 rounded-full"></div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Quick Time Selection Grid */}
@@ -877,7 +884,7 @@ export const AdminPanel = ({
                                     Quick Time Select
                                 </label>
                                 <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-                                    {['07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'].map(time => {
+                                    {['07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'].map(time => {
                                         const isTaken = slots.some(s => s.date === newSlotDate && s.time === time && (s.status === 'Booked' || s.status === 'Active' || s.status === 'Completed'));
                                         return (
                                             <button
@@ -907,21 +914,24 @@ export const AdminPanel = ({
                                     <Clock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                                     <input
                                         type="text"
-                                        placeholder="e.g., 04:25 or 10:30"
+                                        placeholder="e.g., 14:30 or 09:00"
                                         value={newSlotTime}
                                         onChange={e => setNewSlotTime(e.target.value)}
                                         className={`${standardInputClass} block text-lg py-4 pl-12`}
                                     />
                                 </div>
-                                <p className="text-xs text-gray-400">Type manually for custom times (e.g. 04:25)</p>
+                                <p className="text-xs text-gray-400">Type manually for custom times (24-hour format, e.g. 14:30)</p>
                             </div>
 
-                            <Button
-                                onClick={handleAddSlot}
-                                className="w-full py-4 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-bold shadow-md transition-colors text-lg flex items-center justify-center"
-                            >
-                                <Plus className="w-6 h-6 mr-2" /> Add Slot
-                            </Button>
+                            <div className="mt-auto">
+
+                                <Button
+                                    onClick={handleAddSlot}
+                                    className="w-full py-4 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-bold shadow-md transition-colors text-lg flex items-center justify-center"
+                                >
+                                    <Plus className="w-6 h-6 mr-2" /> Add Slot
+                                </Button>
+                            </div>
                         </div>
                     </div>
 

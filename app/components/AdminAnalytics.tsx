@@ -229,9 +229,9 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
         <div className="space-y-8 p-4">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <h3 className="text-2xl font-bold text-gray-800">Performance Overview</h3>
-                <div className="flex flex-wrap gap-3 w-full lg:w-auto">
+                <div className="flex flex-wrap gap-3 w-full xl:w-auto">
                     {/* Tarih Filtresi */}
-                    <div className="relative w-full sm:flex-1 lg:flex-none lg:w-auto min-w-[160px] group">
+                    <div className="relative w-full sm:flex-1 xl:flex-none xl:w-auto min-w-[160px] group">
                         <button
                             onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
                             className="w-full h-12 bg-white hover:bg-gray-50 text-gray-700 font-bold border border-gray-100 rounded-xl px-4 flex items-center justify-between shadow-sm hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#CE8E94]/20"
@@ -264,7 +264,7 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
                     </div>
 
                     {/* Statü Filtresi */}
-                    <div className="relative w-full sm:flex-1 lg:flex-none lg:w-auto min-w-[160px] group">
+                    <div className="relative w-full sm:flex-1 xl:flex-none xl:w-auto min-w-[160px] group">
                         <button
                             onClick={() => setIsFilterOpen(!isFilterOpen)}
                             className="w-full h-12 bg-white hover:bg-gray-50 text-gray-700 font-bold border border-gray-100 rounded-xl px-4 flex items-center justify-between shadow-sm hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#CE8E94]/20"
@@ -295,7 +295,7 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
                         )}
                     </div>
 
-                    <Button onClick={handleDownloadPDF} className="bg-[#CE8E94] hover:bg-[#B57A80] text-white h-12 rounded-xl flex gap-2 w-full sm:flex-1 lg:flex-none lg:w-auto justify-center">
+                    <Button onClick={handleDownloadPDF} className="bg-[#CE8E94] hover:bg-[#B57A80] text-white h-12 rounded-xl flex gap-2 w-full sm:flex-1 xl:flex-none xl:w-auto justify-center">
                         <Download className="w-5 h-5" /> Download PDF
                     </Button>
                 </div>
