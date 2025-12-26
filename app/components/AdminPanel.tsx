@@ -1120,12 +1120,12 @@ export const AdminPanel = ({
                                                                 <Switch
                                                                     checked={slot.status === 'Available'}
                                                                     onCheckedChange={() => handleToggleSlotStatus(slot.date, slot.time)}
-                                                                    disabled={(slot.status === 'Booked' || slot.status === 'Active' || slot.status === 'Completed') && slot.bookedBy !== `Admin Action - ${loggedInUser?.firstName}`}
+                                                                    disabled={isPastSlot(slot.date, slot.time) || ((slot.status === 'Booked' || slot.status === 'Active' || slot.status === 'Completed') && slot.bookedBy !== `Admin Action - ${loggedInUser?.firstName}`)}
                                                                     className="data-[state=checked]:bg-green-500"
                                                                 />
 
                                                                 <div className="flex bg-white rounded-xl shadow-sm border border-gray-100 p-1">
-                                                                    {slot.status === 'Available' && (
+                                                                    {slot.status === 'Available' && !isPastSlot(slot.date, slot.time) && (
                                                                         <button
                                                                             onClick={() => setAssigningSlot(slot)}
                                                                             className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
