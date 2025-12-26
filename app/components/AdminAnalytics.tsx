@@ -214,22 +214,26 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
                 const displayStatus = ((s.status === 'Booked' || s.status === 'Active') && isActuallyPast) ? 'Completed' : s.status;
 
                 // --- STANDARDIZE CLIENT NAME FOR PDF ---
-                let clientName = s.bookedBy || '-';
+                let rawName = s.bookedBy || '-';
+                let isAdminAssigned = rawName.includes('(Admin)');
+                let clientName = rawName.replace(' (Admin)', '').trim();
+
                 if (clientName !== '-') {
-                    // 1. Remove (Admin) suffix
-                    clientName = clientName.replace(' (Admin)', '').trim();
-
-                    // 2. Try to find the latest name from users list using email for consistency
+                    // Try to find the latest name
                     const matchedUser = s.bookedByEmail ? users.find(u => u.email.toLowerCase() === s.bookedByEmail?.toLowerCase()) : null;
-
                     if (matchedUser) {
                         clientName = `${matchedUser.firstName} ${matchedUser.lastName}`;
                     }
 
-                    // 3. Robust Title Case (e.g., "OMER yigitler" -> "Omer Yigitler")
+                    // Title Case
                     clientName = clientName.split(' ')
                         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
                         .join(' ');
+
+                    // Add Checkmark for Admin assignments
+                    if (isAdminAssigned) {
+                        clientName = `${clientName} \u2713`;
+                    }
                 }
 
                 return [s.date, s.time, clientName, displayStatus];
