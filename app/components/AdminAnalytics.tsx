@@ -212,7 +212,27 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
             body: filteredSlots.sort((a, b) => normalizeDate(a.date).localeCompare(normalizeDate(b.date))).map(s => {
                 const isActuallyPast = isPastSlot(s.date, s.time);
                 const displayStatus = ((s.status === 'Booked' || s.status === 'Active') && isActuallyPast) ? 'Completed' : s.status;
-                return [s.date, s.time, s.bookedBy || '-', displayStatus];
+
+                // --- STANDARDIZE CLIENT NAME FOR PDF ---
+                let clientName = s.bookedBy || '-';
+                if (clientName !== '-') {
+                    // 1. Remove (Admin) suffix
+                    clientName = clientName.replace(' (Admin)', '').trim();
+
+                    // 2. Try to find the latest name from users list using email for consistency
+                    const matchedUser = s.bookedByEmail ? users.find(u => u.email.toLowerCase() === s.bookedByEmail?.toLowerCase()) : null;
+
+                    if (matchedUser) {
+                        clientName = `${matchedUser.firstName} ${matchedUser.lastName}`;
+                    }
+
+                    // 3. Robust Title Case (e.g., "OMER yigitler" -> "Omer Yigitler")
+                    clientName = clientName.split(' ')
+                        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                        .join(' ');
+                }
+
+                return [s.date, s.time, clientName, displayStatus];
             }),
             styles: { fontSize: 8 }
         });

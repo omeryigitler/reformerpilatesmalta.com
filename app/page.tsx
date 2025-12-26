@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-// Deployment Trigger: FORCE_V18_PAST_BOOKING_VALIDATION_STABLE
+// Deployment Trigger: FORCE_V19_PDF_NAME_CLEANUP_STABLE
 import { useState, useEffect, useCallback } from "react";
 import { listenToSlots, listenToUsers, bookSlotTransaction, cancelBookingTransaction, logoutUserAuth } from "./services/pilatesService";
 import { Card, CardContent } from "@/components/ui/card";
