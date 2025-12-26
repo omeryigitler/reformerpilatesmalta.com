@@ -89,6 +89,12 @@ export const AdminPanel = ({
             return;
         }
 
+        // NEW: Ensure this is ACTUALLY a past slot
+        if (!isPastSlot(dateStr, pastSlotTime)) {
+            showNotification("You can only add actual PAST bookings here. For future slots, use the 'Current Slots' section.", "error");
+            return;
+        }
+
         try {
             // Standard ID: date_time
             const slotId = `${dateStr}_${pastSlotTime}`;
