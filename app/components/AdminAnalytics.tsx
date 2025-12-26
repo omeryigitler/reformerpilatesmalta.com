@@ -209,35 +209,39 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
         autoTable(doc, {
             startY: finalY + 5,
             head: [['Date', 'Time', 'Client', 'Status']],
-            body: filteredSlots.sort((a, b) => normalizeDate(a.date).localeCompare(normalizeDate(b.date))).map(s => {
-                const isActuallyPast = isPastSlot(s.date, s.time);
-                const displayStatus = ((s.status === 'Booked' || s.status === 'Active') && isActuallyPast) ? 'Completed' : s.status;
+            body: filteredSlots
+                .filter(s => s.bookedBy && s.bookedBy !== '-' && s.bookedBy.trim() !== '') // Filter out ghost/empty records
+                .sort((a, b) => normalizeDate(a.date).localeCompare(normalizeDate(b.date)))
+                .map(s => {
+                    const isActuallyPast = isPastSlot(s.date, s.time);
+                    const displayStatus = ((s.status === 'Booked' || s.status === 'Active') && isActuallyPast) ? 'Completed' : s.status;
 
-                // --- STANDARDIZE CLIENT NAME FOR PDF ---
-                const rawName = s.bookedBy || '-';
-                const isAdminAssigned = rawName.includes('(Admin)');
-                let clientName = rawName.replace(' (Admin)', '').trim();
+                    // --- STANDARDIZE CLIENT NAME FOR PDF ---
+                    const rawName = s.bookedBy || '-';
+                    const isAdminAssigned = rawName.includes('(Admin)');
+                    let clientName = rawName.replace(' (Admin)', '').trim();
 
-                if (clientName !== '-') {
-                    // Try to find the latest name
-                    const matchedUser = s.bookedByEmail ? users.find(u => u.email.toLowerCase() === s.bookedByEmail?.toLowerCase()) : null;
-                    if (matchedUser) {
-                        clientName = `${matchedUser.firstName} ${matchedUser.lastName}`;
+                    if (clientName !== '-') {
+                        // Find latest name
+                        const matchedUser = s.bookedByEmail ? users.find(u => u.email.toLowerCase() === s.bookedByEmail?.toLowerCase()) : null;
+                        if (matchedUser) {
+                            clientName = `${matchedUser.firstName} ${matchedUser.lastName}`;
+                        }
+
+                        // Capitalize parts carefully
+                        clientName = clientName.split(' ')
+                            .filter(part => part.length > 0)
+                            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                            .join(' ');
+
+                        // Re-add Admin label if assigned by admin
+                        if (isAdminAssigned) {
+                            clientName = `${clientName} (Admin)`;
+                        }
                     }
 
-                    // Title Case
-                    clientName = clientName.split(' ')
-                        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                        .join(' ');
-
-                    // Add Checkmark for Admin assignments
-                    if (isAdminAssigned) {
-                        clientName = `${clientName} \u2713`;
-                    }
-                }
-
-                return [s.date, s.time, clientName, displayStatus];
-            }),
+                    return [s.date, s.time, clientName, displayStatus];
+                }),
             styles: { fontSize: 8 }
         });
 
