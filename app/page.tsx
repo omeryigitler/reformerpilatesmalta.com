@@ -1,9 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-// Deployment Trigger: FORCE_V14_ADMIN_FIX_001_D0101_STABLE
+// Deployment Trigger: FORCE_V14.1_ADMIN_IMPORT_FIX_STABLE
 import { useState, useEffect, useCallback } from "react";
-import { listenToSlots, listenToUsers, bookSlotTransaction, cancelBookingTransaction, logoutUserAuth } from "./services/pilatesService";
+import { listenToSlots, listenToUsers, bookSlotTransaction, cancelBookingTransaction, registerUser, logoutUserAuth } from "./services/pilatesService";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
