@@ -77,7 +77,7 @@ export const listenToSlots = (callback: (slots: Slot[]) => void) => {
     return onSnapshot(q, (snapshot) => {
         const slots: Slot[] = [];
         snapshot.forEach((doc) => {
-            slots.push(doc.data() as Slot);
+            slots.push({ ...(doc.data() as Slot), id: doc.id });
         });
         // Slotları tarihe göre sırala (Helper fonksiyonu burada kullanmıyoruz, ham veriyi dönüyoruz)
         callback(slots);

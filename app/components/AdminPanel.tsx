@@ -90,33 +90,20 @@ export const AdminPanel = ({
         }
 
         try {
-            // Check if slot exists
-            const existing = slots.find(s => s.date === dateStr && s.time === pastSlotTime);
+            // Standard ID: date_time
+            const slotId = `${dateStr}_${pastSlotTime}`;
 
-            if (existing) {
-                // If it exists and is available, we can just "book" it retroactively
-                if (existing.status === 'Available') {
-                    await updateDoc(doc(db, "slots", existing.id!), {
-                        status: 'Completed',
-                        bookedBy: `${selectedMember.firstName} ${selectedMember.lastName}`,
-                        bookedByEmail: selectedMember.email
-                    });
-                    showNotification("Existing slot converted to completed booking", "success");
-                } else {
-                    showNotification("Slot already exists and is not available", "error");
-                    return;
-                }
-            } else {
-                // Create new COMPLETED slot
-                await addDoc(collection(db, "slots"), {
-                    date: dateStr,
-                    time: pastSlotTime,
-                    status: 'Completed',
-                    bookedBy: `${selectedMember.firstName} ${selectedMember.lastName}`,
-                    bookedByEmail: selectedMember.email
-                });
-                showNotification("Past booking added successfully", "success");
-            }
+            // Just use setDoc which handles both create and update reliably
+            await setDoc(doc(db, "slots", slotId), {
+                id: slotId,
+                date: dateStr,
+                time: pastSlotTime,
+                status: 'Completed',
+                bookedBy: `${selectedMember.firstName} ${selectedMember.lastName}`,
+                bookedByEmail: selectedMember.email
+            });
+
+            showNotification("Past booking recorded successfully", "success");
             // Reset
             setPastSlotDate('');
             setPastSlotTime('');
@@ -503,6 +490,13 @@ export const AdminPanel = ({
             showNotification('Please select a date for the slot.', 'error');
             return;
         }
+
+        // NEW: Check if the slot is in the past or is the current time
+        if (isPastSlot(newSlotDate, newSlotTime.trim())) {
+            showNotification('You cannot add a slot in the past or for the current time.', 'error');
+            return;
+        }
+
         if (slots.some(s => s.date === newSlotDate && s.time.toLowerCase() === newSlotTime.trim().toLowerCase())) {
             showNotification(`A slot for ${newSlotDate} at ${newSlotTime.trim()} already exists.`, 'error');
             return;
@@ -542,6 +536,12 @@ export const AdminPanel = ({
         }
         if (!dateToSave || dateToSave.length !== 10) {
             showNotification('Please enter a valid date (DD/MM/YYYY).', 'error');
+            return;
+        }
+
+        // NEW: Check if the new time/date is in the past or current time
+        if (isPastSlot(dateToSave, editFormData.time.trim())) {
+            showNotification('You cannot move a slot to the past or the current time.', 'error');
             return;
         }
 

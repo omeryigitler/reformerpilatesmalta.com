@@ -67,7 +67,7 @@ export const isPastSlot = (dateString: string, timeString: string) => {
     const slotTime = convertTime12to24(timeString);
     const currentTime = convertTime12to24(now);
 
-    return slotTime < currentTime;
+    return slotTime <= currentTime;
 }
 
 export const convertTime12to24 = (timeStr: string): string => {
