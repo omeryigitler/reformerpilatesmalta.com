@@ -1,11 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-// Deployment Trigger: FORCE_V23_PDF_TURKISH_AND_GHOST_FIX_STABLE
+// Deployment Trigger: FORCE_V24_CLEANUP_AND_REFINEMENT_STABLE
 import { useState, useEffect, useCallback } from "react";
 import { listenToSlots, listenToUsers, bookSlotTransaction, cancelBookingTransaction, logoutUserAuth } from "./services/pilatesService";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/app/components/ui/card";
+import { Button } from "@/app/components/ui/button";
 import {
     Mail,
     Phone,
@@ -195,18 +195,6 @@ function PilatesMaltaByGozde() {
         }
 
         const usersUnsub = listenToUsers((loadedUsers) => {
-            // Check for missing initial admins and create them
-            // initialUsers.forEach(initialAdmin => {
-            //     const found = loadedUsers.find(u => u.email === initialAdmin.email);
-            //     if (!found) {
-            //         console.log(`Auto-creating admin: ${initialAdmin.email}`);
-            //         registerUser(initialAdmin);
-            //     } else if (found.password !== initialAdmin.password) {
-            //         // Start of optional password sync
-            //         // console.log(`Resetting password for ${initialAdmin.email} to default.`);
-            //         // registerUser({ ...found, password: initialAdmin.password });
-            //     }
-            // });
             setUsers(loadedUsers);
         });
 

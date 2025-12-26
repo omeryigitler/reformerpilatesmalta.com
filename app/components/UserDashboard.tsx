@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/app/components/ui/button';
 import { User, LogOut, Calendar, Clock, Zap, Home, ShieldCheck } from 'lucide-react';
 import { UserType, Slot } from '../types';
 import { getTodayDate, isPastSlot, formatDateDisplay } from '../utils/helpers';

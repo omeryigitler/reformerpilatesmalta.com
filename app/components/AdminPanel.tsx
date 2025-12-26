@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/app/components/ui/button';
 import { LogOut, Calendar, Users, TrendingUp, Edit3, Star, Award, Mail, Clock, Plus, Trash2, Home, UserPlus, ShieldCheck, ChevronDown, Check, Search, FileText, MessageSquareText, CalendarPlus, User, Sparkles } from 'lucide-react';
-import { Switch } from "@/components/ui/switch";
+import { Switch } from "@/app/components/ui/switch";
 import { Slot, UserType, ManagementState } from '../types';
 import { db } from '../firebase';
 import { doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
@@ -372,10 +372,7 @@ export const AdminPanel = ({
     };
 
     const getMemberStats = (email: string) => {
-        // A more robust check might be needed if names are not unique, but ID logic isn't fully there yet for 'bookedBy'.
-        // Current logic relies on string containing Name.
-        // Let's improve: The 'bookedBy' field stores "First Last" or "First Last (Admin)".
-        // We should find user by email, get their full name, and match.
+        // Robust check for member stats based on email and name fallback
         const user = users.find(u => u.email === email);
         if (!user) return { total: 0, active: 0, completed: 0, history: [] };
 
@@ -440,7 +437,6 @@ export const AdminPanel = ({
             "Are you sure you want to delete this slot? This action cannot be undone.",
             async () => {
                 try {
-                    // Check if slot is occupied (Booked/Active) to notify user
                     // Check if slot is occupied (Booked/Active) to notify user
                     const isOccupied = slot.status === 'Booked' || slot.status === 'Active';
                     const isPast = isPastSlot(slot.date, slot.time);

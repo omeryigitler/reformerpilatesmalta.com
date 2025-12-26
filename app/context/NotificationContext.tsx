@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/app/components/ui/button';
 import { CheckCircle, AlertTriangle, Info } from 'lucide-react';
 import { NotificationType, NotificationState } from '../types';
 

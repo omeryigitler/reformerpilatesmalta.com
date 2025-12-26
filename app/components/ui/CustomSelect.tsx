@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown, Check } from "lucide-react";
-import { cn } from "@/components/ui/button"; // Re-using cn utility
+import { cn } from "@/app/components/ui/button"; // Re-using cn utility
 
 interface CustomSelectProps {
     options: string[];

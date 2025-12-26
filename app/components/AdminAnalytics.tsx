@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/app/components/ui/button";
 import { Calendar, Users, TrendingUp, Download, ChevronDown, Check } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";

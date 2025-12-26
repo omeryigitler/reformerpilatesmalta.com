@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/app/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Slot } from "../types";
 import { getTodayDate, isPastDate, isPastSlot } from "../utils/helpers";

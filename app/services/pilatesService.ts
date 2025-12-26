@@ -50,7 +50,7 @@ export const updateExpiredSlots = async (slots: Slot[]) => {
 
     if (expiredSlots.length === 0) return;
 
-    console.log(`${expiredSlots.length} geçmiş booking 'Completed' statüsüne çekiliyor...`);
+
 
     // Hepsini güncelle (Batch kullanılabilir ama şimdilik Promise.all basit)
     // Transaction gerekmez çünkü bu sadece durum güncellemesi, race condition riski düşük.
@@ -62,7 +62,7 @@ export const updateExpiredSlots = async (slots: Slot[]) => {
 
     try {
         await Promise.all(promises);
-        console.log("Geçmiş bookingler güncellendi.");
+
     } catch (e) {
         console.error("Geçmiş bookingleri güncelleme hatası:", e);
     }
@@ -244,7 +244,7 @@ export const migrateSlotsTo24Hour = async () => {
         return { success: true, count: 0, message: "No legacy slots found." };
     }
 
-    console.log(`Found ${slotsToMigrate.length} legacy slots. Starting migration...`);
+
 
     // 3. Perform Migration (Batch - 400 items limit safety)
     // Create new doc with 24h ID, delete old doc.
