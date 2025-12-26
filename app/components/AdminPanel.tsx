@@ -6,7 +6,7 @@ import { LogOut, Calendar, Users, TrendingUp, Edit3, Star, Award, Mail, Clock, P
 import { Switch } from "@/components/ui/switch";
 import { Slot, UserType, ManagementState } from '../types';
 import { db } from '../firebase';
-import { doc, setDoc, deleteDoc, updateDoc, addDoc, collection } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { useNotification } from '../context/NotificationContext';
 import { useConfirm } from '../context/ConfirmContext';
 import { formatDateDisplay, getTodayDate, isPastSlot } from '../utils/helpers';
