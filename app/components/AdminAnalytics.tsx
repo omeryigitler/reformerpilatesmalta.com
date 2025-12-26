@@ -214,8 +214,8 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
                 const displayStatus = ((s.status === 'Booked' || s.status === 'Active') && isActuallyPast) ? 'Completed' : s.status;
 
                 // --- STANDARDIZE CLIENT NAME FOR PDF ---
-                let rawName = s.bookedBy || '-';
-                let isAdminAssigned = rawName.includes('(Admin)');
+                const rawName = s.bookedBy || '-';
+                const isAdminAssigned = rawName.includes('(Admin)');
                 let clientName = rawName.replace(' (Admin)', '').trim();
 
                 if (clientName !== '-') {
