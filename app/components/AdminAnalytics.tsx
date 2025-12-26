@@ -210,34 +210,47 @@ export const AdminAnalytics = ({ slots = [], users = [], currentLogo }: { slots:
             startY: finalY + 5,
             head: [['Date', 'Time', 'Client', 'Status']],
             body: filteredSlots
-                .filter(s => s.bookedBy && s.bookedBy !== '-' && s.bookedBy.trim() !== '') // Filter out ghost/empty records
+                .filter(s => {
+                    if (!s.bookedBy || s.bookedBy === '-' || s.bookedBy.trim() === '') return false;
+                    if (s.bookedByEmail) {
+                        return users.some(u => u.email.toLowerCase() === s.bookedByEmail?.toLowerCase());
+                    }
+                    return true;
+                })
                 .sort((a, b) => normalizeDate(a.date).localeCompare(normalizeDate(b.date)))
                 .map(s => {
                     const isActuallyPast = isPastSlot(s.date, s.time);
                     const displayStatus = ((s.status === 'Booked' || s.status === 'Active') && isActuallyPast) ? 'Completed' : s.status;
 
-                    // --- STANDARDIZE CLIENT NAME FOR PDF ---
                     const rawName = s.bookedBy || '-';
                     const isAdminAssigned = rawName.includes('(Admin)');
                     let clientName = rawName.replace(' (Admin)', '').trim();
 
-                    if (clientName !== '-') {
-                        // Find latest name
-                        const matchedUser = s.bookedByEmail ? users.find(u => u.email.toLowerCase() === s.bookedByEmail?.toLowerCase()) : null;
-                        if (matchedUser) {
-                            clientName = `${matchedUser.firstName} ${matchedUser.lastName}`;
-                        }
+                    const matchedUser = s.bookedByEmail ? users.find(u => u.email.toLowerCase() === s.bookedByEmail?.toLowerCase()) : null;
+                    if (matchedUser) {
+                        clientName = `${matchedUser.firstName} ${matchedUser.lastName}`;
+                    }
 
-                        // Capitalize parts carefully
-                        clientName = clientName.split(' ')
-                            .filter(part => part.length > 0)
-                            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                            .join(' ');
+                    clientName = clientName.split(' ')
+                        .filter(part => part.length > 0)
+                        .map(word => {
+                            const first = word.charAt(0).toUpperCase();
+                            const rest = word.slice(1).toLowerCase();
+                            return first + rest;
+                        })
+                        .join(' ');
 
-                        // Re-add Admin label if assigned by admin
-                        if (isAdminAssigned) {
-                            clientName = `${clientName} (Admin)`;
-                        }
+                    // Final cleanup for PDF font support
+                    clientName = clientName
+                        .replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
+                        .replace(/ş/g, 's').replace(/Ş/g, 'S')
+                        .replace(/ı/g, 'i').replace(/İ/g, 'I')
+                        .replace(/ö/g, 'o').replace(/Ö/g, 'O')
+                        .replace(/ü/g, 'u').replace(/Ü/g, 'U')
+                        .replace(/ç/g, 'c').replace(/Ç/g, 'C');
+
+                    if (isAdminAssigned) {
+                        clientName = `${clientName} (Admin)`;
                     }
 
                     return [s.date, s.time, clientName, displayStatus];

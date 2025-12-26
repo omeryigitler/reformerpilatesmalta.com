@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-// Deployment Trigger: FORCE_V22_PDF_REPORT_CLEANUP_STABLE
+// Deployment Trigger: FORCE_V23_PDF_TURKISH_AND_GHOST_FIX_STABLE
 import { useState, useEffect, useCallback } from "react";
 import { listenToSlots, listenToUsers, bookSlotTransaction, cancelBookingTransaction, logoutUserAuth } from "./services/pilatesService";
 import { Card, CardContent } from "@/components/ui/card";
