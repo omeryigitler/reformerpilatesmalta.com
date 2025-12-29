@@ -59,7 +59,7 @@ export const UserDashboard = ({
         .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
 
     const availableSlotsForSelectedDate = futureSlots
-        .filter(slot => slot.date === selectedDate && slot.status === 'Active')
+        .filter(slot => slot.date === selectedDate && slot.status === 'Available')
         .sort((a, b) => a.time.localeCompare(b.time));
 
     return (

@@ -130,7 +130,7 @@ export const AdminPanel = ({
     const [customEndDate, setCustomEndDate] = useState('');
     const [showCustomDateModal, setShowCustomDateModal] = useState(false);
 
-    const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Completed' | 'Available'>('All');
+    const [statusFilter, setStatusFilter] = useState<'All' | 'Booked' | 'Completed' | 'Available'>('All');
     const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
 
     const filteredSlots = useMemo(() => {
@@ -144,7 +144,7 @@ export const AdminPanel = ({
 
             let statusMatch = true;
             if (statusFilter === 'All') statusMatch = true;
-            else if (statusFilter === 'Active') statusMatch = isActuallyActive;
+            else if (statusFilter === 'Booked') statusMatch = isActuallyActive;
             else if (statusFilter === 'Completed') statusMatch = isActuallyCompleted;
             else statusMatch = slot.status === statusFilter && !isActuallyCompleted;
 
@@ -416,16 +416,20 @@ export const AdminPanel = ({
         const slot = slots.find(s => s.date === slotDate && s.time === slotTime);
         if (!slot) return;
 
-        const newStatus = slot.status === 'Active' ? 'Available' : 'Active';
-        const newBookedBy = null;
+        // If a slot is 'Available', toggling it means it becomes 'Booked' by admin (for private use or blocking)
+        // If it's 'Booked' by admin, toggling it means it becomes 'Available' again.
+        // This assumes the toggle is for admin to temporarily block/unblock a slot.
+        const newStatus = slot.status === 'Available' ? 'Booked' : 'Available';
+        const newBookedBy = newStatus === 'Booked' ? `Admin Action - ${loggedInUser?.firstName}` : null;
+        const newBookedByEmail = newStatus === 'Booked' ? loggedInUser?.email : null;
 
         try {
             await updateDoc(doc(db, "slots", `${slotDate}_${slotTime}`), {
                 status: newStatus,
                 bookedBy: newBookedBy,
-                bookedByEmail: null
+                bookedByEmail: newBookedByEmail
             });
-            showNotification(`Slot is now ${newStatus === 'Active' ? 'VISIBLE' : 'HIDDEN'} for students.`, 'info');
+            showNotification(`Slot is now ${newStatus === 'Available' ? 'AVAILABLE' : 'BOOKED (Admin)'}.`, 'info');
         } catch (e) {
             showNotification('Error toggling status', 'error');
         }
@@ -436,8 +440,8 @@ export const AdminPanel = ({
             "Are you sure you want to delete this slot? This action cannot be undone.",
             async () => {
                 try {
-                    // Check if slot is occupied (Booked/Active) to notify user
-                    const isOccupied = slot.status === 'Booked' || slot.status === 'Active';
+                    // Check if slot is occupied (Booked/Available) to notify user
+                    const isOccupied = slot.status === 'Booked' || slot.status === 'Available';
                     const isPast = isPastSlot(slot.date, slot.time);
 
                     // Only send email if occupied AND in the future
@@ -550,7 +554,7 @@ export const AdminPanel = ({
             s.date === dateToSave &&
             s.time.toLowerCase() === editFormData.time.trim().toLowerCase() &&
             !(s.date === editingSlot.date && s.time === editingSlot.time) &&
-            (s.status === 'Booked' || s.status === 'Active' || s.status === 'Completed')
+            (s.status === 'Booked' || s.status === 'Available' || s.status === 'Completed')
         );
 
         if (isCollision) {
@@ -560,7 +564,7 @@ export const AdminPanel = ({
 
         try {
             if (editingSlot.date !== dateToSave || editingSlot.time !== editFormData.time.trim()) {
-                const isOccupied = editingSlot.status === 'Booked' || editingSlot.status === 'Active' || editingSlot.status === 'Completed';
+                const isOccupied = editingSlot.status === 'Booked' || editingSlot.status === 'Available' || editingSlot.status === 'Completed';
 
                 if (isOccupied) {
                     // 1. CLEAR OLD SLOT (Both formats for safety)
@@ -903,7 +907,7 @@ export const AdminPanel = ({
                                 </label>
                                 <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
                                     {['07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'].map(time => {
-                                        const isTaken = slots.some(s => s.date === newSlotDate && s.time === time && (s.status === 'Booked' || s.status === 'Active' || s.status === 'Completed'));
+                                        const isTaken = slots.some(s => s.date === newSlotDate && s.time === time && (s.status === 'Booked' || s.status === 'Available' || s.status === 'Completed'));
                                         return (
                                             <button
                                                 key={time}
@@ -1007,7 +1011,7 @@ export const AdminPanel = ({
                                         className="w-full h-12 bg-white hover:bg-gray-50 text-gray-700 font-bold border border-gray-100 rounded-xl px-4 flex items-center justify-between shadow-sm hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#CE8E94]/20"
                                     >
                                         <span className="text-gray-800 truncate">
-                                            {statusFilter === 'All' ? 'All Statuses' : statusFilter === 'Completed' ? 'Completed Only' : statusFilter === 'Active' ? 'Active Only' : 'Available Only'}
+                                            {statusFilter === 'All' ? 'All Statuses' : statusFilter === 'Completed' ? 'Completed Only' : statusFilter === 'Available' ? 'Available Only' : 'Booked Only'}
                                         </span>
                                         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 group-hover:text-[#CE8E94] flex-shrink-0 ml-2 ${isStatusFilterOpen ? 'rotate-180' : ''}`} />
                                     </button>
@@ -1016,7 +1020,7 @@ export const AdminPanel = ({
                                         <>
                                             <div className="fixed inset-0 z-10" onClick={() => setIsStatusFilterOpen(false)} />
                                             <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200">
-                                                {(['All', 'Active', 'Available', 'Completed'] as const).map((option) => (
+                                                {(['All', 'Booked', 'Available', 'Completed'] as const).map((option) => (
                                                     <div
                                                         key={option}
                                                         onClick={() => {
@@ -1030,7 +1034,7 @@ export const AdminPanel = ({
                                                             }`}
                                                     >
                                                         <span className="text-sm">
-                                                            {option === 'All' ? 'All Statuses' : option === 'Completed' ? 'Completed Only' : option === 'Active' ? 'Active Only' : 'Available Only'}
+                                                            {option === 'All' ? 'All Statuses' : option === 'Completed' ? 'Completed Only' : option === 'Available' ? 'Available Only' : 'Booked Only'}
                                                         </span>
                                                         {statusFilter === option && <Check className="w-4 h-4 text-[#CE8E94]" />}
                                                     </div>
@@ -1088,15 +1092,13 @@ export const AdminPanel = ({
 
                                                                 <div className="flex flex-col items-center sm:items-start flex-1">
                                                                     <div className={`px-3 py-1.5 rounded-full text-xs font-bold ring-1 ring-inset ${slot.status === 'Available'
-                                                                        ? 'bg-blue-50 text-blue-600 ring-blue-600/20'
-                                                                        : slot.status === 'Active'
-                                                                            ? 'bg-green-50 text-green-600 ring-green-600/20'
-                                                                            : slot.status === 'Booked'
-                                                                                ? 'bg-indigo-50 text-indigo-600 ring-indigo-600/20'
-                                                                                : 'bg-gray-50 text-gray-500 ring-gray-600/20'}`}>
+                                                                        ? 'bg-green-50 text-green-600 ring-green-600/20'
+                                                                        : slot.status === 'Booked'
+                                                                            ? 'bg-indigo-50 text-indigo-600 ring-indigo-600/20'
+                                                                            : 'bg-gray-50 text-gray-500 ring-gray-600/20'}`}>
                                                                         <div className="flex items-center gap-1.5">
-                                                                            <div className={`w-1.5 h-1.5 rounded-full ${slot.status === 'Active' ? 'bg-green-500' : slot.status === 'Available' ? 'bg-blue-500' : 'bg-indigo-500'}`} />
-                                                                            {(isPastSlot(slot.date, slot.time) || slot.status === 'Completed') ? 'Completed' : (slot.status === 'Available' ? 'Hidden' : slot.status === 'Active' ? 'Public' : slot.status)}
+                                                                            <div className={`w-1.5 h-1.5 rounded-full ${slot.status === 'Available' ? 'bg-green-500' : 'bg-indigo-500'}`} />
+                                                                            {(isPastSlot(slot.date, slot.time) || slot.status === 'Completed') ? 'Completed' : slot.status}
                                                                         </div>
                                                                     </div>
                                                                     <div className="flex items-center gap-1.5 max-w-[150px]">

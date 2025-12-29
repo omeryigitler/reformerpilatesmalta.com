@@ -18,7 +18,7 @@ export const BookingCalendar = ({ slots, onSelectDate, selectedDate }: { slots: 
 
     const datesWithSlots = useMemo(() => {
         return slots
-            .filter(slot => slot.status === 'Active' && !isPastSlot(slot.date, slot.time))
+            .filter(slot => slot.status === 'Available' && !isPastSlot(slot.date, slot.time))
             .map(slot => slot.date);
     }, [slots]);
 
