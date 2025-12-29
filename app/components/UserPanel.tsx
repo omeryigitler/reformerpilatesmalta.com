@@ -68,17 +68,26 @@ export const UserPanel = ({ onLogin, activePanel, setActivePanel }: UserPanelPro
 
         setIsRegistering(true);
 
-        const newUser: UserType = {
-            email: trimmedEmail.toLowerCase(),
-            password: trimmedPassword, // Auth handles hashing, passing raw for consistency
-            role: 'user',
-            firstName: userForm.firstName.trim(),
-            lastName: userForm.lastName.trim(),
-            phone: phoneInput,
-            registered: getTodayDate()
-        };
-
         try {
+            // NEW: Pre-check if user exists in Firestore before attempting Auth registration
+            // This handles cases where Auth might be cleared but Firestore document remains.
+            const existingProfile = await getUserProfile(trimmedEmail.toLowerCase());
+            if (existingProfile) {
+                setRegisterError('This email is already registered in our system. Please try logging in.');
+                setIsRegistering(false);
+                return;
+            }
+
+            const newUser: UserType = {
+                email: trimmedEmail.toLowerCase(),
+                password: trimmedPassword,
+                role: 'user',
+                firstName: userForm.firstName.trim(),
+                lastName: userForm.lastName.trim(),
+                phone: phoneInput,
+                registered: getTodayDate()
+            };
+
             await registerUserAuth(newUser);
 
             showNotification('Registration successful! Logging you in...', 'success');
@@ -95,7 +104,7 @@ export const UserPanel = ({ onLogin, activePanel, setActivePanel }: UserPanelPro
             let msg = 'Registration failed.';
             const err = error as { code?: string; message: string };
             if (err.code === 'auth/email-already-in-use') {
-                msg = 'This email is already registered.';
+                msg = 'This email is already registered in Firebase. Please use Forgot Password or a different email.';
             } else {
                 msg = err.message || msg;
             }
