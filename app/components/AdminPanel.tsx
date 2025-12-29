@@ -1088,18 +1088,16 @@ export const AdminPanel = ({
                                                                 <div className="h-10 w-px bg-gray-200 hidden sm:block"></div>
 
                                                                 <div className="flex flex-col items-center sm:items-start flex-1">
-                                                                    <div className={`px-3 py-1.5 rounded-full text-xs font-bold ring-1 ring-inset ${slot.status === 'Available'
-                                                                        ? 'bg-green-50 text-green-600 ring-green-600/20'
-                                                                        : slot.status === 'Booked'
-                                                                            ? 'bg-indigo-50 text-indigo-600 ring-indigo-600/20'
-                                                                            : slot.status === 'Active'
-                                                                                ? 'bg-blue-50 text-blue-600 ring-blue-600/20'
-                                                                                : 'bg-gray-50 text-gray-500 ring-gray-600/20'}`}>
-                                                                        <div className="flex items-center gap-1.5">
-                                                                            <div className={`w-1.5 h-1.5 rounded-full ${slot.status === 'Available' ? 'bg-green-500' : slot.status === 'Booked' ? 'bg-indigo-500' : 'bg-blue-500'}`} />
-                                                                            {(isPastSlot(slot.date, slot.time) || slot.status === 'Completed') ? 'Completed' : slot.status}
-                                                                        </div>
-                                                                    </div>
+                                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full mb-1 ${
+                                                                        // Overriding Logic: Past slots are always viewed as Completed
+                                                                        (isPastSlot(slot.date, slot.time) || slot.status === 'Completed')
+                                                                            ? 'bg-gray-100 text-gray-500'
+                                                                            : (slot.status === 'Booked' || slot.status === 'Active')
+                                                                                ? 'bg-red-100 text-red-500'
+                                                                                : 'bg-green-100 text-green-600'
+                                                                        }`}>
+                                                                        {(isPastSlot(slot.date, slot.time) || slot.status === 'Completed') ? 'Completed' : (slot.status === 'Booked' ? 'Active' : slot.status)}
+                                                                    </span>
                                                                     <div className="flex items-center gap-1 max-w-[150px]">
                                                                         {slot.bookedBy ? (
                                                                             slot.bookedBy.includes('(Admin)') ? (
