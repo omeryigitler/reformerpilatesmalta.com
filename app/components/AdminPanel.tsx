@@ -1091,22 +1091,22 @@ export const AdminPanel = ({
                                                                 <div className="h-10 w-px bg-gray-200 hidden sm:block"></div>
 
                                                                 <div className="flex flex-col items-center sm:items-start flex-1">
-                                                                    <div className={`px-3 py-1.5 rounded-full text-xs font-bold ring-1 ring-inset ${(isPastSlot(slot.date, slot.time) || slot.status === 'Completed')
-                                                                            ? 'bg-gray-50 text-gray-500 ring-gray-600/20'
+                                                                    <div className={`rounded-full font-bold ring-1 ring-inset transition-all duration-200 ${(isPastSlot(slot.date, slot.time) || slot.status === 'Completed')
+                                                                            ? 'px-2 py-0.5 text-[10px] bg-gray-50 text-gray-400 ring-gray-200'
                                                                             : slot.bookedBy
-                                                                                ? 'bg-indigo-50 text-indigo-600 ring-indigo-600/20'
+                                                                                ? 'px-3 py-1.5 text-xs bg-indigo-50 text-indigo-600 ring-indigo-600/20'
                                                                                 : slot.status === 'Available'
-                                                                                    ? 'bg-green-50 text-green-600 ring-green-600/20'
-                                                                                    : 'bg-blue-50 text-blue-500 ring-blue-600/20' // This is for 'Passive' state
+                                                                                    ? 'px-3 py-1.5 text-xs bg-green-50 text-green-600 ring-green-600/20'
+                                                                                    : 'bg-sky-400 text-white ring-sky-500/50 px-3 py-1.5 text-xs shadow-sm' // Filled soft blue
                                                                         }`}>
                                                                         <div className="flex items-center gap-1.5">
                                                                             <div className={`w-1.5 h-1.5 rounded-full ${(isPastSlot(slot.date, slot.time) || slot.status === 'Completed')
-                                                                                    ? 'bg-gray-400'
+                                                                                    ? 'bg-gray-300'
                                                                                     : slot.bookedBy
                                                                                         ? 'bg-indigo-500'
                                                                                         : slot.status === 'Available'
                                                                                             ? 'bg-green-500'
-                                                                                            : 'bg-blue-500'
+                                                                                            : 'bg-white'
                                                                                 }`} />
                                                                             {(isPastSlot(slot.date, slot.time) || slot.status === 'Completed')
                                                                                 ? 'Completed'
@@ -1120,7 +1120,7 @@ export const AdminPanel = ({
                                                                     <div className="flex items-center gap-1.5 max-w-[150px]">
                                                                         {slot.bookedBy ? (
                                                                             <div className="flex items-center gap-1.5">
-                                                                                <span className="truncate text-sm font-medium text-gray-900">
+                                                                                <span className="truncate text-[15px] font-bold text-gray-900 tracking-tight">
                                                                                     {slot.bookedBy.replace(' (Admin)', '')}
                                                                                 </span>
                                                                                 {slot.bookedBy.includes('(Admin)') && (
