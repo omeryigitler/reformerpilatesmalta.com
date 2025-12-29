@@ -1,9 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-// Deployment Trigger: FORCE_V24_CLEANUP_AND_REFINEMENT_STABLE
+// Deployment Trigger: FORCE_V26_AUTO_CLEANUP_EMPTY_PAST_SLOTS
 import { useState, useEffect, useCallback } from "react";
-import { listenToSlots, listenToUsers, bookSlotTransaction, cancelBookingTransaction, logoutUserAuth } from "./services/pilatesService";
+import { listenToSlots, listenToUsers, bookSlotTransaction, cancelBookingTransaction, logoutUserAuth, updateExpiredSlots } from "./services/pilatesService";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import {
@@ -164,8 +164,13 @@ function PilatesMaltaByGozde() {
         initAuth();
 
         // Subscribe to Slots (Needed for everyone)
+        let hasInitialCleanupRun = false;
         const slotsUnsub = listenToSlots((loadedSlots) => {
             setSlots(sortSlots(loadedSlots));
+            if (!hasInitialCleanupRun && loadedSlots.length > 0) {
+                updateExpiredSlots(loadedSlots);
+                hasInitialCleanupRun = true;
+            }
         });
 
         // Subscribe to Management (Needed for Logo/branding)

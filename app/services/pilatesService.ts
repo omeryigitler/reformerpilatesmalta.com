@@ -8,6 +8,7 @@ import {
     updateDoc,
     setDoc,
     getDoc,
+    deleteDoc,
     DocumentReference
 } from "firebase/firestore";
 import {
@@ -26,9 +27,9 @@ import { convertTime12to24, getTodayDate } from "../utils/helpers";
 export const updateExpiredSlots = async (slots: Slot[]) => {
     const now = new Date();
 
-    // Geçmiş "Booked" veya "Active" olanları bul
+    // Geçmiş "Booked", "Active" veya "Available" olanları bul
     const expiredSlots = slots.filter(slot => {
-        if (slot.status !== 'Booked' && slot.status !== 'Active') return false;
+        if (slot.status === 'Completed') return false;
 
         // Tarih ve saat kontrolü
         // Slot.date: YYYY-MM-DD
@@ -57,7 +58,13 @@ export const updateExpiredSlots = async (slots: Slot[]) => {
     // Ancak kullanıcı iptal etmeye çalışırsa çakışma olabilir, ama geçmiş tarih olduğu için iptal edilemez zaten.
     const promises = expiredSlots.map(slot => {
         const slotRef = doc(db, "slots", `${slot.date}_${slot.time}`);
-        return updateDoc(slotRef, { status: 'Completed' });
+
+        // Eğer slot boşsa (kimse almamışsa) SİL, eğer doluysa COMPLETED yap
+        if (!slot.bookedBy && !slot.bookedByEmail) {
+            return deleteDoc(slotRef);
+        } else {
+            return updateDoc(slotRef, { status: 'Completed' });
+        }
     });
 
     try {
