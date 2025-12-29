@@ -1091,14 +1091,30 @@ export const AdminPanel = ({
                                                                 <div className="h-10 w-px bg-gray-200 hidden sm:block"></div>
 
                                                                 <div className="flex flex-col items-center sm:items-start flex-1">
-                                                                    <div className={`px-3 py-1.5 rounded-full text-xs font-bold ring-1 ring-inset ${slot.status === 'Available'
-                                                                        ? 'bg-green-50 text-green-600 ring-green-600/20'
-                                                                        : slot.status === 'Booked'
-                                                                            ? 'bg-indigo-50 text-indigo-600 ring-indigo-600/20'
-                                                                            : 'bg-gray-50 text-gray-500 ring-gray-600/20'}`}>
+                                                                    <div className={`px-3 py-1.5 rounded-full text-xs font-bold ring-1 ring-inset ${(isPastSlot(slot.date, slot.time) || slot.status === 'Completed')
+                                                                            ? 'bg-gray-50 text-gray-500 ring-gray-600/20'
+                                                                            : slot.bookedBy
+                                                                                ? 'bg-indigo-50 text-indigo-600 ring-indigo-600/20'
+                                                                                : slot.status === 'Available'
+                                                                                    ? 'bg-green-50 text-green-600 ring-green-600/20'
+                                                                                    : 'bg-blue-50 text-blue-500 ring-blue-600/20' // This is for 'Passive' state
+                                                                        }`}>
                                                                         <div className="flex items-center gap-1.5">
-                                                                            <div className={`w-1.5 h-1.5 rounded-full ${slot.status === 'Available' ? 'bg-green-500' : 'bg-indigo-500'}`} />
-                                                                            {(isPastSlot(slot.date, slot.time) || slot.status === 'Completed') ? 'Completed' : slot.status}
+                                                                            <div className={`w-1.5 h-1.5 rounded-full ${(isPastSlot(slot.date, slot.time) || slot.status === 'Completed')
+                                                                                    ? 'bg-gray-400'
+                                                                                    : slot.bookedBy
+                                                                                        ? 'bg-indigo-500'
+                                                                                        : slot.status === 'Available'
+                                                                                            ? 'bg-green-500'
+                                                                                            : 'bg-blue-500'
+                                                                                }`} />
+                                                                            {(isPastSlot(slot.date, slot.time) || slot.status === 'Completed')
+                                                                                ? 'Completed'
+                                                                                : slot.bookedBy
+                                                                                    ? 'Booked'
+                                                                                    : slot.status === 'Available'
+                                                                                        ? 'Available'
+                                                                                        : 'Passive'}
                                                                         </div>
                                                                     </div>
                                                                     <div className="flex items-center gap-1.5 max-w-[150px]">
