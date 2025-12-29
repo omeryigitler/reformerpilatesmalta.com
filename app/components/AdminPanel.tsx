@@ -1091,22 +1091,22 @@ export const AdminPanel = ({
                                                                 <div className="h-10 w-px bg-gray-200 hidden sm:block"></div>
 
                                                                 <div className="flex flex-col items-center sm:items-start flex-1">
-                                                                    <div className={`rounded-full font-bold ring-1 ring-inset transition-all duration-200 ${(isPastSlot(slot.date, slot.time) || slot.status === 'Completed')
-                                                                            ? 'px-2 py-0.5 text-[10px] bg-gray-50 text-gray-400 ring-gray-200'
+                                                                    <div className={`rounded-full font-bold ring-1 ring-inset transition-all duration-200 px-2 py-0.5 text-[10px] ${(isPastSlot(slot.date, slot.time) || slot.status === 'Completed')
+                                                                            ? 'bg-gray-50 text-gray-400 ring-gray-200'
                                                                             : slot.bookedBy
-                                                                                ? 'px-3 py-1.5 text-xs bg-indigo-50 text-indigo-600 ring-indigo-600/20'
+                                                                                ? 'bg-sky-50 text-sky-600 ring-sky-200' // Soft blue for Booked
                                                                                 : slot.status === 'Available'
-                                                                                    ? 'px-3 py-1.5 text-xs bg-green-50 text-green-600 ring-green-600/20'
-                                                                                    : 'px-3 py-1.5 text-xs bg-sky-100 text-sky-600 ring-sky-200' // Soft blue filled effect
+                                                                                    ? 'bg-green-50 text-green-600 ring-green-100' // Soft green for Available
+                                                                                    : 'bg-blue-50 text-blue-500 ring-blue-100' // Passive
                                                                         }`}>
                                                                         <div className="flex items-center gap-1.5">
-                                                                            <div className={`w-1.5 h-1.5 rounded-full ${(isPastSlot(slot.date, slot.time) || slot.status === 'Completed')
+                                                                            <div className={`w-1 h-1 rounded-full ${(isPastSlot(slot.date, slot.time) || slot.status === 'Completed')
                                                                                     ? 'bg-gray-300'
                                                                                     : slot.bookedBy
-                                                                                        ? 'bg-indigo-500'
+                                                                                        ? 'bg-sky-400'
                                                                                         : slot.status === 'Available'
-                                                                                            ? 'bg-green-500'
-                                                                                            : 'bg-sky-500'
+                                                                                            ? 'bg-green-400'
+                                                                                            : 'bg-blue-400'
                                                                                 }`} />
                                                                             {(isPastSlot(slot.date, slot.time) || slot.status === 'Completed')
                                                                                 ? 'Completed'
@@ -1117,7 +1117,7 @@ export const AdminPanel = ({
                                                                                         : 'Passive'}
                                                                         </div>
                                                                     </div>
-                                                                    <div className="flex items-center gap-1.5 max-w-[180px]">
+                                                                    <div className="flex items-center gap-1.5 max-w-[180px] mt-1">
                                                                         {slot.bookedBy ? (
                                                                             <div className="flex items-center gap-1.5">
                                                                                 <span className="truncate text-[15px] font-bold text-gray-900 tracking-tight">
