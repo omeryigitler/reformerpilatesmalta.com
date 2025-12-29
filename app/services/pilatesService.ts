@@ -120,8 +120,8 @@ export const bookSlotTransaction = async (slotDate: string, slotTime: string, us
 
             const slotData = slotDoc.data() as Slot;
 
-            // Kontrol: Yer dolu mu?
-            if (slotData.status === 'Booked' || slotData.status === 'Active' || slotData.status === 'Completed') {
+            // Allowing booking for Active (Public) or even Available (if direct link/admin)
+            if (slotData.status === 'Booked' || slotData.status === 'Completed') {
                 throw "Bu ders az önce başkası tarafından alındı veya doldu!";
             }
 

@@ -416,17 +416,16 @@ export const AdminPanel = ({
         const slot = slots.find(s => s.date === slotDate && s.time === slotTime);
         if (!slot) return;
 
-        const isOccupied = slot.status === 'Booked' || slot.status === 'Active' || slot.status === 'Completed';
-        const newStatus = isOccupied ? 'Available' : 'Active';
-        const newBookedBy = !isOccupied ? `Admin Action - ${loggedInUser?.firstName}` : null;
+        const newStatus = slot.status === 'Active' ? 'Available' : 'Active';
+        const newBookedBy = null;
 
         try {
             await updateDoc(doc(db, "slots", `${slotDate}_${slotTime}`), {
                 status: newStatus,
                 bookedBy: newBookedBy,
-                bookedByEmail: !isOccupied ? null : slot.bookedByEmail
+                bookedByEmail: null
             });
-            showNotification(`Slot status toggled for ${slotTime} on ${formatDateDisplay(slotDate)}`, 'info');
+            showNotification(`Slot is now ${newStatus === 'Active' ? 'VISIBLE' : 'HIDDEN'} for students.`, 'info');
         } catch (e) {
             showNotification('Error toggling status', 'error');
         }
@@ -1088,29 +1087,30 @@ export const AdminPanel = ({
                                                                 <div className="h-10 w-px bg-gray-200 hidden sm:block"></div>
 
                                                                 <div className="flex flex-col items-center sm:items-start flex-1">
-                                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full mb-1 ${
-                                                                        // Overriding Logic: Past slots are always viewed as Completed
-                                                                        (isPastSlot(slot.date, slot.time) || slot.status === 'Completed')
-                                                                            ? 'bg-gray-100 text-gray-500'
-                                                                            : (slot.status === 'Booked' || slot.status === 'Active')
-                                                                                ? 'bg-red-100 text-red-500'
-                                                                                : 'bg-green-100 text-green-600'
-                                                                        }`}>
-                                                                        {(isPastSlot(slot.date, slot.time) || slot.status === 'Completed') ? 'Completed' : (slot.status === 'Booked' ? 'Active' : slot.status)}
-                                                                    </span>
-                                                                    <div className="flex items-center gap-1 max-w-[150px]">
+                                                                    <div className={`px-3 py-1.5 rounded-full text-xs font-bold ring-1 ring-inset ${slot.status === 'Available'
+                                                                        ? 'bg-blue-50 text-blue-600 ring-blue-600/20'
+                                                                        : slot.status === 'Active'
+                                                                            ? 'bg-green-50 text-green-600 ring-green-600/20'
+                                                                            : slot.status === 'Booked'
+                                                                                ? 'bg-indigo-50 text-indigo-600 ring-indigo-600/20'
+                                                                                : 'bg-gray-50 text-gray-500 ring-gray-600/20'}`}>
+                                                                        <div className="flex items-center gap-1.5">
+                                                                            <div className={`w-1.5 h-1.5 rounded-full ${slot.status === 'Active' ? 'bg-green-500' : slot.status === 'Available' ? 'bg-blue-500' : 'bg-indigo-500'}`} />
+                                                                            {(isPastSlot(slot.date, slot.time) || slot.status === 'Completed') ? 'Completed' : (slot.status === 'Available' ? 'Hidden' : slot.status === 'Active' ? 'Public' : slot.status)}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1.5 max-w-[150px]">
                                                                         {slot.bookedBy ? (
-                                                                            slot.bookedBy.includes('(Admin)') ? (
-                                                                                <span className="text-xs font-bold text-blue-600 truncate flex items-center gap-1" title={slot.bookedBy}>
-                                                                                    <ShieldCheck className="w-3 h-3" /> {slot.bookedBy.replace(' (Admin)', '')}
+                                                                            <div className="flex items-center gap-1.5">
+                                                                                <span className="truncate text-sm font-medium text-gray-900">
+                                                                                    {slot.bookedBy.replace(' (Admin)', '')}
                                                                                 </span>
-                                                                            ) : (
-                                                                                <span className="text-xs font-bold text-gray-600 truncate" title={slot.bookedBy}>
-                                                                                    {slot.bookedBy}
-                                                                                </span>
-                                                                            )
+                                                                                {slot.bookedBy.includes('(Admin)') && (
+                                                                                    <ShieldCheck className="w-4 h-4 text-[#CE8E94] flex-shrink-0" />
+                                                                                )}
+                                                                            </div>
                                                                         ) : (
-                                                                            <span className="text-xs text-gray-400">No Booking</span>
+                                                                            <span className="text-gray-400 italic text-xs">No one yet</span>
                                                                         )}
                                                                     </div>
                                                                 </div>
