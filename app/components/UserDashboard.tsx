@@ -209,7 +209,7 @@ END:VCALENDAR`;
                                     <div className="flex-1 overflow-y-auto pr-2 space-y-4 scrollbar-hide">
                                         {availableSlotsForSelectedDate.length > 0 ? (
                                             availableSlotsForSelectedDate.map((slot, idx) => (
-                                                <div key={idx} className="flex justify-between items-center p-5 bg-white/60 rounded-2xl hover:bg-white hover:shadow-md transition border border-white/40 hover:border-[#CE8E94]/30 gap-4">
+                                                <div key={idx} className="flex justify-between items-center p-5 bg-white/60 rounded-2xl shadow-sm hover:bg-white hover:shadow-md transition border border-gray-100 hover:border-[#CE8E94]/30 gap-4">
                                                     <span className="text-xl font-medium text-gray-800 flex items-center gap-3">
                                                         <Clock className="w-5 h-5 text-green-600" /> {slot.time}
                                                     </span>
