@@ -64,7 +64,7 @@ export const UserDashboard = ({
 
     return (
         <div className="pilates-root min-h-screen flex flex-col items-center p-4 md:p-10 pb-32 md:pb-40 space-y-10 font-sans bg-[#FFF0E5]">
-            <div className="w-full max-w-7xl px-8 md:px-32 py-10 bg-white/60 backdrop-blur-md rounded-[3rem] shadow-2xl border border-white/50 space-y-12">
+            <div className="w-full max-w-6xl px-8 md:px-16 py-10 bg-white/60 backdrop-blur-md rounded-[3rem] shadow-2xl border border-white/50 space-y-12">
                 <div className="flex justify-between items-start md:items-center border-b border-[#CE8E94]/20 pb-6">
                     <h1 className="text-3xl md:text-4xl font-bold text-[#CE8E94] flex items-center gap-3"><User className="w-8 h-8" />
                         <span className="flex flex-col md:flex-row md:gap-2">
