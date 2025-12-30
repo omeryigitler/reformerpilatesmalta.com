@@ -416,9 +416,50 @@ export const AdminPanel = ({
         const slot = slots.find(s => s.date === slotDate && s.time === slotTime);
         if (!slot) return;
 
-        // If a slot is 'Available', toggling it means it becomes 'Booked' by admin (for private use or blocking)
-        // If it's 'Booked' by admin, toggling it means it becomes 'Available' again.
-        // This assumes the toggle is for admin to temporarily block/unblock a slot.
+        // 1. Check if occupied by a REAL user (not Admin block) -- Admin blocks have 'Admin Action' in bookedBy
+        const isOccupied = slot.status === 'Booked' || slot.status === 'Active';
+        // Robust check: If 'bookedBy' doesn't contain "Admin Action", treat as real user
+        const isRealUser = isOccupied && slot.bookedBy && !slot.bookedBy.includes('Admin Action');
+
+        if (isRealUser) {
+            showConfirm(
+                `This slot is booked by ${slot.bookedBy}. Toggling will CANCEL their booking, notify them, and make the slot AVAILABLE (Empty). Continue?`,
+                async () => {
+                    try {
+                        const bookedName = slot.bookedBy ? slot.bookedBy.replace(' (Admin)', '').trim().toLowerCase() : '';
+
+                        // Find user to notify
+                        const userToNotify = users.find(u => {
+                            if (slot.bookedByEmail) return u.email.toLowerCase() === slot.bookedByEmail.toLowerCase();
+                            const fullName = `${u.firstName} ${u.lastName}`.trim().toLowerCase();
+                            return fullName === bookedName;
+                        });
+
+                        if (userToNotify) {
+                            showNotification(`Notifying ${userToNotify.firstName} of cancellation...`, 'info');
+                            await sendUserCancellationAlert(userToNotify, slot, 'Class Cancelled by Studio (Slot Opened)');
+                        }
+
+                        // Reset to Available (Empty)
+                        await updateDoc(doc(db, "slots", `${slotDate}_${slotTime}`), {
+                            status: 'Available',
+                            bookedBy: null,
+                            bookedByEmail: null
+                        });
+                        showNotification(`Booking cancelled. Slot is now Available.`, 'success');
+                    } catch (e) {
+                        console.error("Error cancelling via toggle:", e);
+                        showNotification('Error cancelling booking', 'error');
+                    }
+                },
+                "Cancel Booking & Open Slot"
+            );
+            return;
+        }
+
+        // 2. Standard Admin Toggle (Available <-> Blocked)
+        // If it was 'Booked' (Admin) -> becomes Available
+        // If it was 'Available' -> becomes Booked (Admin)
         const newStatus = slot.status === 'Available' ? 'Booked' : 'Available';
         const newBookedBy = newStatus === 'Booked' ? `Admin Action - ${loggedInUser?.firstName}` : null;
         const newBookedByEmail = newStatus === 'Booked' ? loggedInUser?.email : null;
@@ -1092,21 +1133,21 @@ export const AdminPanel = ({
 
                                                                 <div className="flex flex-col items-center sm:items-start flex-1">
                                                                     <div className={`rounded-full font-bold ring-1 ring-inset transition-all duration-200 px-2 py-0.5 text-[10px] ${(isPastSlot(slot.date, slot.time) || slot.status === 'Completed')
-                                                                            ? 'bg-gray-50 text-gray-400 ring-gray-200'
-                                                                            : slot.bookedBy
-                                                                                ? 'bg-sky-50 text-sky-600 ring-sky-200' // Soft blue for Booked
-                                                                                : slot.status === 'Available'
-                                                                                    ? 'bg-green-50 text-green-600 ring-green-100' // Soft green for Available
-                                                                                    : 'bg-blue-50 text-blue-500 ring-blue-100' // Passive
+                                                                        ? 'bg-gray-50 text-gray-400 ring-gray-200'
+                                                                        : slot.bookedBy
+                                                                            ? 'bg-sky-50 text-sky-600 ring-sky-200' // Soft blue for Booked
+                                                                            : slot.status === 'Available'
+                                                                                ? 'bg-green-50 text-green-600 ring-green-100' // Soft green for Available
+                                                                                : 'bg-blue-50 text-blue-500 ring-blue-100' // Passive
                                                                         }`}>
                                                                         <div className="flex items-center gap-1.5">
                                                                             <div className={`w-1 h-1 rounded-full ${(isPastSlot(slot.date, slot.time) || slot.status === 'Completed')
-                                                                                    ? 'bg-gray-300'
-                                                                                    : slot.bookedBy
-                                                                                        ? 'bg-sky-400'
-                                                                                        : slot.status === 'Available'
-                                                                                            ? 'bg-green-400'
-                                                                                            : 'bg-blue-400'
+                                                                                ? 'bg-gray-300'
+                                                                                : slot.bookedBy
+                                                                                    ? 'bg-sky-400'
+                                                                                    : slot.status === 'Available'
+                                                                                        ? 'bg-green-400'
+                                                                                        : 'bg-blue-400'
                                                                                 }`} />
                                                                             {(isPastSlot(slot.date, slot.time) || slot.status === 'Completed')
                                                                                 ? 'Completed'
