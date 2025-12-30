@@ -78,6 +78,7 @@ export const UserDashboard = ({
         if (!SHOW_GAMIFICATION) return [];
         return BADGE_DEFINITIONS.filter(def => {
             const c = def.criteria;
+            // TS Fix: Fallback for optional values
             if (c.type === 'count') return completedCount >= (c.value || 0);
 
             if (c.type === 'time') {
@@ -127,35 +128,11 @@ export const UserDashboard = ({
         <div className="pilates-root min-h-screen flex flex-col items-center p-4 md:p-8 lg:p-10 space-y-6 md:space-y-10 font-sans bg-[#FFF0E5]">
             <div className="w-full max-w-6xl px-4 py-8 md:px-12 md:py-10 lg:px-16 bg-white/60 backdrop-blur-md rounded-[2rem] md:rounded-[3rem] shadow-2xl border border-white/50 space-y-8 md:space-y-12">
 
-                {/* HEAD & WELCOME */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-[#CE8E94]/20 pb-6 gap-4 md:gap-0">
-                    <div>
-                        <h1 className="text-3xl md:text-4xl font-bold text-[#CE8E94] flex items-center gap-3">
-                            <User className="w-8 h-8 flex-shrink-0" />
-                            <span className="flex flex-col md:flex-row md:gap-2">
-                                <span>Hi,</span>
-                                <span>{loggedInUser.firstName}</span>
-                            </span>
-                        </h1>
+                {/* HEAD & WELCOME - UPDATED LAYOUT V3 */}
+                <div className="flex flex-col md:flex-row-reverse justify-between items-center md:items-start border-b border-[#CE8E94]/20 pb-6 gap-6 md:gap-0">
 
-                        {/* BADGES ROW (MOBILE OPTIMIZED: WRAPS NICELY) */}
-                        {SHOW_GAMIFICATION && myBadges.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-3 animate-in fade-in slide-in-from-left-4 duration-500">
-                                {myBadges.map((badge) => (
-                                    <div
-                                        key={badge.id}
-                                        className={`px-3 py-1.5 rounded-full text-xs md:text-sm font-bold flex items-center gap-2 border shadow-sm transition-transform hover:scale-105 select-none cursor-default ${badge.color}`}
-                                        title={badge.description}
-                                    >
-                                        <span className="text-base md:text-lg leading-none">{badge.icon}</span>
-                                        <span>{badge.label}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="flex flex-row md:flex-col lg:flex-row gap-3 items-center w-full md:w-auto">
+                    {/* BUTTONS (Mobile: Top, Desktop: Right) */}
+                    <div className="flex flex-row gap-3 items-center w-full md:w-auto justify-end">
                         <Button
                             onClick={navigateToHome}
                             className="flex-1 md:flex-none px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-xl text-sm font-bold hover:bg-gray-100 transition duration-300 flex items-center justify-center gap-2 relative group shadow-sm"
@@ -169,6 +146,33 @@ export const UserDashboard = ({
                         >
                             <LogOut className="w-4 h-4" /> <span className="hidden sm:inline">Logout</span>
                         </Button>
+                    </div>
+
+                    {/* NAME & BADGES (Mobile: Bottom L/R, Desktop: Left Stack) */}
+                    <div className="w-full md:w-auto flex flex-row md:flex-col justify-between md:justify-start items-center md:items-start">
+                        <h1 className="text-3xl md:text-4xl font-bold text-[#CE8E94] flex items-center gap-3">
+                            <User className="w-8 h-8 flex-shrink-0 hidden md:block" />
+                            <span className="flex flex-col md:flex-row md:gap-2">
+                                <span>Hi,</span>
+                                <span>{loggedInUser.firstName}</span>
+                            </span>
+                        </h1>
+
+                        {/* BADGES ROW */}
+                        {SHOW_GAMIFICATION && myBadges.length > 0 && (
+                            <div className="flex flex-wrap gap-2 md:mt-3 justify-end md:justify-start animate-in fade-in slide-in-from-left-4 duration-500 max-w-[50%] md:max-w-none">
+                                {myBadges.map((badge) => (
+                                    <div
+                                        key={badge.id}
+                                        className={`px-2 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-sm font-bold flex items-center gap-1 md:gap-2 border shadow-sm transition-transform hover:scale-105 select-none cursor-default ${badge.color}`}
+                                        title={badge.description}
+                                    >
+                                        <span className="text-sm md:text-lg leading-none">{badge.icon}</span>
+                                        <span className="hidden sm:inline">{badge.label}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -279,26 +283,25 @@ export const UserDashboard = ({
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#CE8E94]/5 rounded-bl-full pointer-events-none transition-transform group-hover:scale-150 duration-700"></div>
                                 </div>
 
-                                {/* Wellness Tip Card */}
-                                <div className="bg-gradient-to-br from-[#CE8E94] to-[#B57A80] p-6 md:p-8 rounded-[2rem] shadow-lg relative overflow-hidden text-white group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between min-h-[200px]">
+                                {/* Wellness Tip Card (Light Theme) */}
+                                <div className="bg-[#FFF5F0] border border-[#CE8E94]/20 p-6 md:p-8 rounded-[2rem] shadow-sm relative overflow-hidden text-[#CE8E94] group hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between min-h-[200px]">
                                     <div className="relative z-10">
                                         <div className="flex items-center gap-2 opacity-80 mb-4">
-                                            <div className="p-1.5 bg-white/20 rounded-full">
-                                                <Sparkles className="w-3 h-3 md:w-4 md:h-4" />
+                                            <div className="p-1.5 bg-[#CE8E94]/10 rounded-full">
+                                                <Sparkles className="w-3 h-3 md:w-4 md:h-4 text-[#CE8E94]" />
                                             </div>
-                                            <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">Daily Wisdom</span>
+                                            <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-[#CE8E94]">Daily Wisdom</span>
                                         </div>
-                                        <h4 className="text-lg md:text-2xl font-bold leading-relaxed font-serif italic">
+                                        <h4 className="text-lg md:text-2xl font-bold leading-relaxed font-serif italic text-gray-700">
                                             &quot;{dailyTip}&quot;
                                         </h4>
                                     </div>
-                                    <div className="relative z-10 mt-6 flex justify-end opacity-20 group-hover:opacity-40 transition-opacity">
-                                        <Quote className="w-8 h-8 md:w-10 md:h-10 rotate-180" />
+                                    <div className="relative z-10 mt-6 flex justify-end opacity-10 group-hover:opacity-20 transition-opacity">
+                                        <Quote className="w-8 h-8 md:w-10 md:h-10 rotate-180 text-[#CE8E94]" />
                                     </div>
 
-                                    {/* Decorative circles */}
-                                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-colors duration-500"></div>
-                                    <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-black/10 rounded-full blur-2xl"></div>
+                                    {/* Decorative circles (Subtle) */}
+                                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#CE8E94]/5 rounded-full blur-2xl group-hover:bg-[#CE8E94]/10 transition-colors duration-500"></div>
                                 </div>
                             </div>
                         )}
@@ -329,13 +332,13 @@ export const UserDashboard = ({
                                     {availableSlotsForSelectedDate.length > 0 ? (
                                         availableSlotsForSelectedDate.map((slot, idx) => (
                                             <div key={idx} className="flex justify-between items-center p-4 md:p-5 bg-white/60 rounded-2xl hover:bg-white hover:shadow-md transition border border-white/40 hover:border-[#CE8E94]/30 gap-4 group">
-                                                <span className="text-lg md:text-xl font-medium text-gray-800 flex items-center gap-3">
-                                                    <Clock className="w-5 h-5 text-green-600 transition-transform group-hover:scale-110" />
-                                                    {slot.time}
+                                                <span className="text-lg md:text-xl font-medium text-gray-800 flex items-center gap-3 min-w-0">
+                                                    <Clock className="w-5 h-5 text-green-600 transition-transform group-hover:scale-110 flex-shrink-0" />
+                                                    <span className="truncate">{slot.time}</span>
                                                 </span>
                                                 <Button
                                                     onClick={() => handleBookSlot(slot.date, slot.time)}
-                                                    className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold shadow-md transition-all hover:scale-105 active:scale-95"
+                                                    className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold shadow-md transition-all hover:scale-105 active:scale-95 flex-shrink-0"
                                                 >
                                                     Book
                                                 </Button>
@@ -359,7 +362,7 @@ export const UserDashboard = ({
 
             {/* Footer / Copyright / Version */}
             <div className="text-center pb-8 opacity-30 text-[10px] font-mono hover:opacity-100 transition-opacity cursor-default">
-                <p>Reformer Pilates Malta • V40-GAMIFICATION</p>
+                <p>Reformer Pilates Malta • V44-UI-POLISH</p>
             </div>
         </div>
     );
