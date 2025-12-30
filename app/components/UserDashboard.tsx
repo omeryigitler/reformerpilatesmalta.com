@@ -198,33 +198,35 @@ END:VCALENDAR`;
                             </div>
 
                             {/* 2. & 3. KISIM: SAĞ TARAF (SLOT LİSTESİ) - Admin Panel'deki beyaz kutu ve başlık yapısı */}
-                            <div className="lg:col-span-1 flex flex-col bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-white/50 h-full">
-                                {/* Sabit Başlık Alanı - Sol tarafla görsel eşitleme */}
-                                <h2 className="text-2xl font-bold text-gray-700 flex items-center gap-2 border-b pb-2 mb-4">
+                            <div className="lg:col-span-1 space-y-4 flex flex-col h-full">
+                                {/* Sabit Başlık Alanı - Sol tarafla TAM SİMETRİK (Kutunun Üstünde) */}
+                                <h2 className="text-2xl font-bold text-gray-700 flex items-center gap-2 border-b pb-2">
                                     {formatDateDisplay(selectedDate)}
                                 </h2>
 
-                                {/* Slotların Listelendiği Alan - Senin orijinal slot tasarımın korundu */}
-                                <div className="flex-1 overflow-y-auto pr-2 space-y-4 mt-4 scrollbar-hide">
-                                    {availableSlotsForSelectedDate.length > 0 ? (
-                                        availableSlotsForSelectedDate.map((slot, idx) => (
-                                            <div key={idx} className="flex justify-between items-center p-5 bg-white/60 rounded-2xl hover:bg-white hover:shadow-md transition border border-white/40 hover:border-[#CE8E94]/30 gap-4">
-                                                <span className="text-xl font-medium text-gray-800 flex items-center gap-3">
-                                                    <Clock className="w-5 h-5 text-green-600" /> {slot.time}
-                                                </span>
-                                                <Button
-                                                    onClick={() => handleBookSlot(slot.date, slot.time)}
-                                                    className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold shadow-md transition-colors"
-                                                >
-                                                    Book
-                                                </Button>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p className="p-4 bg-red-50 border border-red-200 rounded-xl text-gray-600">
-                                            No available slots on this date. Please choose another day from the calendar.
-                                        </p>
-                                    )}
+                                <div className="flex-1 flex flex-col bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-white/50">
+                                    {/* Slotların Listelendiği Alan - Senin orijinal slot tasarımın korundu */}
+                                    <div className="flex-1 overflow-y-auto pr-2 space-y-4 scrollbar-hide">
+                                        {availableSlotsForSelectedDate.length > 0 ? (
+                                            availableSlotsForSelectedDate.map((slot, idx) => (
+                                                <div key={idx} className="flex justify-between items-center p-5 bg-white/60 rounded-2xl hover:bg-white hover:shadow-md transition border border-white/40 hover:border-[#CE8E94]/30 gap-4">
+                                                    <span className="text-xl font-medium text-gray-800 flex items-center gap-3">
+                                                        <Clock className="w-5 h-5 text-green-600" /> {slot.time}
+                                                    </span>
+                                                    <Button
+                                                        onClick={() => handleBookSlot(slot.date, slot.time)}
+                                                        className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold shadow-md transition-colors"
+                                                    >
+                                                        Book
+                                                    </Button>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p className="p-4 bg-red-50 border border-red-200 rounded-xl text-gray-600">
+                                                No available slots on this date. Please choose another day from the calendar.
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
