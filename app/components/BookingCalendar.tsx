@@ -80,17 +80,16 @@ export const BookingCalendar = ({ slots, onSelectDate, selectedDate }: { slots: 
 
     const renderDays = () => {
         const days = [];
+        const TOTAL_GRID_SLOTS = 42; // Fixed 6 rows (7 cols * 6 rows)
 
         // Empty slots for offset
         for (let i = 0; i < startOffset; i++) {
-            days.push(<div key={`empty-${i}`} className="text-center p-3 opacity-0 cursor-default"></div>);
+            days.push(<div key={`empty-start-${i}`} className="text-center p-3 opacity-0 cursor-default"></div>);
         }
 
         // Days
         for (let day = 1; day <= daysInMonth; day++) {
-            // Construct YYYY-MM-DD
             const dateStr = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            // ... rest of logic uses string comparison, safe ...
             const isToday = dateStr === todayDate;
             const hasSlots = datesWithSlots.includes(dateStr);
             const isSelected = dateStr === selectedDate;
@@ -99,35 +98,39 @@ export const BookingCalendar = ({ slots, onSelectDate, selectedDate }: { slots: 
             const baseClass = "w-full aspect-square max-w-[40px] md:max-w-[48px] rounded-full flex items-center justify-center font-bold font-sans transition-all duration-200 text-base mx-auto";
             let colorClass = 'text-gray-700 hover:bg-gray-100 cursor-pointer';
 
-            if (isPast) {
-                colorClass = 'text-gray-400 cursor-not-allowed';
-            } else if (isSelected) {
-                colorClass = 'bg-[#CE8E94] text-white shadow-lg ring-2 md:ring-4 ring-[#CE8E94]/30 transform scale-105';
-            } else if (hasSlots) {
-                colorClass = 'bg-green-100 text-green-700 hover:bg-green-200 cursor-pointer border-2 border-green-300';
+            if (isSelected) {
+                colorClass = 'bg-[#CE8E94] text-white shadow-md transform scale-110';
+            } else if (hasSlots && !isPast) {
+                colorClass = 'bg-white border-2 border-[#CE8E94] text-[#CE8E94] hover:bg-[#CE8E94] hover:text-white font-black';
             } else if (isToday) {
-                colorClass = 'text-[#CE8E94] border-2 border-[#CE8E94]/50 hover:bg-gray-100 cursor-pointer';
+                colorClass = 'bg-gray-100 text-[#CE8E94] border border-[#CE8E94]/30';
+            } else if (isPast) {
+                colorClass = 'text-gray-300 cursor-not-allowed font-normal';
             }
 
-            const handleClick = () => {
-                if (!isPast) {
-                    onSelectDate(dateStr);
-                }
-            };
-
             days.push(
-                <div
-                    key={day}
-                    className={`${baseClass} ${colorClass} relative`}
-                    onClick={handleClick}
-                >
-                    {day}
-                    {hasSlots && !isSelected && !isPast && (
-                        <span className="absolute top-1 right-1 w-1.5 h-1.5 md:w-2 md:h-2 bg-green-500 rounded-full animate-pulse"></span>
-                    )}
+                <div key={day} className="flex justify-center items-center py-1">
+                    <button
+                        onClick={() => !isPast && onSelectDate(dateStr)}
+                        disabled={isPast}
+                        className={`${baseClass} ${colorClass} relative group`}
+                    >
+                        {day}
+                        {hasSlots && !isPast && !isSelected && (
+                            <span className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-[#CE8E94] rounded-full opacity-50"></span>
+                        )}
+                    </button>
                 </div>
             );
         }
+
+        // Fill remaining slots to maintain height (up to 42)
+        const currentCount = days.length;
+        const remainder = TOTAL_GRID_SLOTS - currentCount;
+        for (let i = 0; i < remainder; i++) {
+            days.push(<div key={`empty-end-${i}`} className="text-center p-3 opacity-0 cursor-default pointer-events-none"></div>);
+        }
+
         return days;
     };
 
@@ -180,10 +183,6 @@ export const BookingCalendar = ({ slots, onSelectDate, selectedDate }: { slots: 
                         <span>Today</span>
                     </div>
                 </div>
-                {/* DEBUG INFO - REMOVE AFTER FIX */}
-                {/* <div className="text-[10px] text-center text-gray-300 font-mono">
-                V3-FINAL | Offset: {startOffset} | Mon: {monthIndex + 1} | Yr: {year} | Today: {todayDate}
-            </div> */}
             </div>
         </>
     );
