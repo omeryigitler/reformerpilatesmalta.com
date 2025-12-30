@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-// Deployment Trigger: FORCE_V46_FIXED_CALENDAR_HEIGHT
+// Deployment Trigger: FORCE_V47_REVERT_TO_V39
 import { useState, useEffect, useCallback } from "react";
 import { listenToSlots, listenToUsers, bookSlotTransaction, cancelBookingTransaction, logoutUserAuth, updateExpiredSlots } from "./services/pilatesService";
 import { Card, CardContent } from "@/app/components/ui/card";
