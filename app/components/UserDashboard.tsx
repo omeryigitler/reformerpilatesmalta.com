@@ -59,8 +59,9 @@ export const UserDashboard = ({
         .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
 
     const availableSlotsForSelectedDate = futureSlots
-        .filter(slot => slot.date === selectedDate && slot.status === 'Available')
-        .sort((a, b) => a.time.localeCompare(b.time));
+        .filter(slot => slot.date === selectedDate && slot.status === 'Available');
+
+    availableSlotsForSelectedDate.sort((a, b) => a.time.localeCompare(b.time));
 
     return (
         <div className="pilates-root min-h-screen flex flex-col items-center p-4 md:p-10 space-y-10 font-sans bg-[#FFF0E5]">
@@ -181,23 +182,39 @@ END:VCALENDAR`;
                             )}
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-16">
-                            <div className="lg:col-span-1 space-y-4 mb-12 lg:mb-0">
-                                <h2 className="text-2xl font-bold text-gray-700 flex items-center gap-2 border-b pb-2"><Zap className="w-6 h-6 text-[#CE8E94]" /> Book a Class</h2>
-                                <BookingCalendar
-                                    slots={futureSlots}
-                                    onSelectDate={setSelectedDate}
-                                    selectedDate={selectedDate}
-                                />
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-16">
+                            {/* 1. KISIM: SOL TARAF (TAKVİM) - h-full eklenerek sağdaki kutuyla boyu eşitlendi */}
+                            <div className="lg:col-span-1 space-y-4 flex flex-col h-full">
+                                <h2 className="text-2xl font-bold text-gray-700 flex items-center gap-2 border-b pb-2">
+                                    <Zap className="w-6 h-6 text-[#CE8E94]" /> Book a Class
+                                </h2>
+                                <div className="flex-1">
+                                    <BookingCalendar
+                                        slots={futureSlots}
+                                        onSelectDate={setSelectedDate}
+                                        selectedDate={selectedDate}
+                                    />
+                                </div>
                             </div>
 
-                            <div className="lg:col-span-1 space-y-4">
-                                <h3 className="text-xl font-bold text-gray-700 border-b pb-2">{formatDateDisplay(selectedDate)}</h3>
-                                <div className="space-y-4 max-h-80 overflow-y-auto pr-2">
+                            {/* 2. & 3. KISIM: SAĞ TARAF (SLOT LİSTESİ) - Admin Panel'deki beyaz kutu ve başlık yapısı */}
+                            <div className="lg:col-span-1 flex flex-col bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-white/50 h-full">
+                                {/* Sabit Başlık Alanı (Admin Paneli ile aynı hizada olması için) */}
+                                <div className="h-[88px] flex flex-col justify-center space-y-2 mb-2 border-b border-gray-100 pb-4">
+                                    <label className="text-sm font-bold text-gray-600 block">Selected Date</label>
+                                    <h3 className="text-xl md:text-2xl font-bold text-gray-700">
+                                        {formatDateDisplay(selectedDate)}
+                                    </h3>
+                                </div>
+
+                                {/* Slotların Listelendiği Alan - Senin orijinal slot tasarımın korundu */}
+                                <div className="flex-1 overflow-y-auto pr-2 space-y-4 mt-4 scrollbar-hide">
                                     {availableSlotsForSelectedDate.length > 0 ? (
                                         availableSlotsForSelectedDate.map((slot, idx) => (
                                             <div key={idx} className="flex justify-between items-center p-5 bg-white/60 rounded-2xl hover:bg-white hover:shadow-md transition border border-white/40 hover:border-[#CE8E94]/30 gap-4">
-                                                <span className="text-xl font-medium text-gray-800 flex items-center gap-3"><Clock className="w-5 h-5 text-green-600" /> {slot.time}</span>
+                                                <span className="text-xl font-medium text-gray-800 flex items-center gap-3">
+                                                    <Clock className="w-5 h-5 text-green-600" /> {slot.time}
+                                                </span>
                                                 <Button
                                                     onClick={() => handleBookSlot(slot.date, slot.time)}
                                                     className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold shadow-md transition-colors"
@@ -207,7 +224,9 @@ END:VCALENDAR`;
                                             </div>
                                         ))
                                     ) : (
-                                        <p className="p-4 bg-red-50 border border-red-200 rounded-xl text-gray-600">No available slots on this date. Please choose another day from the calendar.</p>
+                                        <p className="p-4 bg-red-50 border border-red-200 rounded-xl text-gray-600">
+                                            No available slots on this date. Please choose another day from the calendar.
+                                        </p>
                                     )}
                                 </div>
                             </div>
