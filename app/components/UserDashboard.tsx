@@ -322,9 +322,9 @@ export const UserDashboard = ({
                             </div>
 
                             <div className="lg:col-span-1 space-y-6">
-                                <h3 className="text-lg md:text-xl font-bold text-gray-700 border-b pb-2 flex items-center justify-between">
-                                    <span>Available: {formatDateDisplay(selectedDate)}</span>
-                                    <span className="text-xs font-normal text-gray-400 bg-gray-50 px-2 py-1 rounded-lg">
+                                <h3 className="text-lg md:text-xl font-bold text-gray-700 border-b pb-2 flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+                                    <span className="leading-tight">Available: {formatDateDisplay(selectedDate)}</span>
+                                    <span className="text-xs font-normal text-gray-400 bg-gray-50 px-2 py-1 rounded-lg self-start md:self-auto flex-shrink-0">
                                         {availableSlotsForSelectedDate.length} slots
                                     </span>
                                 </h3>
@@ -362,7 +362,7 @@ export const UserDashboard = ({
 
             {/* Footer / Copyright / Version */}
             <div className="text-center pb-8 opacity-30 text-[10px] font-mono hover:opacity-100 transition-opacity cursor-default">
-                <p>Reformer Pilates Malta • V44-UI-POLISH</p>
+                <p>Reformer Pilates Malta • V45-RESPONSIVE-FIX</p>
             </div>
         </div>
     );
