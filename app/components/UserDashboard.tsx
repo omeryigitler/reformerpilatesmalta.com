@@ -199,13 +199,10 @@ END:VCALENDAR`;
 
                             {/* 2. & 3. KISIM: SAĞ TARAF (SLOT LİSTESİ) - Admin Panel'deki beyaz kutu ve başlık yapısı */}
                             <div className="lg:col-span-1 flex flex-col bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-white/50 h-full">
-                                {/* Sabit Başlık Alanı (Admin Paneli ile aynı hizada olması için) */}
-                                <div className="h-[88px] flex flex-col justify-center space-y-2 mb-2 border-b border-gray-100 pb-4">
-                                    <label className="text-sm font-bold text-gray-600 block">Selected Date</label>
-                                    <h3 className="text-xl md:text-2xl font-bold text-gray-700">
-                                        {formatDateDisplay(selectedDate)}
-                                    </h3>
-                                </div>
+                                {/* Sabit Başlık Alanı - Sol tarafla görsel eşitleme */}
+                                <h2 className="text-2xl font-bold text-gray-700 flex items-center gap-2 border-b pb-2 mb-4">
+                                    {formatDateDisplay(selectedDate)}
+                                </h2>
 
                                 {/* Slotların Listelendiği Alan - Senin orijinal slot tasarımın korundu */}
                                 <div className="flex-1 overflow-y-auto pr-2 space-y-4 mt-4 scrollbar-hide">
