@@ -78,7 +78,7 @@ export const UserDashboard = ({
         if (!SHOW_GAMIFICATION) return [];
         return BADGE_DEFINITIONS.filter(def => {
             const c = def.criteria;
-            if (c.type === 'count') return completedCount >= c.value;
+            if (c.type === 'count') return completedCount >= (c.value || 0);
 
             if (c.type === 'time') {
                 const count = myHistory.filter(s => {
@@ -99,13 +99,13 @@ export const UserDashboard = ({
             if (c.type === 'monthly') {
                 const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
                 const count = myHistory.filter(s => s.date.startsWith(currentMonth)).length;
-                return count >= c.value;
+                return count >= (c.value || 0);
             }
 
             if (c.type === 'loyalty_days') {
                 const regDate = new Date(loggedInUser.registered);
                 const days = (new Date().getTime() - regDate.getTime()) / (1000 * 3600 * 24);
-                return days >= c.value;
+                return days >= (c.value || 0);
             }
 
             if (c.type === 'profile') {
