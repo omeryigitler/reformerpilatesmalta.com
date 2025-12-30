@@ -141,7 +141,7 @@ export const UserDashboard = ({
                         {/* BADGES ROW (MOBILE OPTIMIZED: WRAPS NICELY) */}
                         {SHOW_GAMIFICATION && myBadges.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-3 animate-in fade-in slide-in-from-left-4 duration-500">
-                                {myBadges.map((badge, i) => (
+                                {myBadges.map((badge) => (
                                     <div
                                         key={badge.id}
                                         className={`px-3 py-1.5 rounded-full text-xs md:text-sm font-bold flex items-center gap-2 border shadow-sm transition-transform hover:scale-105 select-none cursor-default ${badge.color}`}
@@ -289,7 +289,7 @@ export const UserDashboard = ({
                                             <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">Daily Wisdom</span>
                                         </div>
                                         <h4 className="text-lg md:text-2xl font-bold leading-relaxed font-serif italic">
-                                            "{dailyTip}"
+                                            &quot;{dailyTip}&quot;
                                         </h4>
                                     </div>
                                     <div className="relative z-10 mt-6 flex justify-end opacity-20 group-hover:opacity-40 transition-opacity">
