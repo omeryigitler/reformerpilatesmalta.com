@@ -230,3 +230,60 @@
     background: var(--terracotta);
     color: white;
 }
+
+/* Mobile Fit & Stability Optimization */
+@media (max-width: 480px) {
+    .system-wrapper {
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .card-box {
+        padding: 15px;
+        min-height: 520px;
+        /* Equalize height to prevent jumping */
+        justify-content: flex-start;
+        overflow: visible;
+        /* Ensure hover transforms aren't clipped */
+    }
+
+    .title {
+        margin-bottom: 12px;
+        font-size: 10px;
+    }
+
+    /* Tighten Path list */
+    .progression-list {
+        gap: 4px;
+    }
+
+    .level-row {
+        padding: 6px 10px;
+        min-height: 36px;
+    }
+
+    /* Tighten Traits grid */
+    .traits-grid {
+        gap: 8px;
+    }
+
+    .trait-item {
+        padding: 8px;
+    }
+
+    .trait-icon {
+        font-size: 18px;
+        margin-bottom: 2px;
+    }
+
+    .trait-name {
+        font-size: 9px;
+    }
+
+    /* Ensure buttons are compact but reachable */
+    .action-btn {
+        padding: 5px;
+        font-size: 7.5px;
+        min-height: 26px;
+    }
+}
