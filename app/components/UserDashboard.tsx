@@ -248,7 +248,7 @@ END:VCALENDAR`;
                                     ))}
                                 </div>
                             ) : (
-                                <p className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-gray-600">You currently have no active bookings. Time to book a session!</p>
+                                <p className="p-4 bg-[#CE8E94]/10 border border-[#CE8E94]/30 rounded-xl text-[#CE8E94] font-bold">You currently have no active bookings. Time to book a session!</p>
                             )}
                         </div>
 
@@ -292,7 +292,7 @@ END:VCALENDAR`;
                                                 </div>
                                             ))
                                         ) : (
-                                            <p className="p-4 bg-red-50 border border-red-200 rounded-xl text-gray-600">
+                                            <p className="p-4 bg-[#CE8E94]/10 border border-[#CE8E94]/30 rounded-xl text-[#CE8E94] font-bold">
                                                 No available slots on this date. Please choose another day from the calendar.
                                             </p>
                                         )}
