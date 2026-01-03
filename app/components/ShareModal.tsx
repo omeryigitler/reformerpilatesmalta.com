@@ -229,17 +229,14 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     {/* Share Actions Grid */}
                     <div className="grid grid-cols-2 gap-2 mb-3 px-4">
                         <button
-                            className={`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'Instagram' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'} ${isGenerating ? 'opacity-50' : ''}`}
+                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'Instagram' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'} ${isGenerating ? 'opacity-50' : ''}`}
                             onClick={() => handleAction('Instagram')}
                             disabled={isGenerating}
                         >
                             <Instagram className={`w-4 h-4 text-[#CE8E94] group-hover:text-white ${actionStatus === 'Instagram' ? 'text-white' : ''}`} />
-                            <div className="flex flex-col items-center">
-                                <span className="text-[11px] font-bold text-nowrap">
-                                    {isGenerating && actionStatus === 'Instagram' ? 'Sharing...' : (actionStatus === 'Instagram' ? 'Opening App' : 'Instagram')}
-                                </span>
-                                {actionStatus === 'Instagram' && <span className="text-[8px] opacity-70">App Opened</span>}
-                            </div>
+                            <span className="text-[11px] font-bold text-nowrap">
+                                {isGenerating && actionStatus === 'Instagram' ? 'Sharing...' : (actionStatus === 'Instagram' ? 'Done' : 'Instagram')}
+                            </span>
                         </button>
 
                         <button
