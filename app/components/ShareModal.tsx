@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Modal } from './Modal';
-import { Facebook, Instagram, Twitter, MessageCircle, Link, Download } from 'lucide-react';
+import { Facebook, Instagram, Twitter, MessageCircle, Link, Download, Eye } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
 
 
@@ -111,8 +111,8 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     if (blob) {
                         triggerDownload(blob, filename);
                         showAlert(
-                            "Paylaşıma Hazır!",
-                            "Görüntü telefonunuza indirildi. Şimdi Story kısmına bu görüntüyü ekleyerek paylaşabilirsiniz.",
+                            "Ready to Share!",
+                            "The image has been saved to your gallery. You can now share it manually.",
                             "success"
                         );
                     }
@@ -132,7 +132,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         } catch (err) {
             console.error('Action failed:', err);
             setActionStatus('Error');
-            showAlert("Hata", "Bir sorun oluştu. Lütfen tekrar deneyin.", "error");
+            showAlert("Error", "Something went wrong. Please try again.", "error");
         }
 
         // Reset status
@@ -148,7 +148,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
 
     return (
         <>
-            <Modal onClose={onClose} className="max-w-[440px]">
+            <Modal onClose={onClose} className="max-w-[400px]">
                 <div className="text-center">
                     <h3 className="text-xl font-bold text-[#CE8E94] mb-1">Share Your Success</h3>
                     <p className="text-gray-400 text-[13px] mb-6">
@@ -165,7 +165,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                             <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-white/40 to-transparent pointer-events-none" />
 
                             {/* Central Card - Matches the screenshot aesthetic */}
-                            <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-center bg-white rounded-[32px] p-8 shadow-[0_20px_50px_rgba(206,142,148,0.12)] border border-white/20 my-6">
+                            <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-center bg-white rounded-[32px] p-8 shadow-[0_15px_45px_rgba(206,142,148,0.15),0_5px_15px_rgba(206,142,148,0.1)] border border-white/20 my-6">
                                 {/* Achievement Icon */}
                                 <div className="text-5xl mb-6 flex justify-center text-[#CE8E94] filter drop-shadow-[0_4px_8px_rgba(206,142,148,0.2)]">
                                     {achievementIcon}
@@ -183,9 +183,10 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                             </div>
 
                             {/* Branding Watermark - Bottom Centered */}
-                            <div className="w-full text-center pb-1">
-                                <span className="text-[10px] font-bold tracking-[0.3em] text-[#CE8E94]/40 uppercase">
-                                    Reformer Pilates Malta
+                            <div className="w-full flex flex-col items-center pb-2">
+                                <Eye className="w-6 h-6 text-[#CE8E94]/40 mb-1" strokeWidth={1.5} />
+                                <span className="text-[9px] font-bold tracking-[0.4em] text-[#CE8E94]/40 uppercase">
+                                    REFORMER PILATES
                                 </span>
                             </div>
                         </div>
@@ -198,7 +199,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                             onClick={() => handleAction('Instagram')}
                         >
                             <Instagram className={`w-4 h-4 text-[#CE8E94] group-hover:text-white ${actionStatus === 'Instagram' ? 'text-white' : ''}`} />
-                            <span className="text-[11px] font-bold">{actionStatus === 'Instagram' ? 'Oluşturuluyor' : 'Instagram'}</span>
+                            <span className="text-[11px] font-bold">{actionStatus === 'Instagram' ? 'Sharing...' : 'Instagram'}</span>
                         </button>
 
                         <button
@@ -206,7 +207,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                             onClick={() => handleAction('Facebook')}
                         >
                             <Facebook className={`w-4 h-4 text-[#CE8E94] group-hover:text-white ${actionStatus === 'Facebook' ? 'text-white' : ''}`} />
-                            <span className="text-[11px] font-bold">{actionStatus === 'Facebook' ? 'Oluşturuluyor' : 'Facebook'}</span>
+                            <span className="text-[11px] font-bold">{actionStatus === 'Facebook' ? 'Sharing...' : 'Facebook'}</span>
                         </button>
 
                         <button
@@ -214,7 +215,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                             onClick={() => handleAction('WhatsApp')}
                         >
                             <MessageCircle className={`w-4 h-4 text-[#CE8E94] group-hover:text-white ${actionStatus === 'WhatsApp' ? 'text-white' : ''}`} />
-                            <span className="text-[11px] font-bold">{actionStatus === 'WhatsApp' ? 'Oluşturuluyor' : 'WhatsApp'}</span>
+                            <span className="text-[11px] font-bold">{actionStatus === 'WhatsApp' ? 'Sharing...' : 'WhatsApp'}</span>
                         </button>
 
                         <button
@@ -222,7 +223,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                             onClick={() => handleAction('X')}
                         >
                             <Twitter className={`w-4 h-4 text-[#CE8E94] group-hover:text-white ${actionStatus === 'X' ? 'text-white' : ''}`} />
-                            <span className="text-[11px] font-bold">{actionStatus === 'X' ? 'Oluşturuluyor' : 'X'}</span>
+                            <span className="text-[11px] font-bold">{actionStatus === 'X' ? 'Sharing...' : 'X'}</span>
                         </button>
                     </div>
 
@@ -233,14 +234,14 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                             onClick={() => handleAction('Copy Link')}
                             disabled={actionStatus === 'Copied!'}
                         >
-                            <Link className="w-3.5 h-3.5" /> {actionStatus === 'Copied!' ? 'Link Kopyalandı!' : 'Link Kopyala'}
+                            <Link className="w-3.5 h-3.5" /> {actionStatus === 'Copied!' ? 'Link Copied!' : 'Copy Link'}
                         </button>
                         <button
                             className={`flex items-center gap-2 text-[10px] transition-colors font-bold tracking-widest uppercase ${actionStatus === 'Saved!' ? 'text-green-500' : 'text-gray-400 hover:text-[#CE8E94]'}`}
                             onClick={() => handleAction('Download Image')}
                             disabled={actionStatus === 'Saved!'}
                         >
-                            <Download className="w-3.5 h-3.5" /> {actionStatus === 'Saved!' ? 'Kaydedildi!' : 'Görseli Kaydet'}
+                            <Download className="w-3.5 h-3.5" /> {actionStatus === 'Saved!' ? 'Saved!' : 'Save Image'}
                         </button>
                     </div>
                 </div>

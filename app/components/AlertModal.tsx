@@ -37,7 +37,7 @@ export const AlertModal = ({ isOpen, onClose, title, message, type = 'info' }: A
                     onClick={onClose}
                     className="w-full py-3 px-6 bg-[#CE8E94] text-white rounded-full font-bold shadow-lg hover:bg-[#B5838D] transition-all duration-300"
                 >
-                    Tamam
+                    Close
                 </button>
             </div>
         </Modal>
