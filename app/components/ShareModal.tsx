@@ -150,15 +150,15 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
 
     return (
         <>
-            <Modal onClose={onClose} className="max-w-[400px]">
-                <div className="text-center">
-                    <h3 className="text-xl font-bold text-[#CE8E94] mb-1">Share Your Success</h3>
-                    <p className="text-gray-400 text-[13px] mb-6">
+            <Modal onClose={onClose} className="max-w-[420px]" useDefaultPadding={false}>
+                <div className="text-center pt-12 pb-6 px-4">
+                    <h3 className="text-xl font-bold text-[#CE8E94] mb-0.5">Share Your Success</h3>
+                    <p className="text-gray-400 text-[13px] mb-4">
                         Show off your new <strong>{achievementTitle}</strong> badge to the world!
                     </p>
 
                     {/* Story-Ready Achievement Card */}
-                    <div className="flex justify-center mb-6 overflow-hidden w-full">
+                    <div className="flex justify-center mb-2 overflow-hidden w-full h-[360px] sm:h-[600px]">
                         {/* Scaling wrapper to fit the 480px container into the narrower Modal/Phone screen */}
                         <div className="scale-[0.6] min-[400px]:scale-[0.7] sm:scale-100 origin-top flex-shrink-0">
                             <div id="capture-container" className="p-[80px] bg-white rounded-[40px] flex-shrink-0 w-[480px]">
@@ -225,42 +225,42 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     </div>
 
                     {/* Share Actions Grid */}
-                    <div className="grid grid-cols-2 gap-2.5 mb-6">
+                    <div className="grid grid-cols-2 gap-2 mb-4">
                         <button
-                            className={`flex items-center justify-center gap-2.5 p-3 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'Instagram' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
+                            className={`flex items-center justify-center gap-2 p-2.5 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'Instagram' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
                             onClick={() => handleAction('Instagram')}
                         >
                             <Instagram className={`w-4 h-4 text-[#CE8E94] group-hover:text-white ${actionStatus === 'Instagram' ? 'text-white' : ''}`} />
-                            <span className="text-[11px] font-bold">{actionStatus === 'Instagram' ? 'Sharing...' : 'Instagram'}</span>
+                            <span className="text-[11px] font-bold text-nowrap">{actionStatus === 'Instagram' ? 'Sharing...' : 'Instagram'}</span>
                         </button>
 
                         <button
-                            className={`flex items-center justify-center gap-2.5 p-3 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'Facebook' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
+                            className={`flex items-center justify-center gap-2 p-2.5 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'Facebook' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
                             onClick={() => handleAction('Facebook')}
                         >
                             <Facebook className={`w-4 h-4 text-[#CE8E94] group-hover:text-white ${actionStatus === 'Facebook' ? 'text-white' : ''}`} />
-                            <span className="text-[11px] font-bold">{actionStatus === 'Facebook' ? 'Sharing...' : 'Facebook'}</span>
+                            <span className="text-[11px] font-bold text-nowrap">{actionStatus === 'Facebook' ? 'Sharing...' : 'Facebook'}</span>
                         </button>
 
                         <button
-                            className={`flex items-center justify-center gap-2.5 p-3 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'WhatsApp' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
+                            className={`flex items-center justify-center gap-2 p-2.5 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'WhatsApp' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
                             onClick={() => handleAction('WhatsApp')}
                         >
                             <MessageCircle className={`w-4 h-4 text-[#CE8E94] group-hover:text-white ${actionStatus === 'WhatsApp' ? 'text-white' : ''}`} />
-                            <span className="text-[11px] font-bold">{actionStatus === 'WhatsApp' ? 'Sharing...' : 'WhatsApp'}</span>
+                            <span className="text-[11px] font-bold text-nowrap">{actionStatus === 'WhatsApp' ? 'Sharing...' : 'WhatsApp'}</span>
                         </button>
 
                         <button
-                            className={`flex items-center justify-center gap-2.5 p-3 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'X' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
+                            className={`flex items-center justify-center gap-2 p-2.5 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'X' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
                             onClick={() => handleAction('X')}
                         >
                             <Twitter className={`w-4 h-4 text-[#CE8E94] group-hover:text-white ${actionStatus === 'X' ? 'text-white' : ''}`} />
-                            <span className="text-[11px] font-bold">{actionStatus === 'X' ? 'Sharing...' : 'X'}</span>
+                            <span className="text-[11px] font-bold text-nowrap">{actionStatus === 'X' ? 'Sharing...' : 'X'}</span>
                         </button>
                     </div>
 
                     {/* Secondary Actions */}
-                    <div className="flex justify-center gap-8 pt-2">
+                    <div className="flex justify-center gap-8 pt-1">
                         <button
                             className={`flex items-center gap-2 text-[10px] transition-colors font-bold tracking-widest uppercase ${actionStatus === 'Copied!' ? 'text-green-500' : 'text-gray-400 hover:text-[#CE8E94]'}`}
                             onClick={() => handleAction('Copy Link')}
