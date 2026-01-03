@@ -9,6 +9,9 @@ import { useConfirm } from '../context/ConfirmContext';
 import { BookingCalendar } from './BookingCalendar';
 import { UserHistory } from './UserHistory';
 import { SantaHat } from './ChristmasDecorations';
+import { ProgressionDashboard } from './ProgressionDashboard';
+import { Modal } from './Modal';
+import { ShareModal } from './ShareModal';
 
 export const UserDashboard = ({
     loggedInUser,
@@ -33,6 +36,8 @@ export const UserDashboard = ({
     React.useEffect(() => {
         setSelectedDate(getTodayDate());
     }, []);
+    const [showGamification, setShowGamification] = useState(false);
+    const [sharingItem, setSharingItem] = useState<{ title: string, icon: React.ReactNode, description: string } | null>(null);
     const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>('upcoming');
 
     // Standardized Logic: Active = Not Past + Not Completed
@@ -63,6 +68,11 @@ export const UserDashboard = ({
 
     availableSlotsForSelectedDate.sort((a, b) => a.time.localeCompare(b.time));
 
+    // MOCK DATA for Gamification Demo
+    // In real app, these would come from the database (UserType needs update)
+    const lessonsCompleted = userBookings.length; // Simply usage of current bookings count as demo
+    const mockUnlockedTraits = ['SOLARIS', 'GRAVITY'];
+
     return (
         <div className="pilates-root min-h-screen flex flex-col items-center p-4 md:p-10 space-y-10 font-sans bg-[#FFF0E5]">
             <div className="w-full max-w-6xl px-8 md:px-16 py-10 bg-white/60 backdrop-blur-md rounded-[3rem] shadow-2xl border border-white/50 space-y-12">
@@ -74,6 +84,15 @@ export const UserDashboard = ({
                         </span>
                     </h1>
                     <div className="flex flex-col sm:flex-row gap-3 items-end">
+                        <Button
+                            onClick={() => {
+                                console.log('My Path button clicked, setting showGamification to true');
+                                setShowGamification(true);
+                            }}
+                            className="px-6 py-3 bg-gradient-to-r from-[#B5838D] to-[#CE8E94] text-white border-none rounded-xl text-sm font-bold shadow-md hover:shadow-lg hover:scale-105 transition duration-300 flex items-center gap-2 w-full sm:w-auto justify-center"
+                        >
+                            <Zap className="w-4 h-4 text-yellow-200" /> My Path
+                        </Button>
                         <Button
                             onClick={navigateToHome}
                             className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-xl text-sm font-bold hover:bg-gray-100 transition duration-300 flex items-center gap-2 w-full sm:w-auto justify-center relative group"
@@ -235,6 +254,29 @@ END:VCALENDAR`;
                     <UserHistory slots={slots} userName={userName} userEmail={loggedInUser.email} />
                 )}
             </div>
+
+            {showGamification && (
+                <Modal
+                    onClose={() => setShowGamification(false)}
+                    className="max-w-[1050px] bg-[#FFF0E5] rounded-[24px]" // Use site BG color
+                    overlayClassName="bg-[#CE8E94]/40 backdrop-blur-[5px]" // Brand-tinted overlay
+                    useDefaultPadding={false}
+                >
+                    <ProgressionDashboard
+                        lessonsCompleted={lessonsCompleted}
+                        unlockedTraits={mockUnlockedTraits}
+                        onShare={(item) => setSharingItem(item)}
+                    />
+                </Modal>
+            )}
+
+            <ShareModal
+                isOpen={!!sharingItem}
+                onClose={() => setSharingItem(null)}
+                achievementTitle={sharingItem?.title || ''}
+                achievementIcon={sharingItem?.icon}
+                achievementDescription={sharingItem?.description || ''}
+            />
         </div>
     );
 }

@@ -4,7 +4,21 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
-export const Modal = ({ children, onClose, showCloseIcon = true }: { children: React.ReactNode, onClose: () => void, showCloseIcon?: boolean }) => {
+export const Modal = ({
+    children,
+    onClose,
+    showCloseIcon = true,
+    className = "",
+    overlayClassName = "",
+    useDefaultPadding = true
+}: {
+    children: React.ReactNode,
+    onClose: () => void,
+    showCloseIcon?: boolean,
+    className?: string,
+    overlayClassName?: string,
+    useDefaultPadding?: boolean
+}) => {
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -18,12 +32,20 @@ export const Modal = ({ children, onClose, showCloseIcon = true }: { children: R
 
     if (!mounted) return null;
 
+    // Default overlay style + custom override
+    const overlayStyle = `fixed inset-0 z-[9999] flex items-center justify-center p-4 transition-opacity duration-300 ${overlayClassName || "bg-[#CE8E94]/10 backdrop-blur-md"}`;
+
+    // Default content style + custom override
+    // Note: We use useDefaultPadding to toggle the p-8 md:p-10 classes
+    const paddingClasses = useDefaultPadding ? "p-8 md:p-10" : "";
+    const contentStyle = `relative bg-white rounded-[2rem] shadow-2xl w-full animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto scrollbar-hide z-10 ${paddingClasses} ${className ? className : 'max-w-lg'}`;
+
     return createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-[#CE8E94]/10 backdrop-blur-md transition-opacity duration-300">
+        <div className={overlayStyle}>
             {/* Arka plan overlay - tıklayınca kapanır */}
             <div className="absolute inset-0" onClick={onClose}></div>
 
-            <div className="relative bg-white rounded-[2rem] shadow-2xl w-full max-w-lg p-8 md:p-10 animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto scrollbar-hide z-10">
+            <div className={contentStyle}>
                 {showCloseIcon && (
                     <button
                         onClick={onClose}

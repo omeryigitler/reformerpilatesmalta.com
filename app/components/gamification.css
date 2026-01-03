@@ -1,0 +1,232 @@
+:root {
+    --bg: #FFF0E5;
+    /* Site Arka Planı */
+    --terracotta: #CE8E94;
+    /* Site Ana Rengi */
+    --soft: #6B5E5E;
+    /* Sıcak Gri/Kahve */
+}
+
+/* body {
+  background-color: var(--bg);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  margin: 0;
+} REMOVED BODY STYLES TO AVOID GLOBAL CONFLICTS IN NEXT.JS APP */
+
+/* Ana Grid */
+.system-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    /* Gap azaltıldı (30 -> 20) */
+    padding: 25px;
+    /* Padding azaltıldı (40 -> 25) */
+    width: 100%;
+    max-width: 1050px;
+    /* Genişlik optimize edildi */
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+/* Tablet ve Altı için Breakpoint (iPad Air Masaüstü modunda kalsın diye 600px'e çektik) */
+@media (max-width: 600px) {
+    .system-wrapper {
+        grid-template-columns: 1fr;
+        padding: 15px;
+        gap: 15px;
+    }
+}
+
+/* Statü Kartları */
+.card-box {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    /* Biraz küçültüldü */
+    padding: 20px;
+    /* Padding azaltıldı (25 -> 20) */
+    border: 1px solid rgba(181, 131, 141, 0.15);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    transition: all 0.4s ease;
+}
+
+.card-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(181, 131, 141, 0.1);
+    background: rgba(255, 255, 255, 0.6);
+    border-color: rgba(181, 131, 141, 0.3);
+}
+
+.title {
+    font-size: 11px;
+    /* Font küçültüldü */
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--soft);
+    margin-bottom: 15px;
+    /* Margin azaltıldı (20 -> 15) */
+    display: block;
+    text-align: center;
+}
+
+/* 10'lu Gelişim Listesi */
+.progression-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    /* Gap ciddi oranda azaltıldı (12 -> 6) - Sığdırma için kritik */
+}
+
+.level-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    /* Padding azaltıldı */
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    cursor: default;
+    min-height: 40px;
+    /* Yükseklik standardı */
+}
+
+.level-row:hover {
+    transform: translateX(3px);
+    background: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 2px 10px rgba(181, 131, 141, 0.05);
+}
+
+.level-row:hover .level-icon {
+    transform: scale(1.1);
+    transition: transform 0.3s ease;
+}
+
+.level-row.active {
+    border-left: 3px solid var(--terracotta);
+    background: white;
+    box-shadow: 0 4px 12px rgba(181, 131, 141, 0.1);
+}
+
+.level-row.locked {
+    opacity: 0.5;
+}
+
+.level-icon {
+    font-size: 18px;
+    /* İkon küçültüldü */
+    width: 24px;
+    text-align: center;
+    color: var(--terracotta);
+}
+
+.level-info {
+    flex: 1;
+}
+
+.level-name {
+    font-size: 11px;
+    font-weight: bold;
+    display: block;
+    color: var(--soft);
+    margin-bottom: 1px;
+}
+
+.level-desc {
+    font-size: 9px;
+    margin: 0;
+    color: #8D7B70;
+    opacity: 0.8;
+    line-height: 1.2;
+}
+
+/* 10'lu Yetenek Izgarası */
+.traits-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    /* Gap azaltıldı (15 -> 10) */
+}
+
+.trait-item {
+    text-align: center;
+    padding: 10px;
+    /* Padding azaltıldı (15 -> 10) */
+    border-radius: 16px;
+    background: white;
+    border: 1px solid rgba(181, 131, 141, 0.1);
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.trait-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(181, 131, 141, 0.15);
+    border-color: rgba(181, 131, 141, 0.3);
+}
+
+.trait-item.locked {
+    opacity: 0.5;
+    filter: grayscale(0.8);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.trait-icon {
+    font-size: 20px;
+    /* İkon küçültüldü */
+    color: var(--terracotta);
+    margin-bottom: 5px;
+}
+
+.trait-name {
+    font-size: 10px;
+    font-weight: bold;
+    display: block;
+    color: var(--soft);
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.trait-condition {
+    font-size: 8px;
+    /* Font küçültüldü */
+    color: #999;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.action-btn {
+    width: 100%;
+    margin-top: auto;
+    padding: 6px;
+    /* Padding azaltıldı */
+    border-radius: 6px;
+    border: 1px solid var(--terracotta);
+    background: transparent;
+    color: var(--terracotta);
+    font-size: 8px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    font-weight: 600;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 30px;
+    /* Buton yüksekliği azaltıldı */
+    box-sizing: border-box;
+}
+
+.action-btn:hover {
+    background: var(--terracotta);
+    color: white;
+}
