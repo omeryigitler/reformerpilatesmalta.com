@@ -156,32 +156,48 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
 
                     {/* Story-Ready Achievement Card */}
                     <div className="flex justify-center mb-6">
-                        <div id="capture-container" className="p-14 bg-white rounded-[60px]">
+                        <div id="capture-container" className="p-16 bg-white rounded-[48px]">
                             <div
                                 id="share-card"
-                                className="relative w-[300px] aspect-[1/1.38] flex flex-col items-center justify-between p-10 bg-[#FEF9F9] rounded-[100px] shadow-[0_40px_90px_-30px_rgba(206,142,148,0.2)] overflow-hidden"
+                                className="relative w-[320px] aspect-[1/1.35] flex flex-col items-center justify-between p-12 bg-[#FEF9F9] rounded-[100px] shadow-[0_45px_100px_-30px_rgba(206,142,148,0.25)] overflow-hidden"
                             >
                                 {/* Inner Card - Matches the 'Solaris' reference aesthetic */}
-                                <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-center bg-white rounded-[80px] p-8 shadow-[0_40px_80px_-20px_rgba(206,142,148,0.15)] my-4">
+                                <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-center bg-white rounded-[80px] p-8 shadow-[0_45px_100px_-20px_rgba(206,142,148,0.22)] my-4">
                                     {/* Achievement Icon */}
                                     <div className="text-5xl mb-6 flex justify-center text-[#CE8E94] filter drop-shadow-[0_4px_8px_rgba(206,142,148,0.12)]">
-                                        {achievementIcon}
+                                        {achievementTitle === 'SOLARIS' ? (
+                                            <svg viewBox="0 0 100 100" className="w-16 h-16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                {/* Center Circle */}
+                                                <circle cx="50" cy="50" r="12" stroke="currentColor" strokeWidth="2.5" />
+                                                {/* 8 Thin Rays */}
+                                                <line x1="50" y1="28" x2="50" y2="10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                <line x1="50" y1="72" x2="50" y2="90" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                <line x1="72" y1="50" x2="90" y2="50" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                <line x1="28" y1="50" x2="10" y2="50" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                <line x1="66" y1="34" x2="79" y2="21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                <line x1="34" y1="66" x2="21" y2="79" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                <line x1="66" y1="66" x2="79" y2="79" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                <line x1="34" y1="34" x2="21" y2="21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                            </svg>
+                                        ) : (
+                                            achievementIcon
+                                        )}
                                     </div>
 
-                                    {/* Badge Title */}
-                                    <div className="text-xl font-bold tracking-[0.25em] text-[#B5838D] uppercase mb-4 leading-none text-center">
+                                    {/* Badge Title - Pixel Perfect spacing */}
+                                    <div className="text-xl font-bold tracking-[0.35em] text-[#B5838D] uppercase mb-4 leading-none text-center">
                                         {achievementTitle}
                                     </div>
 
                                     {/* Description */}
-                                    <div className="text-[12px] text-gray-500 italic font-medium text-center leading-relaxed px-2">
+                                    <div className="text-[11.5px] text-gray-500 italic font-medium text-center leading-relaxed px-1">
                                         {`"`}{achievementDescription}{`"`}
                                     </div>
                                 </div>
 
                                 {/* Branding Watermark - Bottom Centered (Custom Eye Logo) */}
-                                <div className="w-full flex justify-center pb-6">
-                                    <div className="w-12 h-12 text-[#CE8E94]/40">
+                                <div className="w-full flex justify-center pb-5">
+                                    <div className="w-12 h-12 text-[#CE8E94]/35">
                                         <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             {/* Five Rays */}
                                             <line x1="50" y1="15" x2="50" y2="0" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
