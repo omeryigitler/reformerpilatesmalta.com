@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/app/components/ui/button';
-import { User, LogOut, Calendar, Clock, Zap, Home, ShieldCheck } from 'lucide-react';
+import { User, LogOut, Calendar, Clock, Zap, Home, ShieldCheck, Phone, Mail, Star } from 'lucide-react';
 import { UserType, Slot } from '../types';
 import { getTodayDate, isPastSlot, formatDateDisplay } from '../utils/helpers';
 import { useConfirm } from '../context/ConfirmContext';
@@ -38,7 +38,7 @@ export const UserDashboard = ({
     }, []);
     const [showGamification, setShowGamification] = useState(false);
     const [sharingItem, setSharingItem] = useState<{ title: string, icon: React.ReactNode, description: string } | null>(null);
-    const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>('upcoming');
+    const [activeTab, setActiveTab] = useState<'upcoming' | 'history' | 'profile'>('upcoming');
 
     // Standardized Logic: Active = Not Past + Not Completed
     const futureSlots = slots.filter(slot => !isPastSlot(slot.date, slot.time));
@@ -169,6 +169,12 @@ export const UserDashboard = ({
                         >
                             History
                         </button>
+                        <button
+                            onClick={() => setActiveTab('profile')}
+                            className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${activeTab === 'profile' ? 'bg-[#CE8E94] text-white shadow-md' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                            Profile
+                        </button>
                     </div>
                 </div>
 
@@ -295,8 +301,82 @@ END:VCALENDAR`;
                             </div>
                         </div>
                     </>
-                ) : (
+                ) : activeTab === 'history' ? (
                     <UserHistory slots={slots} userName={userName} userEmail={loggedInUser.email} />
+                ) : (
+                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="border-b border-[#CE8E94]/20 pb-4">
+                            <h2 className="text-2xl font-bold text-gray-700 flex items-center gap-2">
+                                <User className="w-6 h-6 text-[#CE8E94]" /> Your Profile
+                            </h2>
+                            <p className="text-sm text-gray-500 mt-1">Manage your personal information and account details.</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Personal Info Card */}
+                            <div className="bg-white/40 backdrop-blur-sm p-8 rounded-[2rem] border border-white/50 shadow-sm space-y-6">
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-[#CE8E94] uppercase tracking-wider">Full Name</label>
+                                    <div className="flex items-center gap-3 text-lg text-gray-800 font-medium">
+                                        <div className="bg-[#CE8E94]/10 p-2 rounded-lg">
+                                            <User className="w-5 h-5 text-[#CE8E94]" />
+                                        </div>
+                                        {loggedInUser.firstName} {loggedInUser.lastName}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-[#CE8E94] uppercase tracking-wider">Phone Number</label>
+                                    <div className="flex items-center gap-3 text-lg text-gray-800 font-medium">
+                                        <div className="bg-[#CE8E94]/10 p-2 rounded-lg">
+                                            <Phone className="w-5 h-5 text-[#CE8E94]" />
+                                        </div>
+                                        {loggedInUser.phone}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1 overflow-hidden">
+                                    <label className="text-xs font-bold text-[#CE8E94] uppercase tracking-wider">Email Address</label>
+                                    <div className="flex items-center gap-3 text-lg text-gray-800 font-medium break-all">
+                                        <div className="bg-[#CE8E94]/10 p-2 rounded-lg shrink-0">
+                                            <Mail className="w-5 h-5 text-[#CE8E94]" />
+                                        </div>
+                                        <span className="truncate">{loggedInUser.email}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Account Stats / Details Card */}
+                            <div className="bg-white/40 backdrop-blur-sm p-8 rounded-[2rem] border border-white/50 shadow-sm space-y-6">
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-[#CE8E94] uppercase tracking-wider">Member Since</label>
+                                    <div className="flex items-center gap-3 text-lg text-gray-800 font-medium">
+                                        <div className="bg-[#CE8E94]/10 p-2 rounded-lg">
+                                            <Calendar className="w-5 h-5 text-[#CE8E94]" />
+                                        </div>
+                                        {formatDateDisplay(loggedInUser.registered)}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-[#CE8E94] uppercase tracking-wider">Instructor</label>
+                                    <div className="flex items-center gap-3 text-lg text-gray-800 font-medium">
+                                        <div className="bg-[#CE8E94]/10 p-2 rounded-lg">
+                                            <Star className="w-5 h-5 text-[#CE8E94]" />
+                                        </div>
+                                        Gözde
+                                    </div>
+                                </div>
+
+                                <div className="pt-4">
+                                    <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-2xl text-sm text-blue-600 flex items-start gap-3">
+                                        <ShieldCheck className="w-5 h-5 mt-0.5 shrink-0" />
+                                        <p>Your profile information is securely stored and only visible to you and the studio administrators.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 )}
             </div>
 
