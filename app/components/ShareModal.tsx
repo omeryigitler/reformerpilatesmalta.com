@@ -35,14 +35,27 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
 
     if (!isOpen) return null;
 
-    // Helper to generate a data URL (Base64) - More stable for Safari
+    // Faster conversion without fetch
+    const dataURLtoBlob = (dataurl: string) => {
+        const arr = dataurl.split(',');
+        const mime = arr[0].match(/:(.*?);/)![1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new Blob([u8arr], { type: mime });
+    };
+
+    // Helper to generate a data URL (Base64)
     const generateImageDataUrl = async (): Promise<string | null> => {
         const element = document.getElementById('capture-container');
         if (!element) return null;
 
         try {
-            // Small delay to ensure styles and SVGs are fully rendered
-            await new Promise(resolve => setTimeout(resolve, 100));
+            // Minimal delay for styles
+            await new Promise(resolve => setTimeout(resolve, 50));
             return await htmlToImage.toPng(element, {
                 pixelRatio: 2,
                 backgroundColor: '#FFFFFF',
@@ -71,7 +84,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         try {
             if (platform === 'Copy Link') {
                 const shareText = `${text} ${url}`;
-                if (navigator.clipboard && navigator.clipboard.writeText) {
+                if (navigator.clipboard?.writeText) {
                     await navigator.clipboard.writeText(shareText);
                     setActionStatus('Copied!');
                 } else {
@@ -96,7 +109,10 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
             setIsGenerating(false);
 
             if (!dataUrl) {
-                throw new Error('Görsel oluşturulamadı');
+                showAlert("Hata", "Görsel hazırlanırken sorun oluştu. Lütfen cihazınızın belleğini kontrol edip tekrar deneyin.", "error");
+                setActionInProgress(false);
+                setActionStatus(null);
+                return;
             }
 
             // --- DOWNLOAD CASE ---
@@ -117,14 +133,12 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
             }
 
             // --- SHARING CASE ---
-            // Convert DataURL back to File for navigator.share
-            const res = await fetch(dataUrl);
-            const blob = await res.blob();
-            const file = new File([blob], filename, { type: 'image/png' });
+            try {
+                const blob = dataURLtoBlob(dataUrl);
+                const file = new File([blob], filename, { type: 'image/png' });
 
-            // 1. Try Native Sharing (Recommended for Instagram/WhatsApp/Safari/Chrome Mobile)
-            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                try {
+                // 1. Try Native Sharing (Recommended for Instagram/WhatsApp/Safari/Chrome Mobile)
+                if (navigator.share && navigator.canShare?.({ files: [file] })) {
                     await navigator.share({
                         files: [file],
                         title: 'Pilates Başarısı',
@@ -134,10 +148,10 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     setActionInProgress(false);
                     onClose(); // Close modal on successful native share
                     return;
-                } catch (shareErr) {
-                    console.log('Native share canceled or failed', shareErr);
-                    // Continue to fallbacks if canceled
                 }
+            } catch (shareErr) {
+                console.log('Native share failed or canceled', shareErr);
+                // Continue to fallbacks if canceled
             }
 
             // 2. Fallbacks for Desktop or restricted environments
@@ -151,7 +165,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                 link.click();
                 document.body.removeChild(link);
 
-                showAlert("Görsel İndirildi", "Görsel galerinize kaydedildi. Şimdi Instagram Story'de paylaşabilirsiniz!", "success");
+                showAlert("İndirildi", "Görsel kaydedildi. Instagram Story'de paylaşabilirsiniz!", "success");
             }
             else if (platform === 'Facebook') {
                 window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'popup,width=600,height=400');
@@ -173,7 +187,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
             setIsGenerating(false);
             setActionInProgress(false);
             setActionStatus('Error');
-            showAlert("Hata", "İşlem sırasında bir sorun oluştu. Lütfen tekrar deneyin.", "error");
+            showAlert("İşlem Başarısız", "Görsel çok büyük olabilir veya tarayıcınız bu işlemi şu an desteklemiyor. Lütfen İndir (Save Image) butonunu deneyin.", "error");
         }
     };
 
