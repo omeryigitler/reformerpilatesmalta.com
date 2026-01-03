@@ -20,6 +20,7 @@ interface ShareModalProps {
 export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon, achievementDescription }: ShareModalProps) => {
     const [actionStatus, setActionStatus] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [actionInProgress, setActionInProgress] = useState(false);
     const [alertConfig, setAlertConfig] = useState<{
         isOpen: boolean;
         title: string;
@@ -63,18 +64,20 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
     };
 
     const handleAction = async (platform: string) => {
-        if (isGenerating) return;
+        if (isGenerating || actionInProgress) return;
 
+        setActionInProgress(true);
         setActionStatus(platform);
         const text = `I just unlocked the ${achievementTitle} badge on Reformer Pilates Malta! 🏆`;
         const url = typeof window !== 'undefined' ? window.location.href : '';
         const filename = `pilates-badge-${achievementTitle.toLowerCase().replace(/\s+/g, '-')}.png`;
 
+        let triedNativeShare = false;
+
         try {
             if (platform === 'Copy Link') {
                 await navigator.clipboard.writeText(`${text} ${url}`);
                 setActionStatus('Copied!');
-                setTimeout(() => setActionStatus(null), 2000);
             }
             else {
                 setIsGenerating(true);
@@ -85,14 +88,14 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     if (blob) {
                         triggerDownload(blob, filename);
                         setActionStatus('Saved!');
-                        setTimeout(() => setActionStatus(null), 2000);
                     }
                 }
                 else {
-                    // 1. Try Native Sharing
+                    // 1. Try Native Sharing (Recommended for mobile)
                     if (blob && navigator.share) {
                         const file = new File([blob], filename, { type: 'image/png' });
                         if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                            triedNativeShare = true;
                             try {
                                 await navigator.share({
                                     files: [file],
@@ -100,35 +103,45 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                                     text: text,
                                 });
                                 setActionStatus('Done');
+                                // Reset status and exit early - DO NOT proceed to fallback
+                                setActionInProgress(false);
                                 setTimeout(() => setActionStatus(null), 2000);
                                 return;
                             } catch (shareErr) {
                                 console.log('Native share canceled or failed', shareErr);
+                                // If they canceled the native menu, we don't want to suddenly pop a window.open redirection loop
+                                setActionInProgress(false);
+                                setActionStatus(null);
+                                return;
                             }
                         }
                     }
 
-                    // 2. Fallbacks
-                    if (platform === 'Facebook') {
-                        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
-                    } else if (platform === 'Instagram') {
-                        // NO DOWNLOAD, JUST REDIRECT
-                        window.open('https://instagram.com', '_blank', 'noopener,noreferrer');
-                    } else if (platform === 'WhatsApp') {
-                        window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank', 'noopener,noreferrer');
-                    } else if (platform === 'X') {
-                        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
+                    // 2. Fallbacks (Only if native share was not even attempted)
+                    if (!triedNativeShare) {
+                        if (platform === 'Facebook') {
+                            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+                        } else if (platform === 'Instagram') {
+                            window.open('https://instagram.com', '_blank', 'noopener,noreferrer');
+                        } else if (platform === 'WhatsApp') {
+                            window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank', 'noopener,noreferrer');
+                        } else if (platform === 'X') {
+                            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
+                        }
+                        setActionStatus('Done');
                     }
-
-                    setActionStatus('Done');
-                    setTimeout(() => setActionStatus(null), 2000);
                 }
             }
         } catch (err) {
             console.error('Action failed:', err);
             setIsGenerating(false);
-            setActionStatus(null);
         }
+
+        // Final cleanup for non-native paths
+        setTimeout(() => {
+            setActionInProgress(false);
+            setActionStatus(null);
+        }, 2000);
     };
 
     return (
