@@ -130,37 +130,36 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     Show off your new <strong>{achievementTitle}</strong> badge to the world!
                 </p>
 
-                {/* Premium Shareable Card Area */}
+                {/* Story-Ready Achievement Card */}
                 <div className="flex justify-center mb-8">
                     <div
                         id="share-card"
-                        className="relative w-[340px] aspect-[4/5] sm:w-[380px] sm:aspect-[4/5] flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#FFF0F5] via-[#FFFDFD] to-[#FDF5F2] overflow-hidden rounded-[40px] shadow-2xl border border-white/50"
+                        className="relative w-[340px] aspect-[3/4.2] sm:w-[380px] flex flex-col items-center justify-between p-12 bg-gradient-to-br from-[#FFF5F7] via-[#FFFDFE] to-[#FAF6F4] rounded-[54px] shadow-2xl border border-white/40 overflow-hidden"
                     >
-                        {/* Decorative Background Elements */}
-                        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#CE8E94]/5 blur-[60px] rounded-full" />
-                        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#CE8E94]/10 blur-[60px] rounded-full" />
+                        {/* Decorative Top Glow */}
+                        <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-white/40 to-transparent pointer-events-none" />
 
-                        {/* The Glass Card Item */}
-                        <div className="relative z-10 w-full flex flex-col items-center justify-center bg-white/30 backdrop-blur-xl border border-white/60 p-10 rounded-[32px] shadow-[0_20px_50px_rgba(206,142,148,0.15),0_10px_30px_rgba(255,255,255,0.8)_inset]">
-                            {/* Icon with depth */}
-                            <div className="text-7xl mb-6 flex justify-center text-[#CE8E94] filter drop-shadow-[0_8px_15px_rgba(206,142,148,0.3)]">
+                        {/* Central Card - Matches the screenshot aesthetic */}
+                        <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-center bg-white/90 rounded-[40px] p-10 shadow-[0_15px_35px_rgba(206,142,148,0.08)] border border-white/20 my-8">
+                            {/* Achievement Icon */}
+                            <div className="text-6xl mb-8 flex justify-center text-[#CE8E94] filter drop-shadow-[0_4px_8px_rgba(206,142,148,0.2)]">
                                 {achievementIcon}
                             </div>
 
-                            {/* Title - Refined Typography */}
-                            <div className="text-xl font-bold tracking-[0.25em] text-[#B5838D] uppercase mb-4 leading-none text-center">
+                            {/* Badge Title */}
+                            <div className="text-2xl font-bold tracking-[0.2em] text-[#B5838D] uppercase mb-5 leading-none text-center">
                                 {achievementTitle}
                             </div>
 
-                            {/* Description - Italic & Elegant */}
-                            <div className="text-sm text-gray-500 italic font-medium text-center leading-relaxed">
+                            {/* Description */}
+                            <div className="text-[13px] text-gray-500 italic font-medium text-center leading-relaxed px-2">
                                 {`"`}{achievementDescription}{`"`}
                             </div>
                         </div>
 
-                        {/* Branding Watermark */}
-                        <div className="absolute bottom-6 left-0 right-0 text-center">
-                            <span className="text-[10px] font-bold tracking-[0.3em] text-[#CE8E94]/40 uppercase">
+                        {/* Branding Watermark - Bottom Centered */}
+                        <div className="w-full text-center pb-2">
+                            <span className="text-[11px] font-bold tracking-[0.35em] text-[#CE8E94]/50 uppercase">
                                 Reformer Pilates Malta
                             </span>
                         </div>
@@ -170,7 +169,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                 {/* Share Actions Grid */}
                 <div className="grid grid-cols-2 gap-3 mb-6">
                     <button
-                        className={`flex items-center justify-center gap-2 p-3.5 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'Instagram' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
+                        className={`flex items-center justify-center gap-2 p-4 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'Instagram' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
                         onClick={() => handleAction('Instagram')}
                     >
                         <Instagram className={`w-5 h-5 text-[#CE8E94] group-hover:text-white ${actionStatus === 'Instagram' ? 'text-white' : ''}`} />
@@ -178,7 +177,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     </button>
 
                     <button
-                        className={`flex items-center justify-center gap-2 p-3.5 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'Facebook' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
+                        className={`flex items-center justify-center gap-2 p-4 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'Facebook' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
                         onClick={() => handleAction('Facebook')}
                     >
                         <Facebook className={`w-5 h-5 text-[#CE8E94] group-hover:text-white ${actionStatus === 'Facebook' ? 'text-white' : ''}`} />
@@ -186,7 +185,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     </button>
 
                     <button
-                        className={`flex items-center justify-center gap-2 p-3.5 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'WhatsApp' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
+                        className={`flex items-center justify-center gap-2 p-4 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'WhatsApp' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
                         onClick={() => handleAction('WhatsApp')}
                     >
                         <MessageCircle className={`w-5 h-5 text-[#CE8E94] group-hover:text-white ${actionStatus === 'WhatsApp' ? 'text-white' : ''}`} />
@@ -194,7 +193,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     </button>
 
                     <button
-                        className={`flex items-center justify-center gap-2 p-3.5 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'X' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
+                        className={`flex items-center justify-center gap-2 p-4 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'X' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
                         onClick={() => handleAction('X')}
                     >
                         <Twitter className={`w-5 h-5 text-[#CE8E94] group-hover:text-white ${actionStatus === 'X' ? 'text-white' : ''}`} />
