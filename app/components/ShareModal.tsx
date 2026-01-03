@@ -37,13 +37,22 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
             const element = document.getElementById('share-card');
             if (element) {
                 try {
-                    const canvas = await html2canvas(element);
+                    const canvas = await html2canvas(element, {
+                        useCORS: true,
+                    });
+
                     const link = document.createElement('a');
                     link.download = `pilates-badge-${achievementTitle.toLowerCase().replace(/\s+/g, '-')}.png`;
                     link.href = canvas.toDataURL('image/png');
+
+                    // Robust trigger
+                    document.body.appendChild(link);
                     link.click();
+                    document.body.removeChild(link);
+
                 } catch (err) {
                     console.error('Failed to capture image: ', err);
+                    alert("Görüntü kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.");
                 }
             }
         } else {
