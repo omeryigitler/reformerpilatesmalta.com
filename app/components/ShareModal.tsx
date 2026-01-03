@@ -156,31 +156,31 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
 
                     {/* Story-Ready Achievement Card */}
                     <div className="flex justify-center mb-6">
-                        <div id="capture-container" className="p-16 bg-white rounded-[60px]">
+                        <div id="capture-container" className="p-14 bg-white rounded-[60px]">
                             <div
                                 id="share-card"
-                                className="relative w-[320px] aspect-[1/1.35] flex flex-col items-center justify-between p-12 bg-[#FEF9F9] rounded-[100px] shadow-[0_45px_100px_-30px_rgba(206,142,148,0.25)] overflow-hidden"
+                                className="relative w-[300px] aspect-[1/1.38] flex flex-col items-center justify-between p-10 bg-[#FEF9F9] rounded-[100px] shadow-[0_40px_90px_-30px_rgba(206,142,148,0.2)] overflow-hidden"
                             >
                                 {/* Inner Card - Matches the 'Solaris' reference aesthetic */}
-                                <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-center bg-white rounded-[80px] p-8 shadow-[0_45px_100px_-20px_rgba(206,142,148,0.22)] my-4">
+                                <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-center bg-white rounded-[80px] p-8 shadow-[0_40px_80px_-20px_rgba(206,142,148,0.15)] my-4">
                                     {/* Achievement Icon */}
-                                    <div className="text-5xl mb-6 flex justify-center text-[#CE8E94] filter drop-shadow-[0_4px_8px_rgba(206,142,148,0.2)]">
+                                    <div className="text-5xl mb-6 flex justify-center text-[#CE8E94] filter drop-shadow-[0_4px_8px_rgba(206,142,148,0.12)]">
                                         {achievementIcon}
                                     </div>
 
                                     {/* Badge Title */}
-                                    <div className="text-xl font-bold tracking-[0.2em] text-[#B5838D] uppercase mb-4 leading-none text-center">
+                                    <div className="text-xl font-bold tracking-[0.25em] text-[#B5838D] uppercase mb-4 leading-none text-center">
                                         {achievementTitle}
                                     </div>
 
                                     {/* Description */}
-                                    <div className="text-[11px] text-gray-500 italic font-medium text-center leading-relaxed px-1">
+                                    <div className="text-[12px] text-gray-500 italic font-medium text-center leading-relaxed px-2">
                                         {`"`}{achievementDescription}{`"`}
                                     </div>
                                 </div>
 
                                 {/* Branding Watermark - Bottom Centered (Custom Eye Logo) */}
-                                <div className="w-full flex justify-center pb-4">
+                                <div className="w-full flex justify-center pb-6">
                                     <div className="w-12 h-12 text-[#CE8E94]/40">
                                         <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             {/* Five Rays */}
