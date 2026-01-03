@@ -19,7 +19,6 @@ interface ShareModalProps {
 
 export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon, achievementDescription }: ShareModalProps) => {
     const [actionStatus, setActionStatus] = useState<string | null>(null);
-    const [actionInProgress, setActionInProgress] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const [alertConfig, setAlertConfig] = useState<{
         isOpen: boolean;
@@ -61,10 +60,6 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-    };
-
-    const showAlert = (title: string, message: string, type: 'info' | 'success' | 'error' = 'info') => {
-        setAlertConfig({ isOpen: true, title, message, type });
     };
 
     const handleAction = async (platform: string) => {
