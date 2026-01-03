@@ -19,6 +19,7 @@ interface ShareModalProps {
 
 export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon, achievementDescription }: ShareModalProps) => {
     const [actionStatus, setActionStatus] = useState<string | null>(null);
+    const [actionInProgress, setActionInProgress] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const [alertConfig, setAlertConfig] = useState<{
         isOpen: boolean;
@@ -40,7 +41,6 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         if (!element) return null;
 
         try {
-            // Use toBlob directly for better performance and stability
             return await htmlToImage.toBlob(element, {
                 pixelRatio: 2,
                 backgroundColor: '#FFFFFF',
@@ -53,14 +53,23 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
     };
 
     const triggerDownload = (blob: Blob, filename: string) => {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.download = filename;
-        link.href = url;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        try {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = url;
+            document.body.appendChild(link);
+            link.click();
+            // Clean up with a small delay to ensure the browser registers the click
+            setTimeout(() => {
+                if (document.body.contains(link)) {
+                    document.body.removeChild(link);
+                }
+                URL.revokeObjectURL(url);
+            }, 100);
+        } catch (err) {
+            console.error('Download failed:', err);
+        }
     };
 
     const showAlert = (title: string, message: string, type: 'info' | 'success' | 'error' = 'info') => {
@@ -68,8 +77,9 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
     };
 
     const handleAction = async (platform: string) => {
-        if (isGenerating) return;
+        if (isGenerating || actionInProgress) return;
 
+        setActionInProgress(true);
         setActionStatus(platform);
         const text = `I just unlocked the ${achievementTitle} badge on Reformer Pilates Malta! 🏆`;
         const url = typeof window !== 'undefined' ? window.location.href : '';
@@ -79,6 +89,10 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
             if (platform === 'Copy Link') {
                 await navigator.clipboard.writeText(`${text} ${url}`);
                 setActionStatus('Copied!');
+                setTimeout(() => {
+                    setActionInProgress(false);
+                    setTimeout(() => setActionStatus(null), 2000);
+                }, 500);
             }
             else {
                 setIsGenerating(true);
@@ -94,9 +108,13 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                         triggerDownload(blob, filename);
                         setActionStatus('Saved!');
                     }
+                    setTimeout(() => {
+                        setActionInProgress(false);
+                        setTimeout(() => setActionStatus(null), 2000);
+                    }, 500);
                 }
                 else {
-                    // 1. Try Native Sharing (Best for Instagram/WhatsApp mobile)
+                    // 1. Try Native Sharing
                     if (blob && navigator.share) {
                         const file = new File([blob], filename, { type: 'image/png' });
                         if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -107,8 +125,8 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                                     text: text,
                                 });
                                 setActionStatus('Shared!');
-                                // Close modal after successful native share
-                                setTimeout(onClose, 500);
+                                setActionInProgress(false);
+                                onClose();
                                 return;
                             } catch (shareErr) {
                                 console.log('Native share canceled or failed', shareErr);
@@ -120,32 +138,30 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     if (platform === 'Facebook') {
                         window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
                     } else if (platform === 'Instagram') {
-                        // Instagram fallback: download + redirect (Old stable flow)
                         if (blob) triggerDownload(blob, filename);
+                        // Close modal immediately to prevent re-execution when coming back
+                        onClose();
                         window.open('https://instagram.com', '_blank', 'noopener,noreferrer');
                     } else if (platform === 'WhatsApp') {
                         window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank', 'noopener,noreferrer');
                     } else if (platform === 'X') {
                         window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
                     }
+
                     setActionStatus('Done');
-                    // Close modal after redirect to prevent state loop
-                    setTimeout(onClose, 1000);
+                    setActionInProgress(false);
+                    if (platform !== 'Instagram') {
+                        setTimeout(onClose, 800);
+                    }
                 }
             }
         } catch (err) {
             console.error('Action failed:', err);
             setIsGenerating(false);
+            setActionInProgress(false);
             setActionStatus('Error');
-            showAlert("Hata", "Görsel oluşturulurken bir sorun oluştu. Lütfen tekrar deneyin.", "error");
+            showAlert("Hata", "Bir sorun oluştu. Lütfen tekrar deneyin.", "error");
         }
-
-        // Reset status
-        setTimeout(() => {
-            if (platform === 'Download Image' || platform === 'Copy Link') {
-                setTimeout(() => setActionStatus(null), 2000);
-            }
-        }, 1000);
     };
 
     return (
