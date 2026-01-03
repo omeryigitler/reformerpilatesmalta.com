@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Modal } from './Modal';
-import { Facebook, Instagram, Twitter, MessageCircle, Link, Download, Eye } from 'lucide-react';
+import { Facebook, Instagram, Twitter, MessageCircle, Link, Download } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
 
 
