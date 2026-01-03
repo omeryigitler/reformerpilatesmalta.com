@@ -68,10 +68,55 @@ export const UserDashboard = ({
 
     availableSlotsForSelectedDate.sort((a, b) => a.time.localeCompare(b.time));
 
-    // MOCK DATA for Gamification Demo
-    // In real app, these would come from the database (UserType needs update)
-    const lessonsCompleted = userBookings.length; // Simply usage of current bookings count as demo
-    const mockUnlockedTraits = ['SOLARIS', 'GRAVITY'];
+    // Standardized Logic for History (Past or Completed)
+    const pastBookings = slots.filter(slot => {
+        let isMatch = false;
+        if (slot.bookedByEmail) {
+            isMatch = slot.bookedByEmail.toLowerCase() === loggedInUser.email.toLowerCase();
+        } else if (slot.bookedBy) {
+            const cleanBookedBy = slot.bookedBy.replace(' (Admin)', '').trim().toLowerCase();
+            const myFullName = `${loggedInUser.firstName} ${loggedInUser.lastName}`.trim().toLowerCase();
+            isMatch = cleanBookedBy === myFullName;
+        }
+        return isMatch && (isPastSlot(slot.date, slot.time) || slot.status === 'Completed');
+    });
+
+    // Dynamic Gamification Logic
+    const lessonsCompleted = pastBookings.length;
+
+    // Dynamically calculate traits based on history
+    const unlockedTraits = React.useMemo(() => {
+        const traits: string[] = [];
+        if (lessonsCompleted > 0) {
+            // SOLARIS: Morning (09-12)
+            const hasMorning = pastBookings.some(s => {
+                const hour = parseInt(s.time.split(':')[0]);
+                return hour >= 9 && hour < 12;
+            });
+            if (hasMorning) traits.push('SOLARIS');
+
+            // LUNAR: Evening (18-21)
+            const hasEvening = pastBookings.some(s => {
+                const hour = parseInt(s.time.split(':')[0]);
+                return hour >= 18 && hour < 21;
+            });
+            if (hasEvening) traits.push('LUNAR');
+
+            // ZENITH: Weekend (Saturday=6, Sunday=0)
+            const hasWeekend = pastBookings.some(s => {
+                const day = new Date(s.date).getDay();
+                return day === 0 || day === 6;
+            });
+            if (hasWeekend) traits.push('ZENITH');
+
+            // GRAVITY: 7 or more lifetime sessions (Simplified for now)
+            if (lessonsCompleted >= 7) traits.push('GRAVITY');
+
+            // STARLIGHT: Placeholder for interaction (if it was tracked)
+            // if (user.totalLikes > 0) traits.push('STARLIGHT');
+        }
+        return traits;
+    }, [pastBookings, lessonsCompleted]);
 
     return (
         <div className="pilates-root min-h-screen flex flex-col items-center p-4 md:p-10 space-y-10 font-sans bg-[#FFF0E5]">
@@ -264,7 +309,7 @@ END:VCALENDAR`;
                 >
                     <ProgressionDashboard
                         lessonsCompleted={lessonsCompleted}
-                        unlockedTraits={mockUnlockedTraits}
+                        unlockedTraits={unlockedTraits}
                         onShare={(item) => setSharingItem(item)}
                     />
                 </Modal>
