@@ -85,6 +85,13 @@ export const UserDashboard = ({
                     </h1>
                     <div className="flex flex-col sm:flex-row gap-3 items-end">
                         <Button
+                            onClick={navigateToHome}
+                            className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-xl text-sm font-bold hover:bg-gray-100 transition duration-300 flex items-center gap-2 w-full sm:w-auto justify-center relative group"
+                        >
+                            {holidayMode && <SantaHat className="absolute -top-3 -left-2 w-8 h-8 -rotate-[15deg] z-20 transition-all duration-500 group-hover:-rotate-[35deg] group-hover:-translate-y-1" />}
+                            <Home className="w-4 h-4" /> Home
+                        </Button>
+                        <Button
                             onClick={() => {
                                 console.log('My Path button clicked, setting showGamification to true');
                                 setShowGamification(true);
@@ -92,13 +99,6 @@ export const UserDashboard = ({
                             className="px-6 py-3 bg-gradient-to-r from-[#B5838D] to-[#CE8E94] text-white border-none rounded-xl text-sm font-bold shadow-md hover:shadow-lg hover:scale-105 transition duration-300 flex items-center gap-2 w-full sm:w-auto justify-center"
                         >
                             <Zap className="w-4 h-4 text-yellow-200" /> My Path
-                        </Button>
-                        <Button
-                            onClick={navigateToHome}
-                            className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-xl text-sm font-bold hover:bg-gray-100 transition duration-300 flex items-center gap-2 w-full sm:w-auto justify-center relative group"
-                        >
-                            {holidayMode && <SantaHat className="absolute -top-3 -left-2 w-8 h-8 -rotate-[15deg] z-20 transition-all duration-500 group-hover:-rotate-[35deg] group-hover:-translate-y-1" />}
-                            <Home className="w-4 h-4" /> Home
                         </Button>
                         <Button
                             onClick={onLogout}
