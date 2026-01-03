@@ -35,14 +35,13 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
 
     // Helper to generate a blob from the badge card
     const generateImageBlob = async (): Promise<Blob | null> => {
-        const element = document.getElementById('share-card');
+        const element = document.getElementById('capture-container');
         if (!element) return null;
 
         try {
-            // html-to-image is much better with SVGs and complex CSS
             return await htmlToImage.toBlob(element, {
-                pixelRatio: 3, // High depth
-                backgroundColor: '#FFF5F7',
+                pixelRatio: 3,
+                backgroundColor: '#FFFFFF',
             });
         } catch (err) {
             console.error('Image generation failed:', err);
@@ -157,48 +156,47 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
 
                     {/* Story-Ready Achievement Card */}
                     <div className="flex justify-center mb-6">
-                        <div
-                            id="share-card"
-                            className="relative w-[280px] aspect-[3/4.2] flex flex-col items-center justify-between p-10 bg-gradient-to-br from-[#FFF5F7] via-[#FFFDFE] to-[#FAF6F4] rounded-[48px] shadow-xl border border-white/40 overflow-hidden"
-                        >
-                            {/* Decorative Top Glow */}
-                            <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-white/40 to-transparent pointer-events-none" />
+                        <div id="capture-container" className="p-16 bg-white rounded-[60px]">
+                            <div
+                                id="share-card"
+                                className="relative w-[320px] aspect-[1/1.35] flex flex-col items-center justify-between p-12 bg-[#FEF9F9] rounded-[100px] shadow-[0_45px_100px_-30px_rgba(206,142,148,0.25)] overflow-hidden"
+                            >
+                                {/* Inner Card - Matches the 'Solaris' reference aesthetic */}
+                                <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-center bg-white rounded-[80px] p-8 shadow-[0_45px_100px_-20px_rgba(206,142,148,0.22)] my-4">
+                                    {/* Achievement Icon */}
+                                    <div className="text-5xl mb-6 flex justify-center text-[#CE8E94] filter drop-shadow-[0_4px_8px_rgba(206,142,148,0.2)]">
+                                        {achievementIcon}
+                                    </div>
 
-                            {/* Central Card - Matches the screenshot aesthetic */}
-                            <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-center bg-white rounded-[32px] p-8 shadow-[0_15px_45px_rgba(206,142,148,0.15),0_5px_15px_rgba(206,142,148,0.1)] border border-white/20 my-6">
-                                {/* Achievement Icon */}
-                                <div className="text-5xl mb-6 flex justify-center text-[#CE8E94] filter drop-shadow-[0_4px_8px_rgba(206,142,148,0.2)]">
-                                    {achievementIcon}
+                                    {/* Badge Title */}
+                                    <div className="text-xl font-bold tracking-[0.2em] text-[#B5838D] uppercase mb-4 leading-none text-center">
+                                        {achievementTitle}
+                                    </div>
+
+                                    {/* Description */}
+                                    <div className="text-[11px] text-gray-500 italic font-medium text-center leading-relaxed px-1">
+                                        {`"`}{achievementDescription}{`"`}
+                                    </div>
                                 </div>
 
-                                {/* Badge Title */}
-                                <div className="text-xl font-bold tracking-[0.2em] text-[#B5838D] uppercase mb-4 leading-none text-center">
-                                    {achievementTitle}
-                                </div>
+                                {/* Branding Watermark - Bottom Centered (Custom Eye Logo) */}
+                                <div className="w-full flex justify-center pb-4">
+                                    <div className="w-12 h-12 text-[#CE8E94]/40">
+                                        <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            {/* Five Rays */}
+                                            <line x1="50" y1="15" x2="50" y2="0" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                            <line x1="28" y1="22" x2="18" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                            <line x1="72" y1="22" x2="82" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                            <line x1="12" y1="38" x2="0" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                            <line x1="88" y1="38" x2="100" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
 
-                                {/* Description */}
-                                <div className="text-[11px] text-gray-500 italic font-medium text-center leading-relaxed px-1">
-                                    {`"`}{achievementDescription}{`"`}
-                                </div>
-                            </div>
+                                            {/* Eye Shape */}
+                                            <path d="M10 55C10 55 25 35 50 35C75 35 90 55 90 55C90 55 75 75 50 75C25 75 10 55 10 55Z" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
 
-                            {/* Branding Watermark - Bottom Centered (Custom Eye Logo) */}
-                            <div className="w-full flex justify-center pb-4">
-                                <div className="w-12 h-12 text-[#CE8E94]/40">
-                                    <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        {/* Five Rays */}
-                                        <line x1="50" y1="15" x2="50" y2="0" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                                        <line x1="28" y1="22" x2="18" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                                        <line x1="72" y1="22" x2="82" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                                        <line x1="12" y1="38" x2="0" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                                        <line x1="88" y1="38" x2="100" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-
-                                        {/* Eye Shape */}
-                                        <path d="M10 55C10 55 25 35 50 35C75 35 90 55 90 55C90 55 75 75 50 75C25 75 10 55 10 55Z" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-
-                                        {/* Pupil */}
-                                        <circle cx="50" cy="55" r="10" stroke="currentColor" strokeWidth="4" />
-                                    </svg>
+                                            {/* Pupil */}
+                                            <circle cx="50" cy="55" r="10" stroke="currentColor" strokeWidth="4" />
+                                        </svg>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -257,7 +255,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                         </button>
                     </div>
                 </div>
-            </Modal>
+            </Modal >
 
             <AlertModal
                 isOpen={alertConfig.isOpen}
