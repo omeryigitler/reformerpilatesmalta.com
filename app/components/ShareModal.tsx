@@ -156,13 +156,13 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
 
                     {/* Story-Ready Achievement Card */}
                     <div className="flex justify-center mb-6">
-                        <div id="capture-container" className="p-16 bg-white rounded-[48px]">
+                        <div id="capture-container" className="p-[100px] bg-white rounded-[48px]">
                             <div
                                 id="share-card"
                                 className="relative w-[320px] aspect-[1/1.35] flex flex-col items-center justify-between p-12 bg-[#FEF9F9] rounded-[100px] shadow-[0_45px_100px_-30px_rgba(206,142,148,0.25)] overflow-hidden"
                             >
                                 {/* Inner Card - Matches the 'Solaris' reference aesthetic */}
-                                <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-center bg-white rounded-[80px] p-8 shadow-[0_45px_100px_-20px_rgba(206,142,148,0.22)] my-4">
+                                <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-center bg-white rounded-[80px] p-8 shadow-[0_40px_80px_-15px_rgba(206,142,148,0.22)] my-4">
                                     {/* Achievement Icon */}
                                     <div className="text-5xl mb-6 flex justify-center text-[#CE8E94] filter drop-shadow-[0_4px_8px_rgba(206,142,148,0.12)]">
                                         {achievementTitle === 'SOLARIS' ? (
@@ -196,8 +196,8 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                                 </div>
 
                                 {/* Branding Watermark - Bottom Centered (Custom Eye Logo) */}
-                                <div className="w-full flex justify-center pb-5">
-                                    <div className="w-12 h-12 text-[#CE8E94]/35">
+                                <div className="w-full flex justify-center pb-8">
+                                    <div className="w-20 h-20 text-[#CE8E94]/45">
                                         <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             {/* Five Rays */}
                                             <line x1="50" y1="15" x2="50" y2="0" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
