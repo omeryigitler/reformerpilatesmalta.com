@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Modal } from './Modal';
 import { Facebook, Instagram, Twitter, MessageCircle, Link, Download } from 'lucide-react';
-import html2canvas from 'html2canvas';
+import * as htmlToImage from 'html-to-image';
 
 
 interface ShareModalProps {
@@ -19,92 +19,98 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
 
     if (!isOpen) return null;
 
-    // Helper to generate canvas from the badge card
-    const generateCanvas = async (): Promise<HTMLCanvasElement | null> => {
+    // Helper to generate a blob from the badge card
+    const generateImageBlob = async (): Promise<Blob | null> => {
         const element = document.getElementById('share-card');
         if (!element) return null;
 
         try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const options: any = {
-                useCORS: true,
-                scale: 3,
+            // html-to-image is much better with SVGs and complex CSS
+            return await htmlToImage.toBlob(element, {
+                pixelRatio: 3, // High depth
                 backgroundColor: '#FFF0F3',
-                logging: false,
-                onclone: (clonedDoc: Document) => {
-                    const clonedElement = clonedDoc.getElementById('share-card');
-                    if (clonedElement) {
-                        clonedElement.style.transform = 'none';
-                        clonedElement.style.transition = 'none';
-                    }
-                }
-            };
-            return await html2canvas(element, options);
+            });
         } catch (err) {
-            console.error('Canvas generation failed:', err);
+            console.error('Image generation failed:', err);
             return null;
         }
     };
 
+    const triggerDownload = (blob: Blob, filename: string) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
     const handleAction = async (platform: string) => {
-        setActionStatus(platform);
+        setActionStatus('Sharing...');
         const text = `I just unlocked the ${achievementTitle} badge on Reformer Pilates Malta! 🏆`;
         const url = typeof window !== 'undefined' ? window.location.href : '';
-
-        // Generate the image for all platforms that might use it
-        let canvas: HTMLCanvasElement | null = null;
-        if (['Instagram', 'WhatsApp', 'Facebook', 'X', 'Download Image'].includes(platform)) {
-            canvas = await generateCanvas();
-        }
+        const filename = `pilates-badge-${achievementTitle.toLowerCase().replace(/\s+/g, '-')}.png`;
 
         try {
-            if (platform === 'Download Image') {
-                if (!canvas) throw new Error('Canvas failed');
-                const link = document.createElement('a');
-                link.download = `pilates-badge-${achievementTitle.toLowerCase().replace(/\s+/g, '-')}.png`;
-                link.href = canvas.toDataURL('image/png');
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                setActionStatus('Saved!');
-            }
-            else if (platform === 'Copy Link') {
+            if (platform === 'Copy Link') {
                 await navigator.clipboard.writeText(`${text} ${url}`);
                 setActionStatus('Copied!');
             }
             else {
-                // For Mobile: Try Direct File Sharing (The "Automatic" way for Stories/WhatsApp)
-                if (canvas && navigator.share && navigator.canShare) {
-                    const blob = await new Promise<Blob | null>(resolve => canvas!.toBlob(resolve, 'image/png'));
+                // Generate the image
+                const blob = await generateImageBlob();
+
+                if (platform === 'Download Image') {
                     if (blob) {
-                        const file = new File([blob], 'achievement.png', { type: 'image/png' });
-                        if (navigator.canShare({ files: [file] })) {
-                            await navigator.share({
-                                files: [file],
-                                title: achievementTitle,
-                                text: text,
-                            });
-                            setActionStatus('Shared!');
-                            return; // Success
-                        }
+                        triggerDownload(blob, filename);
+                        setActionStatus('Saved!');
+                    } else {
+                        throw new Error('Image generation failed');
                     }
                 }
+                else {
+                    // Try Native Sharing (The closest to "Automatic" on Mobile)
+                    if (blob && navigator.share) {
+                        const file = new File([blob], filename, { type: 'image/png' });
+                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                            try {
+                                await navigator.share({
+                                    files: [file],
+                                    title: achievementTitle,
+                                    text: text,
+                                });
+                                setActionStatus('Shared!');
+                                return;
+                            } catch (shareErr) {
+                                console.log('Share canceled or failed', shareErr);
+                            }
+                        }
+                    }
 
-                // Fallback for Desktop or if Share API fails: Just open the link
-                if (platform === 'Facebook') {
-                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank');
-                } else if (platform === 'Instagram') {
-                    window.open('https://instagram.com', '_blank'); // Instagram web doesn't support direct story intent
-                } else if (platform === 'WhatsApp') {
-                    window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
-                } else if (platform === 'X') {
-                    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+                    // Fallback: Download the image and open the link
+                    if (blob) {
+                        triggerDownload(blob, filename);
+                        alert("Görüntü indirildi. Şimdi Story kısmına bu görüntüyü ekleyebilirsiniz.");
+                    }
+
+                    if (platform === 'Facebook') {
+                        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank');
+                    } else if (platform === 'Instagram') {
+                        window.open('https://instagram.com', '_blank');
+                    } else if (platform === 'WhatsApp') {
+                        window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
+                    } else if (platform === 'X') {
+                        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+                    }
+                    setActionStatus('Opened');
                 }
             }
         } catch (err) {
             console.error('Action failed:', err);
-            // If it's a mobile share cancel, we don't need to alert. For others, maybe.
-            if (platform === 'Download Image') alert("Görüntü oluşturulamadı. Lütfen tekrar deneyin.");
+            setActionStatus('Error');
+            alert("Bir sorun oluştu. Lütfen tekrar deneyin.");
         }
 
         // Reset status
@@ -121,10 +127,10 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
             <div className="text-center p-2">
                 <h3 className="text-2xl font-bold text-[#CE8E94] mb-2">Share Your Success</h3>
                 <p className="text-gray-500 text-sm mb-6">
-                    Show off your <strong>{achievementTitle}</strong> badge to the world!
+                    Show off your new <strong>{achievementTitle}</strong> badge to the world!
                 </p>
 
-                {/* Preview Card - Note: Removed transform from here to fix capture bugs */}
+                {/* Preview Card */}
                 <div
                     id="share-card"
                     className="bg-gradient-to-br from-[#FFF0F3] to-[#F5F1EE] rounded-3xl p-8 mb-8 shadow-lg border border-[#CE8E94]/10 transition-all duration-300"
@@ -180,12 +186,14 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     <button
                         className={`flex items-center gap-1 text-xs transition-colors font-medium ${actionStatus === 'Copied!' ? 'text-green-500' : 'text-gray-400 hover:text-[#CE8E94]'}`}
                         onClick={() => handleAction('Copy Link')}
+                        disabled={actionStatus === 'Copied!'}
                     >
                         <Link className="w-3 h-3" /> {actionStatus === 'Copied!' ? 'Copied!' : 'Copy Link'}
                     </button>
                     <button
                         className={`flex items-center gap-1 text-xs transition-colors font-medium ${actionStatus === 'Saved!' ? 'text-green-500' : 'text-gray-400 hover:text-[#CE8E94]'}`}
                         onClick={() => handleAction('Download Image')}
+                        disabled={actionStatus === 'Saved!'}
                     >
                         <Download className="w-3 h-3" /> {actionStatus === 'Saved!' ? 'Saved!' : 'Save Image'}
                     </button>
