@@ -154,18 +154,11 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                 // Continue to fallbacks if canceled
             }
 
-            // 2. Fallbacks for Desktop or restricted environments
+            // 2. Fallbacks for Desktop
             if (platform === 'Instagram') {
-                // Instagram Story Web API does not support direct file upload
-                // Instead of window.open loop, we download and inform the user
-                const link = document.createElement('a');
-                link.download = filename;
-                link.href = dataUrl;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-
-                showAlert("İndirildi", "Görsel kaydedildi. Instagram Story'de paylaşabilirsiniz!", "success");
+                // Removed automatic download as requested by the user
+                showAlert("Paylaşıma Hazır", "Görseli 'Save Image' butonu ile kaydedebilir ve ardından Instagram'da paylaşabilirsiniz.", "info");
+                window.open('https://instagram.com', '_blank', 'noopener,noreferrer');
             }
             else if (platform === 'Facebook') {
                 window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'popup,width=600,height=400');
