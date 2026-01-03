@@ -107,6 +107,8 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                                     text: text,
                                 });
                                 setActionStatus('Shared!');
+                                // Close modal after successful native share
+                                setTimeout(onClose, 500);
                                 return;
                             } catch (shareErr) {
                                 console.log('Native share canceled or failed', shareErr);
@@ -116,16 +118,19 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
 
                     // 2. Fallbacks
                     if (platform === 'Facebook') {
-                        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank');
+                        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
                     } else if (platform === 'Instagram') {
-                        // Just open Instagram, don't trigger download to avoid browser prompts
-                        window.open('https://instagram.com', '_blank');
+                        // Instagram fallback: download + redirect (Old stable flow)
+                        if (blob) triggerDownload(blob, filename);
+                        window.open('https://instagram.com', '_blank', 'noopener,noreferrer');
                     } else if (platform === 'WhatsApp') {
-                        window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
+                        window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank', 'noopener,noreferrer');
                     } else if (platform === 'X') {
-                        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+                        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
                     }
                     setActionStatus('Done');
+                    // Close modal after redirect to prevent state loop
+                    setTimeout(onClose, 1000);
                 }
             }
         } catch (err) {
@@ -137,10 +142,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
 
         // Reset status
         setTimeout(() => {
-            if (platform !== 'Download Image' && platform !== 'Copy Link') {
-                setActionStatus(null);
-                onClose(); // Automatically close modal after redirect/share
-            } else {
+            if (platform === 'Download Image' || platform === 'Copy Link') {
                 setTimeout(() => setActionStatus(null), 2000);
             }
         }, 1000);
@@ -227,14 +229,17 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     {/* Share Actions Grid */}
                     <div className="grid grid-cols-2 gap-2 mb-3 px-4">
                         <button
-                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'Instagram' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'} ${isGenerating ? 'opacity-50' : ''}`}
+                            className={`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'Instagram' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'} ${isGenerating ? 'opacity-50' : ''}`}
                             onClick={() => handleAction('Instagram')}
                             disabled={isGenerating}
                         >
                             <Instagram className={`w-4 h-4 text-[#CE8E94] group-hover:text-white ${actionStatus === 'Instagram' ? 'text-white' : ''}`} />
-                            <span className="text-[11px] font-bold text-nowrap">
-                                {isGenerating && actionStatus === 'Instagram' ? 'Sharing...' : (actionStatus === 'Instagram' ? 'Done' : 'Instagram')}
-                            </span>
+                            <div className="flex flex-col items-center">
+                                <span className="text-[11px] font-bold text-nowrap">
+                                    {isGenerating && actionStatus === 'Instagram' ? 'Sharing...' : (actionStatus === 'Instagram' ? 'Opening App' : 'Instagram')}
+                                </span>
+                                {actionStatus === 'Instagram' && <span className="text-[8px] opacity-70">App Opened</span>}
+                            </div>
                         </button>
 
                         <button
