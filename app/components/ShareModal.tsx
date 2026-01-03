@@ -19,7 +19,6 @@ interface ShareModalProps {
 
 export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon, achievementDescription }: ShareModalProps) => {
     const [actionStatus, setActionStatus] = useState<string | null>(null);
-    const [isGenerating, setIsGenerating] = useState(false);
     const [preparedBlob, setPreparedBlob] = useState<Blob | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [alertConfig, setAlertConfig] = useState<{
@@ -105,9 +104,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     triggerDownload(preparedBlob, filename);
                     setActionStatus('Saved!');
                 } else {
-                    setIsGenerating(true);
                     const blob = await generateImageBlob();
-                    setIsGenerating(false);
                     if (blob) {
                         triggerDownload(blob, filename);
                         setActionStatus('Saved!');
