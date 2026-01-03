@@ -38,24 +38,26 @@ export const Modal = ({
     // Default content style + custom override
     // Note: We use useDefaultPadding to toggle the p-8 md:p-10 classes
     const paddingClasses = useDefaultPadding ? "p-8 md:p-10" : "";
-    const contentStyle = `relative bg-white rounded-[2rem] shadow-2xl w-full animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto scrollbar-hide z-10 ${paddingClasses} ${className ? className : 'max-w-lg'}`;
+
 
     return createPortal(
         <div className={overlayStyle}>
             {/* Arka plan overlay - tıklayınca kapanır */}
             <div className="absolute inset-0" onClick={onClose}></div>
 
-            <div className={contentStyle}>
+            <div className={`relative flex flex-col bg-white rounded-[1.5rem] shadow-2xl w-full animate-in fade-in zoom-in duration-300 max-h-[90vh] z-10 ${className ? className : 'max-w-lg'} overflow-hidden`}>
                 {showCloseIcon && (
                     <button
                         onClick={onClose}
-                        className="absolute top-[15px] right-[15px] w-[36px] h-[36px] flex items-center justify-center bg-white rounded-full text-[#6B5E5E] shadow-[0_4px_10px_rgba(0,0,0,0.1)] hover:text-black hover:scale-110 transition-all z-50 cursor-pointer"
+                        className="absolute top-5 right-5 w-[36px] h-[36px] flex items-center justify-center bg-white rounded-full text-[#6B5E5E] shadow-[0_4px_10px_rgba(0,0,0,0.1)] hover:text-black hover:scale-110 transition-all z-50 cursor-pointer"
                         aria-label="Close modal"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 )}
-                {children}
+                <div className={`flex-1 overflow-y-auto scrollbar-hide ${paddingClasses}`}>
+                    {children}
+                </div>
             </div>
         </div>,
         document.body
