@@ -248,7 +248,10 @@ END:VCALENDAR`;
                                     ))}
                                 </div>
                             ) : (
-                                <p className="p-4 bg-[#CE8E94]/10 border border-[#CE8E94]/30 rounded-xl text-[#CE8E94] font-bold">You currently have no active bookings. Time to book a session!</p>
+                                <div className="p-6 bg-[#CE8E94] text-white rounded-[2rem] shadow-lg flex items-center gap-4 animate-in fade-in zoom-in duration-500">
+                                    <Zap className="w-8 h-8 text-yellow-200 shrink-0" />
+                                    <p className="font-extrabold text-lg leading-relaxed">You currently have no active bookings. Time to book a session!</p>
+                                </div>
                             )}
                         </div>
 
@@ -292,9 +295,10 @@ END:VCALENDAR`;
                                                 </div>
                                             ))
                                         ) : (
-                                            <p className="p-4 bg-[#CE8E94]/10 border border-[#CE8E94]/30 rounded-xl text-[#CE8E94] font-bold">
-                                                No available slots on this date. Please choose another day from the calendar.
-                                            </p>
+                                            <div className="p-5 bg-white/40 backdrop-blur-md border-2 border-[#CE8E94] rounded-2xl text-[#CE8E94] font-extrabold flex items-start gap-3">
+                                                <Zap className="w-5 h-5 mt-1 shrink-0" />
+                                                <p>No available slots on this date. Please choose another day from the calendar.</p>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
