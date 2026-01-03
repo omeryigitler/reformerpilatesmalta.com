@@ -114,24 +114,9 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                         }
                     }
 
-                    // Fallback: Download the image and open the link
-                    if (blob) {
-                        triggerDownload(blob, filename);
-                        showAlert(
-                            "Ready to Share!",
-                            "The image has been saved to your gallery. You can now share it manually.",
-                            "success"
-                        );
-                    }
-
                     if (platform === 'Facebook') {
                         window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank');
                     } else if (platform === 'Instagram') {
-                        showAlert(
-                            "Instagram Story",
-                            "Instagram requires manual sharing. The image has been saved to your gallery. You can now upload it as a Story!",
-                            "info"
-                        );
                         window.open('https://instagram.com', '_blank');
                     } else if (platform === 'WhatsApp') {
                         window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
