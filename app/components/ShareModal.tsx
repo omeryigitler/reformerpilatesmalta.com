@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Modal } from './Modal';
 import { Facebook, Instagram, Twitter, MessageCircle, Link, Download } from 'lucide-react';
+import html2canvas from 'html2canvas';
 
 
 interface ShareModalProps {
@@ -18,33 +19,55 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
 
     if (!isOpen) return null;
 
-    const handleAction = (platform: string) => {
+    const handleAction = async (platform: string) => {
         setActionStatus(platform);
 
         const text = `I just unlocked the ${achievementTitle} badge on Reformer Pilates Malta! 🏆`;
         const url = typeof window !== 'undefined' ? window.location.href : '';
 
-        setTimeout(() => {
-            if (platform === 'Facebook') {
-                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank');
-            } else if (platform === 'Instagram') {
-                window.open('https://instagram.com', '_blank');
-            } else if (platform === 'WhatsApp') {
-                window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
-            } else if (platform === 'X') {
-                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
-            } else if (platform === 'Copy Link') {
-                navigator.clipboard.writeText(`${text} ${url}`);
+        // Immediate Actions for Copy/Download
+        if (platform === 'Copy Link') {
+            try {
+                await navigator.clipboard.writeText(`${text} ${url}`);
+                // Status will show "Opened" -> maybe redundant but confirms click
+            } catch (err) {
+                console.error('Failed to copy: ', err);
             }
-
-            // Reset status
-            setTimeout(() => {
-                setActionStatus(null);
-                if (platform !== 'Copy Link' && platform !== 'Download Image') {
-                    onClose();
+        } else if (platform === 'Download Image') {
+            const element = document.getElementById('share-card');
+            if (element) {
+                try {
+                    const canvas = await html2canvas(element);
+                    const link = document.createElement('a');
+                    link.download = `pilates-badge-${achievementTitle.toLowerCase().replace(/\s+/g, '-')}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                } catch (err) {
+                    console.error('Failed to capture image: ', err);
                 }
-            }, 1000);
-        }, 500);
+            }
+        } else {
+            // Social Media Links
+            setTimeout(() => {
+                if (platform === 'Facebook') {
+                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank');
+                } else if (platform === 'Instagram') {
+                    window.open('https://instagram.com', '_blank');
+                } else if (platform === 'WhatsApp') {
+                    window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
+                } else if (platform === 'X') {
+                    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+                }
+            }, 300);
+        }
+
+        // Reset status
+        setTimeout(() => {
+            setActionStatus(null);
+            if (platform !== 'Copy Link' && platform !== 'Download Image') {
+                onClose();
+            }
+        }, 1500);
     };
 
     return (
@@ -62,7 +85,10 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                 </p>
 
                 {/* Preview Card */}
-                <div className="bg-gradient-to-br from-[#FFF0F3] to-[#F5F1EE] rounded-3xl p-8 mb-8 shadow-lg border border-[#CE8E94]/10 transform transition-all hover:scale-105 duration-300">
+                <div
+                    id="share-card"
+                    className="bg-gradient-to-br from-[#FFF0F3] to-[#F5F1EE] rounded-3xl p-8 mb-8 shadow-lg border border-[#CE8E94]/10 transform transition-all hover:scale-105 duration-300"
+                >
                     <div className="text-6xl mb-4 flex justify-center text-[#CE8E94]">
                         {achievementIcon}
                     </div>
@@ -112,16 +138,18 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                 {/* Secondary Actions */}
                 <div className="flex justify-center gap-4">
                     <button
-                        className="flex items-center gap-1 text-xs text-gray-400 hover:text-[#CE8E94] transition-colors font-medium"
+                        className={`flex items-center gap-1 text-xs transition-colors font-medium ${actionStatus === 'Copy Link' ? 'text-green-500' : 'text-gray-400 hover:text-[#CE8E94]'}`}
                         onClick={() => handleAction('Copy Link')}
+                        disabled={actionStatus === 'Copy Link'}
                     >
-                        <Link className="w-3 h-3" /> Copy Link
+                        <Link className="w-3 h-3" /> {actionStatus === 'Copy Link' ? 'Copied!' : 'Copy Link'}
                     </button>
                     <button
-                        className="flex items-center gap-1 text-xs text-gray-400 hover:text-[#CE8E94] transition-colors font-medium"
+                        className={`flex items-center gap-1 text-xs transition-colors font-medium ${actionStatus === 'Download Image' ? 'text-green-500' : 'text-gray-400 hover:text-[#CE8E94]'}`}
                         onClick={() => handleAction('Download Image')}
+                        disabled={actionStatus === 'Download Image'}
                     >
-                        <Download className="w-3 h-3" /> Save Image
+                        <Download className="w-3 h-3" /> {actionStatus === 'Download Image' ? 'Saved!' : 'Save Image'}
                     </button>
                 </div>
             </div>

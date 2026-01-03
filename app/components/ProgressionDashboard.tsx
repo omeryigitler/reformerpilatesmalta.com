@@ -29,16 +29,16 @@ export const ProgressionDashboard: React.FC<ProgressionDashboardProps> = ({
     return (
         <>
             {/* Mobile Tab Navigation (Visible only on mobile) */}
-            <div className="md:hidden flex p-4 pb-0 gap-8 justify-center border-b border-[#F5F1EE]">
+            <div className="md:hidden flex pt-7 pb-2 gap-10 justify-center border-b border-[#F5F1EE]">
                 <button
                     onClick={() => setActiveTab('path')}
-                    className={`pb-2 text-[10px] font-bold uppercase tracking-[2px] border-b-2 transition-all ${activeTab === 'path' ? 'border-[#CE8E94] text-[#CE8E94]' : 'border-transparent text-gray-400'}`}
+                    className={`pb-2 text-[13px] font-bold uppercase tracking-[2px] border-b-2 transition-all ${activeTab === 'path' ? 'border-[#CE8E94] text-[#CE8E94]' : 'border-transparent text-gray-400'}`}
                 >
                     Path
                 </button>
                 <button
                     onClick={() => setActiveTab('traits')}
-                    className={`pb-2 text-[10px] font-bold uppercase tracking-[2px] border-b-2 transition-all ${activeTab === 'traits' ? 'border-[#CE8E94] text-[#CE8E94]' : 'border-transparent text-gray-400'}`}
+                    className={`pb-2 text-[13px] font-bold uppercase tracking-[2px] border-b-2 transition-all ${activeTab === 'traits' ? 'border-[#CE8E94] text-[#CE8E94]' : 'border-transparent text-gray-400'}`}
                 >
                     Traits
                 </button>
