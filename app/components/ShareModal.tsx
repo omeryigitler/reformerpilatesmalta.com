@@ -35,40 +35,23 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
 
     if (!isOpen) return null;
 
-    // Helper to generate a blob from the badge card
-    const generateImageBlob = async (): Promise<Blob | null> => {
+    // Helper to generate a data URL (Base64) - More stable for Safari
+    const generateImageDataUrl = async (): Promise<string | null> => {
         const element = document.getElementById('capture-container');
         if (!element) return null;
 
         try {
-            return await htmlToImage.toBlob(element, {
+            // Small delay to ensure styles and SVGs are fully rendered
+            await new Promise(resolve => setTimeout(resolve, 100));
+            return await htmlToImage.toPng(element, {
                 pixelRatio: 2,
                 backgroundColor: '#FFFFFF',
                 cacheBust: true,
+                skipFonts: false,
             });
         } catch (err) {
             console.error('Image generation failed:', err);
             return null;
-        }
-    };
-
-    const triggerDownload = (blob: Blob, filename: string) => {
-        try {
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.download = filename;
-            link.href = url;
-            document.body.appendChild(link);
-            link.click();
-            // Clean up with a small delay to ensure the browser registers the click
-            setTimeout(() => {
-                if (document.body.contains(link)) {
-                    document.body.removeChild(link);
-                }
-                URL.revokeObjectURL(url);
-            }, 100);
-        } catch (err) {
-            console.error('Download failed:', err);
         }
     };
 
@@ -82,85 +65,115 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         setActionInProgress(true);
         setActionStatus(platform);
         const text = `I just unlocked the ${achievementTitle} badge on Reformer Pilates Malta! 🏆`;
-        const url = typeof window !== 'undefined' ? window.location.href : '';
+        const url = typeof window !== 'undefined' ? window.location.origin : '';
         const filename = `pilates-badge-${achievementTitle.toLowerCase().replace(/\s+/g, '-')}.png`;
 
         try {
             if (platform === 'Copy Link') {
-                await navigator.clipboard.writeText(`${text} ${url}`);
-                setActionStatus('Copied!');
+                const shareText = `${text} ${url}`;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(shareText);
+                    setActionStatus('Copied!');
+                } else {
+                    // Fallback for older browsers
+                    const textArea = document.createElement("textarea");
+                    textArea.value = shareText;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    setActionStatus('Copied!');
+                }
                 setTimeout(() => {
                     setActionInProgress(false);
                     setTimeout(() => setActionStatus(null), 2000);
                 }, 500);
+                return;
             }
-            else {
-                setIsGenerating(true);
-                const blob = await generateImageBlob();
-                setIsGenerating(false);
 
-                if (!blob && platform !== 'Facebook' && platform !== 'WhatsApp' && platform !== 'X') {
-                    throw new Error('Görsel oluşturulamadı');
-                }
+            setIsGenerating(true);
+            const dataUrl = await generateImageDataUrl();
+            setIsGenerating(false);
 
-                if (platform === 'Download Image') {
-                    if (blob) {
-                        triggerDownload(blob, filename);
-                        setActionStatus('Saved!');
-                    }
-                    setTimeout(() => {
-                        setActionInProgress(false);
-                        setTimeout(() => setActionStatus(null), 2000);
-                    }, 500);
-                }
-                else {
-                    // 1. Try Native Sharing
-                    if (blob && navigator.share) {
-                        const file = new File([blob], filename, { type: 'image/png' });
-                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                            try {
-                                await navigator.share({
-                                    files: [file],
-                                    title: achievementTitle,
-                                    text: text,
-                                });
-                                setActionStatus('Shared!');
-                                setActionInProgress(false);
-                                onClose();
-                                return;
-                            } catch (shareErr) {
-                                console.log('Native share canceled or failed', shareErr);
-                            }
-                        }
-                    }
+            if (!dataUrl) {
+                throw new Error('Görsel oluşturulamadı');
+            }
 
-                    // 2. Fallbacks
-                    if (platform === 'Facebook') {
-                        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
-                    } else if (platform === 'Instagram') {
-                        if (blob) triggerDownload(blob, filename);
-                        // Close modal immediately to prevent re-execution when coming back
-                        onClose();
-                        window.open('https://instagram.com', '_blank', 'noopener,noreferrer');
-                    } else if (platform === 'WhatsApp') {
-                        window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank', 'noopener,noreferrer');
-                    } else if (platform === 'X') {
-                        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
-                    }
+            // --- DOWNLOAD CASE ---
+            if (platform === 'Download Image') {
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
 
+                setTimeout(() => {
+                    if (document.body.contains(link)) document.body.removeChild(link);
+                    setActionStatus('Saved!');
+                    setActionInProgress(false);
+                    setTimeout(() => setActionStatus(null), 2000);
+                }, 200);
+                return;
+            }
+
+            // --- SHARING CASE ---
+            // Convert DataURL back to File for navigator.share
+            const res = await fetch(dataUrl);
+            const blob = await res.blob();
+            const file = new File([blob], filename, { type: 'image/png' });
+
+            // 1. Try Native Sharing (Recommended for Instagram/WhatsApp/Safari/Chrome Mobile)
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Pilates Başarısı',
+                        text: text,
+                    });
                     setActionStatus('Done');
                     setActionInProgress(false);
-                    if (platform !== 'Instagram') {
-                        setTimeout(onClose, 800);
-                    }
+                    onClose(); // Close modal on successful native share
+                    return;
+                } catch (shareErr) {
+                    console.log('Native share canceled or failed', shareErr);
+                    // Continue to fallbacks if canceled
                 }
             }
+
+            // 2. Fallbacks for Desktop or restricted environments
+            if (platform === 'Instagram') {
+                // Instagram Story Web API does not support direct file upload
+                // Instead of window.open loop, we download and inform the user
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                showAlert("Görsel İndirildi", "Görsel galerinize kaydedildi. Şimdi Instagram Story'de paylaşabilirsiniz!", "success");
+            }
+            else if (platform === 'Facebook') {
+                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'popup,width=600,height=400');
+            }
+            else if (platform === 'WhatsApp') {
+                window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
+            }
+            else if (platform === 'X') {
+                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+            }
+
+            setActionStatus('Done');
+            setActionInProgress(false);
+            // Don't close modal automatically on web fallbacks so user can see instructions/status
+            setTimeout(() => setActionStatus(null), 3000);
+
         } catch (err) {
             console.error('Action failed:', err);
             setIsGenerating(false);
             setActionInProgress(false);
             setActionStatus('Error');
-            showAlert("Hata", "Bir sorun oluştu. Lütfen tekrar deneyin.", "error");
+            showAlert("Hata", "İşlem sırasında bir sorun oluştu. Lütfen tekrar deneyin.", "error");
         }
     };
 
