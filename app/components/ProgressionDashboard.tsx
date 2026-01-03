@@ -46,7 +46,7 @@ export const ProgressionDashboard: React.FC<ProgressionDashboardProps> = ({
 
             <div className="system-wrapper">
                 {/* 1. Progression Section */}
-                <div className={`card-box ${activeTab === 'traits' ? 'hidden md:flex' : 'flex'}`}>
+                <div className={`card-box ${activeTab === 'traits' ? '!hidden md:!flex' : '!flex'}`}>
                     <span className="title">Your Transformation Path</span>
                     <div className="progression-list">
                         {LEVELS.map((level, index) => {
@@ -93,7 +93,7 @@ export const ProgressionDashboard: React.FC<ProgressionDashboardProps> = ({
                 </div>
 
                 {/* 2. Traits Section */}
-                <div className={`card-box ${activeTab === 'path' ? 'hidden md:flex' : 'flex'}`}>
+                <div className={`card-box ${activeTab === 'path' ? '!hidden md:!flex' : '!flex'}`}>
                     <span className="title">Your Cosmic Traits</span>
                     <div className="traits-grid">
                         {TRAITS.map(trait => {
