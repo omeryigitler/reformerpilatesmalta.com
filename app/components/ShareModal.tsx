@@ -118,8 +118,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     if (platform === 'Facebook') {
                         window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank');
                     } else if (platform === 'Instagram') {
-                        // Instagram fallback: download + redirect
-                        if (blob) triggerDownload(blob, filename);
+                        // Just open Instagram, don't trigger download to avoid browser prompts
                         window.open('https://instagram.com', '_blank');
                     } else if (platform === 'WhatsApp') {
                         window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
@@ -140,7 +139,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         setTimeout(() => {
             if (platform !== 'Download Image' && platform !== 'Copy Link') {
                 setActionStatus(null);
-                // Don't close modal if alert is open
+                onClose(); // Automatically close modal after redirect/share
             } else {
                 setTimeout(() => setActionStatus(null), 2000);
             }
