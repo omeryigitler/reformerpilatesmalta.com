@@ -49,7 +49,7 @@ export const Modal = ({
                 {showCloseIcon && (
                     <button
                         onClick={onClose}
-                        className="absolute top-5 right-5 w-[36px] h-[36px] flex items-center justify-center bg-white rounded-full text-[#6B5E5E] shadow-[0_4px_10px_rgba(0,0,0,0.1)] hover:text-black hover:scale-110 transition-all z-50 cursor-pointer"
+                        className="absolute top-4 right-4 w-[32px] h-[32px] flex items-center justify-center bg-white rounded-full text-[#6B5E5E] shadow-[0_4px_10px_rgba(0,0,0,0.1)] hover:text-black hover:scale-110 transition-all z-50 cursor-pointer"
                         aria-label="Close modal"
                     >
                         <X className="w-5 h-5" />
