@@ -8,8 +8,7 @@ import {
     updateDoc,
     setDoc,
     getDoc,
-    deleteDoc,
-    DocumentReference
+    deleteDoc
 } from "firebase/firestore";
 import {
     createUserWithEmailAndPassword,
@@ -157,7 +156,6 @@ export const cancelBookingTransaction = async (slotDate: string, slotTime: strin
 };
 
 // --- 5. KULLANICI İŞLEMLERİ (AUTH + FIRESTORE) ---
-// --- 5. KULLANICI İŞLEMLERİ (AUTH + FIRESTORE) ---
 
 export const registerUserAuth = async (user: UserType) => {
     // Force persistence to LOCAL specifically
@@ -175,16 +173,13 @@ export const registerUserAuth = async (user: UserType) => {
     }
 
     // 2. Firestore'a kullanıcı detaylarını kaydet
-    // ÖNEMLİ: Mevcut yapı (Email bazlı) bozulmasın diye UID yerine Email'i key olarak kullanmaya devam edelim.
     const newUserWithDate = {
         ...user,
-        uid: firebaseUser.uid, // UID'yi de ekleyelim, dursun.
+        uid: firebaseUser.uid,
         registered: getTodayDate()
     };
 
-    // Şifreyi Firestore'a açık kaydetmeyelim! (Güvenlik)
-    // Ancak UserType içinde 'password' alanı zorunluysa, boş veya hashed gibi tutabiliriz.
-    // Şimdilik UserType yapısını bozmamak için olduğu gibi bırakıyorum ama Auth tarafı esas şifreyi tutuyor.
+    // Şifreyi Firestore'a açık kaydetmiyoruz (Güvenlik)
     await setDoc(doc(db, "users", user.email), newUserWithDate);
 
     return firebaseUser;
@@ -212,77 +207,4 @@ export const logoutUserAuth = async () => {
 
 export const resetPasswordAuth = async (email: string) => {
     await sendPasswordResetEmail(auth, email);
-};
-
-// Eski register fonksiyonu (Geriye uyumluluk veya Admin panelden ekleme için)
-export const registerUser = async (user: UserType) => {
-    // Admin panelinden kullanıcı eklerken Auth kullanmalı mıyız? 
-    // Evet, ama admin başkası adına şifre belirleyemez (Auth kuralları gereği client SDK'da zor).
-    // Şimdilik admin panelinden eklenenler "eski usul" veritabanına eklenir, 
-    // ama bu kullanıcılar giriş yapamaz (şifreleri Auth'da yok).
-    // Bu yüzden Admin panelindeki "Kullanıcı Ekle" butonunu kaldırmak veya 
-    // sadece veri tabanına kayıt açmak (Authsuz) gerekir.
-
-    // Geçici olarak eski usul devam:
-    const newUserWithDate = { ...user, registered: getTodayDate() };
-    // Eski sistemde mail key idi, yeni sistemde UID key olmalı.
-    // Admin panelinden eklenenlerde UID olmadığı için mecburen email kullanıyoruz.
-    await setDoc(doc(db, "users", user.email), newUserWithDate);
-};
-// --- 6. DATA MIGRATION (12h -> 24h) ---
-import { writeBatch, getDocs } from "firebase/firestore";
-
-export const migrateSlotsTo24Hour = async () => {
-    // 1. Fetch ALL slots
-    const q = query(collection(db, "slots"));
-    const querySnapshot = await getDocs(q);
-
-    // 2. Identify slots needing migration
-    const slotsToMigrate: { docRef: DocumentReference; data: Slot }[] = [];
-    querySnapshot.forEach((doc) => {
-        const data = doc.data() as Slot;
-        // Check if time has AM or PM
-        if (data.time && (data.time.toUpperCase().includes('AM') || data.time.toUpperCase().includes('PM'))) {
-            slotsToMigrate.push({ docRef: doc.ref, data });
-        }
-    });
-
-    if (slotsToMigrate.length === 0) {
-        return { success: true, count: 0, message: "No legacy slots found." };
-    }
-
-
-
-    // 3. Perform Migration (Batch - 400 items limit safety)
-    // Create new doc with 24h ID, delete old doc.
-    const batch = writeBatch(db);
-    let opCount = 0;
-
-    for (const item of slotsToMigrate) {
-        const oldData = item.data;
-        const time12 = oldData.time;
-        const time24 = convertTime12to24(time12); // Helper must be imported or reliable
-
-        // If conversion failed or same, skip
-        if (time12 === time24) continue;
-
-        // New ID: date_time24
-        const newDocId = `${oldData.date}_${time24}`;
-        const newDocRef = doc(db, "slots", newDocId);
-
-        // Set new, Delete old
-        batch.set(newDocRef, { ...oldData, time: time24 });
-        batch.delete(item.docRef);
-
-        opCount++;
-        // Firestore batch limit is 500. Let's be safe.
-        // For a simple script, if > 400, strictly we should split batches.
-        // Assuming user doesn't have thousands of legacy slots yet.
-    }
-
-    if (opCount > 0) {
-        await batch.commit();
-    }
-
-    return { success: true, count: opCount, message: `Successfully migrated ${opCount} slots.` };
 };

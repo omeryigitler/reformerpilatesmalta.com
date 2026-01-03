@@ -236,9 +236,8 @@ export const AdminPanel = ({
 
             return true;
         } catch (error) {
-            console.error(error);
             showNotification('Slot assigned purely locally (Network Error?)', 'error');
-            return true; // Still return true as DB update likely succeeded or we want to clear modal
+            return true;
         }
     };
 
@@ -352,7 +351,6 @@ export const AdminPanel = ({
 
             showNotification('Notes saved successfully!', 'success');
         } catch (error) {
-            console.error(error);
             showNotification('Error saving notes', 'error');
         }
     };
@@ -448,7 +446,6 @@ export const AdminPanel = ({
                         });
                         showNotification(`Booking cancelled. Slot is now Available.`, 'success');
                     } catch (e) {
-                        console.error("Error cancelling via toggle:", e);
                         showNotification('Error cancelling booking', 'error');
                     }
                 },
@@ -512,7 +509,6 @@ export const AdminPanel = ({
                     await Promise.all(possibleIds.map(id => deleteDoc(doc(db, "slots", id))));
                     showNotification("Slot deleted successfully", "success");
                 } catch (error) {
-                    console.error("Error deleting slot:", error);
                     showNotification("Failed to delete slot", "error");
                 }
             },
@@ -655,7 +651,6 @@ export const AdminPanel = ({
             setEditingSlot(null);
             showNotification('Slot updated successfully!', 'success');
         } catch (e) {
-            console.error(e);
             showNotification('Error updating slot', 'error');
         }
     };

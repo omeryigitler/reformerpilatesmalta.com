@@ -9,8 +9,8 @@ interface ProgressionDashboardProps {
 }
 
 export const ProgressionDashboard: React.FC<ProgressionDashboardProps> = ({
-    lessonsCompleted = 18, // Default to simulate "ORBIT" level roughly or closer to user example
-    unlockedTraits = ['SOLARIS', 'GRAVITY'],
+    lessonsCompleted = 0,
+    unlockedTraits = [],
     onShare
 }) => {
     const [activeTab, setActiveTab] = useState<'path' | 'traits'>('path');
