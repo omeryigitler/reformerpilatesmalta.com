@@ -39,10 +39,13 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         if (!element) return null;
 
         try {
-            return await htmlToImage.toBlob(element, {
+            // Use toPng for better stability on mobile Safari
+            const dataUrl = await htmlToImage.toPng(element, {
                 pixelRatio: 3,
                 backgroundColor: '#FFFFFF',
             });
+            const response = await fetch(dataUrl);
+            return await response.blob();
         } catch (err) {
             console.error('Image generation failed:', err);
             return null;
@@ -155,63 +158,66 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     </p>
 
                     {/* Story-Ready Achievement Card */}
-                    <div className="flex justify-center mb-6">
-                        <div id="capture-container" className="p-[100px] bg-white rounded-[48px]">
-                            <div
-                                id="share-card"
-                                className="relative w-[320px] aspect-[1/1.35] flex flex-col items-center justify-between p-12 bg-[#FEF9F9] rounded-[100px] shadow-[0_45px_100px_-30px_rgba(206,142,148,0.25)] overflow-hidden"
-                            >
-                                {/* Inner Card - Matches the 'Solaris' reference aesthetic */}
-                                <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-center bg-white rounded-[80px] p-8 shadow-[0_40px_80px_-15px_rgba(206,142,148,0.22)] my-4">
-                                    {/* Achievement Icon */}
-                                    <div className="text-5xl mb-6 flex justify-center text-[#CE8E94] filter drop-shadow-[0_4px_8px_rgba(206,142,148,0.12)]">
-                                        {achievementTitle === 'SOLARIS' ? (
-                                            <svg viewBox="0 0 100 100" className="w-16 h-16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                {/* Center Circle */}
-                                                <circle cx="50" cy="50" r="12" stroke="currentColor" strokeWidth="2.5" />
-                                                {/* 8 Thin Rays */}
-                                                <line x1="50" y1="28" x2="50" y2="10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                <line x1="50" y1="72" x2="50" y2="90" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                <line x1="72" y1="50" x2="90" y2="50" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                <line x1="28" y1="50" x2="10" y2="50" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                <line x1="66" y1="34" x2="79" y2="21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                <line x1="34" y1="66" x2="21" y2="79" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                <line x1="66" y1="66" x2="79" y2="79" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                <line x1="34" y1="34" x2="21" y2="21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                    <div className="flex justify-center mb-6 overflow-hidden w-full">
+                        {/* Scaling wrapper to fit the 480px container into the narrower Modal/Phone screen */}
+                        <div className="scale-[0.6] min-[400px]:scale-[0.7] sm:scale-100 origin-top flex-shrink-0">
+                            <div id="capture-container" className="p-[80px] bg-white rounded-[40px] flex-shrink-0 w-[480px]">
+                                <div
+                                    id="share-card"
+                                    className="relative w-[320px] aspect-[1/1.35] flex flex-col items-center justify-between p-12 bg-[#FEF9F9] rounded-[100px] shadow-[0_45px_100px_-30px_rgba(206,142,148,0.25)] overflow-hidden"
+                                >
+                                    {/* Inner Card - Matches the 'Solaris' reference aesthetic */}
+                                    <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-center bg-white rounded-[80px] p-8 shadow-[0_40px_80px_-15px_rgba(206,142,148,0.22)] my-4">
+                                        {/* Achievement Icon */}
+                                        <div className="text-5xl mb-6 flex justify-center text-[#CE8E94] filter drop-shadow-[0_4px_8px_rgba(206,142,148,0.12)]">
+                                            {achievementTitle === 'SOLARIS' ? (
+                                                <svg viewBox="0 0 100 100" className="w-16 h-16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    {/* Center Circle */}
+                                                    <circle cx="50" cy="50" r="12" stroke="currentColor" strokeWidth="2.5" />
+                                                    {/* 8 Thin Rays */}
+                                                    <line x1="50" y1="28" x2="50" y2="10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                    <line x1="50" y1="72" x2="50" y2="90" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                    <line x1="72" y1="50" x2="90" y2="50" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                    <line x1="28" y1="50" x2="10" y2="50" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                    <line x1="66" y1="34" x2="79" y2="21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                    <line x1="34" y1="66" x2="21" y2="79" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                    <line x1="66" y1="66" x2="79" y2="79" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                    <line x1="34" y1="34" x2="21" y2="21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                </svg>
+                                            ) : (
+                                                achievementIcon
+                                            )}
+                                        </div>
+
+                                        {/* Badge Title - Pixel Perfect spacing */}
+                                        <div className="text-xl font-bold tracking-[0.35em] text-[#B5838D] uppercase mb-4 leading-none text-center">
+                                            {achievementTitle}
+                                        </div>
+
+                                        {/* Description */}
+                                        <div className="text-[11.5px] text-gray-500 italic font-medium text-center leading-relaxed px-1">
+                                            {`"`}{achievementDescription}{`"`}
+                                        </div>
+                                    </div>
+
+                                    {/* Branding Watermark - Bottom Centered (Custom Eye Logo) */}
+                                    <div className="w-full flex justify-center pb-8">
+                                        <div className="w-20 h-20 text-[#CE8E94]/45">
+                                            <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                {/* Five Rays */}
+                                                <line x1="50" y1="15" x2="50" y2="0" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                                <line x1="28" y1="22" x2="18" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                                <line x1="72" y1="22" x2="82" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                                <line x1="12" y1="38" x2="0" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                                <line x1="88" y1="38" x2="100" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+
+                                                {/* Eye Shape */}
+                                                <path d="M10 55C10 55 25 35 50 35C75 35 90 55 90 55C90 55 75 75 50 75C25 75 10 55 10 55Z" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+
+                                                {/* Pupil */}
+                                                <circle cx="50" cy="55" r="10" stroke="currentColor" strokeWidth="4" />
                                             </svg>
-                                        ) : (
-                                            achievementIcon
-                                        )}
-                                    </div>
-
-                                    {/* Badge Title - Pixel Perfect spacing */}
-                                    <div className="text-xl font-bold tracking-[0.35em] text-[#B5838D] uppercase mb-4 leading-none text-center">
-                                        {achievementTitle}
-                                    </div>
-
-                                    {/* Description */}
-                                    <div className="text-[11.5px] text-gray-500 italic font-medium text-center leading-relaxed px-1">
-                                        {`"`}{achievementDescription}{`"`}
-                                    </div>
-                                </div>
-
-                                {/* Branding Watermark - Bottom Centered (Custom Eye Logo) */}
-                                <div className="w-full flex justify-center pb-8">
-                                    <div className="w-20 h-20 text-[#CE8E94]/45">
-                                        <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            {/* Five Rays */}
-                                            <line x1="50" y1="15" x2="50" y2="0" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                                            <line x1="28" y1="22" x2="18" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                                            <line x1="72" y1="22" x2="82" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                                            <line x1="12" y1="38" x2="0" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                                            <line x1="88" y1="38" x2="100" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-
-                                            {/* Eye Shape */}
-                                            <path d="M10 55C10 55 25 35 50 35C75 35 90 55 90 55C90 55 75 75 50 75C25 75 10 55 10 55Z" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-
-                                            {/* Pupil */}
-                                            <circle cx="50" cy="55" r="10" stroke="currentColor" strokeWidth="4" />
-                                        </svg>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
