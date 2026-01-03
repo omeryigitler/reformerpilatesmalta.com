@@ -130,26 +130,47 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     Show off your new <strong>{achievementTitle}</strong> badge to the world!
                 </p>
 
-                {/* Preview Card */}
-                <div
-                    id="share-card"
-                    className="bg-gradient-to-br from-[#FFF0F3] to-[#F5F1EE] rounded-3xl p-8 mb-8 shadow-lg border border-[#CE8E94]/10 transition-all duration-300"
-                >
-                    <div className="text-6xl mb-4 flex justify-center text-[#CE8E94]">
-                        {achievementIcon}
-                    </div>
-                    <div className="text-sm font-bold tracking-widest text-[#B5838D] uppercase mb-2">
-                        {achievementTitle}
-                    </div>
-                    <div className="text-xs text-gray-400 italic font-medium">
-                        {achievementDescription}
+                {/* Premium Shareable Card Area */}
+                <div className="flex justify-center mb-8">
+                    <div
+                        id="share-card"
+                        className="relative w-[340px] aspect-[4/5] sm:w-[380px] sm:aspect-[4/5] flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#FFF0F5] via-[#FFFDFD] to-[#FDF5F2] overflow-hidden rounded-[40px] shadow-2xl border border-white/50"
+                    >
+                        {/* Decorative Background Elements */}
+                        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#CE8E94]/5 blur-[60px] rounded-full" />
+                        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#CE8E94]/10 blur-[60px] rounded-full" />
+
+                        {/* The Glass Card Item */}
+                        <div className="relative z-10 w-full flex flex-col items-center justify-center bg-white/30 backdrop-blur-xl border border-white/60 p-10 rounded-[32px] shadow-[0_20px_50px_rgba(206,142,148,0.15),0_10px_30px_rgba(255,255,255,0.8)_inset]">
+                            {/* Icon with depth */}
+                            <div className="text-7xl mb-6 flex justify-center text-[#CE8E94] filter drop-shadow-[0_8px_15px_rgba(206,142,148,0.3)]">
+                                {achievementIcon}
+                            </div>
+
+                            {/* Title - Refined Typography */}
+                            <div className="text-xl font-bold tracking-[0.25em] text-[#B5838D] uppercase mb-4 leading-none text-center">
+                                {achievementTitle}
+                            </div>
+
+                            {/* Description - Italic & Elegant */}
+                            <div className="text-sm text-gray-500 italic font-medium text-center leading-relaxed">
+                                {`"`}{achievementDescription}{`"`}
+                            </div>
+                        </div>
+
+                        {/* Branding Watermark */}
+                        <div className="absolute bottom-6 left-0 right-0 text-center">
+                            <span className="text-[10px] font-bold tracking-[0.3em] text-[#CE8E94]/40 uppercase">
+                                Reformer Pilates Malta
+                            </span>
+                        </div>
                     </div>
                 </div>
 
                 {/* Share Actions Grid */}
                 <div className="grid grid-cols-2 gap-3 mb-6">
                     <button
-                        className={`flex items-center justify-center gap-2 p-3 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'Instagram' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
+                        className={`flex items-center justify-center gap-2 p-3.5 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'Instagram' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
                         onClick={() => handleAction('Instagram')}
                     >
                         <Instagram className={`w-5 h-5 text-[#CE8E94] group-hover:text-white ${actionStatus === 'Instagram' ? 'text-white' : ''}`} />
@@ -157,7 +178,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     </button>
 
                     <button
-                        className={`flex items-center justify-center gap-2 p-3 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'Facebook' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
+                        className={`flex items-center justify-center gap-2 p-3.5 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'Facebook' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
                         onClick={() => handleAction('Facebook')}
                     >
                         <Facebook className={`w-5 h-5 text-[#CE8E94] group-hover:text-white ${actionStatus === 'Facebook' ? 'text-white' : ''}`} />
@@ -165,7 +186,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     </button>
 
                     <button
-                        className={`flex items-center justify-center gap-2 p-3 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'WhatsApp' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
+                        className={`flex items-center justify-center gap-2 p-3.5 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'WhatsApp' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
                         onClick={() => handleAction('WhatsApp')}
                     >
                         <MessageCircle className={`w-5 h-5 text-[#CE8E94] group-hover:text-white ${actionStatus === 'WhatsApp' ? 'text-white' : ''}`} />
@@ -173,7 +194,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     </button>
 
                     <button
-                        className={`flex items-center justify-center gap-2 p-3 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'X' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
+                        className={`flex items-center justify-center gap-2 p-3.5 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'X' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
                         onClick={() => handleAction('X')}
                     >
                         <Twitter className={`w-5 h-5 text-[#CE8E94] group-hover:text-white ${actionStatus === 'X' ? 'text-white' : ''}`} />
@@ -182,20 +203,20 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                 </div>
 
                 {/* Secondary Actions */}
-                <div className="flex justify-center gap-6">
+                <div className="flex justify-center gap-8">
                     <button
-                        className={`flex items-center gap-1 text-xs transition-colors font-medium ${actionStatus === 'Copied!' ? 'text-green-500' : 'text-gray-400 hover:text-[#CE8E94]'}`}
+                        className={`flex items-center gap-2 text-[11px] transition-colors font-bold tracking-wider uppercase ${actionStatus === 'Copied!' ? 'text-green-500' : 'text-gray-400 hover:text-[#CE8E94]'}`}
                         onClick={() => handleAction('Copy Link')}
                         disabled={actionStatus === 'Copied!'}
                     >
-                        <Link className="w-3 h-3" /> {actionStatus === 'Copied!' ? 'Copied!' : 'Copy Link'}
+                        <Link className="w-3.5 h-3.5" /> {actionStatus === 'Copied!' ? 'Copied!' : 'Copy Link'}
                     </button>
                     <button
-                        className={`flex items-center gap-1 text-xs transition-colors font-medium ${actionStatus === 'Saved!' ? 'text-green-500' : 'text-gray-400 hover:text-[#CE8E94]'}`}
+                        className={`flex items-center gap-2 text-[11px] transition-colors font-bold tracking-wider uppercase ${actionStatus === 'Saved!' ? 'text-green-500' : 'text-gray-400 hover:text-[#CE8E94]'}`}
                         onClick={() => handleAction('Download Image')}
                         disabled={actionStatus === 'Saved!'}
                     >
-                        <Download className="w-3 h-3" /> {actionStatus === 'Saved!' ? 'Saved!' : 'Save Image'}
+                        <Download className="w-3.5 h-3.5" /> {actionStatus === 'Saved!' ? 'Saved!' : 'Save Image'}
                     </button>
                 </div>
             </div>
