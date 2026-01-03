@@ -19,8 +19,7 @@ interface ShareModalProps {
 
 export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon, achievementDescription }: ShareModalProps) => {
     const [actionStatus, setActionStatus] = useState<string | null>(null);
-    const [preparedBlob, setPreparedBlob] = useState<Blob | null>(null);
-    const [error, setError] = useState<string | null>(null);
+    const [isGenerating, setIsGenerating] = useState(false);
     const [alertConfig, setAlertConfig] = useState<{
         isOpen: boolean;
         title: string;
@@ -33,25 +32,6 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         type: 'info'
     });
 
-    // Proactive Image Generation when modal opens
-    React.useEffect(() => {
-        if (isOpen) {
-            const timer = setTimeout(async () => {
-                const blob = await generateImageBlob();
-                if (blob) {
-                    setPreparedBlob(blob);
-                } else {
-                    setError("Failed to prepare image. You can still share the link.");
-                }
-            }, 600); // Give the DOM a moment to settle for the capture
-            return () => clearTimeout(timer);
-        } else {
-            setPreparedBlob(null);
-            setError(null);
-            setActionStatus(null);
-        }
-    }, [isOpen]);
-
     if (!isOpen) return null;
 
     // Helper to generate a blob from the badge card
@@ -60,13 +40,12 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         if (!element) return null;
 
         try {
-            // Use toPng for better stability on mobile Safari
-            const dataUrl = await htmlToImage.toPng(element, {
-                pixelRatio: 3,
+            // Use toBlob directly for better performance and stability
+            return await htmlToImage.toBlob(element, {
+                pixelRatio: 2,
                 backgroundColor: '#FFFFFF',
+                cacheBust: true,
             });
-            const response = await fetch(dataUrl);
-            return await response.blob();
         } catch (err) {
             console.error('Image generation failed:', err);
             return null;
@@ -89,6 +68,8 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
     };
 
     const handleAction = async (platform: string) => {
+        if (isGenerating) return;
+
         setActionStatus(platform);
         const text = `I just unlocked the ${achievementTitle} badge on Reformer Pilates Malta! 🏆`;
         const url = typeof window !== 'undefined' ? window.location.href : '';
@@ -99,58 +80,60 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                 await navigator.clipboard.writeText(`${text} ${url}`);
                 setActionStatus('Copied!');
             }
-            else if (platform === 'Download Image') {
-                if (preparedBlob) {
-                    triggerDownload(preparedBlob, filename);
-                    setActionStatus('Saved!');
-                } else {
-                    const blob = await generateImageBlob();
+            else {
+                setIsGenerating(true);
+                const blob = await generateImageBlob();
+                setIsGenerating(false);
+
+                if (!blob && platform !== 'Facebook' && platform !== 'WhatsApp' && platform !== 'X') {
+                    throw new Error('Görsel oluşturulamadı');
+                }
+
+                if (platform === 'Download Image') {
                     if (blob) {
                         triggerDownload(blob, filename);
                         setActionStatus('Saved!');
-                    } else {
-                        showAlert("Error", "Could not generate image. Please try again.", "error");
                     }
                 }
-            }
-            else {
-                // Try Native Sharing (The closest to "Automatic" on Mobile)
-                const useBlob = preparedBlob;
-                if (useBlob && navigator.share) {
-                    const file = new File([useBlob], filename, { type: 'image/png' });
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                        try {
-                            await navigator.share({
-                                files: [file],
-                                title: achievementTitle,
-                                text: text,
-                            });
-                            setActionStatus('Shared!');
-                            return;
-                        } catch (shareErr) {
-                            console.log('Native share canceled or failed', shareErr);
+                else {
+                    // 1. Try Native Sharing (Best for Instagram/WhatsApp mobile)
+                    if (blob && navigator.share) {
+                        const file = new File([blob], filename, { type: 'image/png' });
+                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                            try {
+                                await navigator.share({
+                                    files: [file],
+                                    title: achievementTitle,
+                                    text: text,
+                                });
+                                setActionStatus('Shared!');
+                                return;
+                            } catch (shareErr) {
+                                console.log('Native share canceled or failed', shareErr);
+                            }
                         }
                     }
-                }
 
-                // Platform Specific Fallbacks (Desktop or Native Share Fail)
-                if (platform === 'Facebook') {
-                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank');
-                } else if (platform === 'Instagram') {
-                    // Instagram Story fallback: Download image + Go to App
-                    if (preparedBlob) triggerDownload(preparedBlob, filename);
-                    window.open('https://instagram.com', '_blank');
-                } else if (platform === 'WhatsApp') {
-                    window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
-                } else if (platform === 'X') {
-                    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+                    // 2. Fallbacks
+                    if (platform === 'Facebook') {
+                        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank');
+                    } else if (platform === 'Instagram') {
+                        // Instagram fallback: download + redirect
+                        if (blob) triggerDownload(blob, filename);
+                        window.open('https://instagram.com', '_blank');
+                    } else if (platform === 'WhatsApp') {
+                        window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
+                    } else if (platform === 'X') {
+                        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+                    }
+                    setActionStatus('Done');
                 }
-                setActionStatus('Done');
             }
         } catch (err) {
             console.error('Action failed:', err);
+            setIsGenerating(false);
             setActionStatus('Error');
-            showAlert("Error", "Something went wrong. Please try again.", "error");
+            showAlert("Hata", "Görsel oluşturulurken bir sorun oluştu. Lütfen tekrar deneyin.", "error");
         }
 
         // Reset status
@@ -245,42 +228,46 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     {/* Share Actions Grid */}
                     <div className="grid grid-cols-2 gap-2 mb-3 px-4">
                         <button
-                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'Instagram' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
+                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'Instagram' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'} ${isGenerating ? 'opacity-50' : ''}`}
                             onClick={() => handleAction('Instagram')}
+                            disabled={isGenerating}
                         >
                             <Instagram className={`w-4 h-4 text-[#CE8E94] group-hover:text-white ${actionStatus === 'Instagram' ? 'text-white' : ''}`} />
                             <span className="text-[11px] font-bold text-nowrap">
-                                {!preparedBlob && !error && actionStatus === 'Instagram' ? 'Preparing...' : (actionStatus === 'Instagram' ? 'Done' : 'Instagram')}
+                                {isGenerating && actionStatus === 'Instagram' ? 'Sharing...' : (actionStatus === 'Instagram' ? 'Done' : 'Instagram')}
                             </span>
                         </button>
 
                         <button
-                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'Facebook' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
+                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'Facebook' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'} ${isGenerating ? 'opacity-50' : ''}`}
                             onClick={() => handleAction('Facebook')}
+                            disabled={isGenerating}
                         >
                             <Facebook className={`w-4 h-4 text-[#CE8E94] group-hover:text-white ${actionStatus === 'Facebook' ? 'text-white' : ''}`} />
                             <span className="text-[11px] font-bold text-nowrap">
-                                {!preparedBlob && !error && actionStatus === 'Facebook' ? 'Preparing...' : (actionStatus === 'Facebook' ? 'Done' : 'Facebook')}
+                                {isGenerating && actionStatus === 'Facebook' ? 'Sharing...' : (actionStatus === 'Facebook' ? 'Done' : 'Facebook')}
                             </span>
                         </button>
 
                         <button
-                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'WhatsApp' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
+                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'WhatsApp' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'} ${isGenerating ? 'opacity-50' : ''}`}
                             onClick={() => handleAction('WhatsApp')}
+                            disabled={isGenerating}
                         >
                             <MessageCircle className={`w-4 h-4 text-[#CE8E94] group-hover:text-white ${actionStatus === 'WhatsApp' ? 'text-white' : ''}`} />
                             <span className="text-[11px] font-bold text-nowrap">
-                                {!preparedBlob && !error && actionStatus === 'WhatsApp' ? 'Preparing...' : (actionStatus === 'WhatsApp' ? 'Done' : 'WhatsApp')}
+                                {isGenerating && actionStatus === 'WhatsApp' ? 'Sharing...' : (actionStatus === 'WhatsApp' ? 'Done' : 'WhatsApp')}
                             </span>
                         </button>
 
                         <button
-                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'X' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
+                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'X' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'} ${isGenerating ? 'opacity-50' : ''}`}
                             onClick={() => handleAction('X')}
+                            disabled={isGenerating}
                         >
                             <Twitter className={`w-4 h-4 text-[#CE8E94] group-hover:text-white ${actionStatus === 'X' ? 'text-white' : ''}`} />
                             <span className="text-[11px] font-bold text-nowrap">
-                                {!preparedBlob && !error && actionStatus === 'X' ? 'Preparing...' : (actionStatus === 'X' ? 'Done' : 'X')}
+                                {isGenerating && actionStatus === 'X' ? 'Sharing...' : (actionStatus === 'X' ? 'Done' : 'X')}
                             </span>
                         </button>
                     </div>
