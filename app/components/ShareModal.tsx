@@ -130,36 +130,37 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     Show off your new <strong>{achievementTitle}</strong> badge to the world!
                 </p>
 
-                {/* Solaris Style Premium Card */}
-                <div className="flex justify-center mb-10 mt-4">
+                {/* Premium Shareable Card Area */}
+                <div className="flex justify-center mb-8">
                     <div
                         id="share-card"
-                        className="relative w-[340px] aspect-[4/3] sm:w-[500px] flex flex-col items-center justify-center p-12 bg-[#FFF5F6] rounded-[48px] shadow-[0_45px_100px_-25px_rgba(0,0,0,0.12)] border border-white/60 overflow-hidden"
+                        className="relative w-[340px] aspect-[4/5] sm:w-[380px] sm:aspect-[4/5] flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#FFF0F5] via-[#FFFDFD] to-[#FDF5F2] overflow-hidden rounded-[40px] shadow-2xl border border-white/50"
                     >
-                        {/* Decorative subtle inner glow */}
-                        <div className="absolute inset-0 rounded-[48px] shadow-[0_0_40px_rgba(255,255,255,0.8)_inset]" />
+                        {/* Decorative Background Elements */}
+                        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#CE8E94]/5 blur-[60px] rounded-full" />
+                        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#CE8E94]/10 blur-[60px] rounded-full" />
 
-                        {/* Content Container */}
-                        <div className="relative z-10 flex flex-col items-center text-center">
-                            {/* Icon - Clean and focused */}
-                            <div className="text-8xl mb-8 flex justify-center text-[#CE8E94] filter drop-shadow-[0_10px_15px_rgba(206,142,148,0.2)]">
+                        {/* The Glass Card Item */}
+                        <div className="relative z-10 w-full flex flex-col items-center justify-center bg-white/30 backdrop-blur-xl border border-white/60 p-10 rounded-[32px] shadow-[0_20px_50px_rgba(206,142,148,0.15),0_10px_30px_rgba(255,255,255,0.8)_inset]">
+                            {/* Icon with depth */}
+                            <div className="text-7xl mb-6 flex justify-center text-[#CE8E94] filter drop-shadow-[0_8px_15px_rgba(206,142,148,0.3)]">
                                 {achievementIcon}
                             </div>
 
-                            {/* Title - The Solaris Aesthetic */}
-                            <h4 className="text-2xl font-bold tracking-[0.35em] text-[#B5838D] uppercase mb-4 leading-none">
+                            {/* Title - Refined Typography */}
+                            <div className="text-xl font-bold tracking-[0.25em] text-[#B5838D] uppercase mb-4 leading-none text-center">
                                 {achievementTitle}
-                            </h4>
+                            </div>
 
                             {/* Description - Italic & Elegant */}
-                            <p className="text-base text-[#8D7B70]/80 italic font-medium px-4">
+                            <div className="text-sm text-gray-500 italic font-medium text-center leading-relaxed">
                                 {`"`}{achievementDescription}{`"`}
-                            </p>
+                            </div>
                         </div>
 
-                        {/* Branding Watermark - Very Discreet */}
-                        <div className="absolute bottom-8 left-0 right-0 text-center opacity-30">
-                            <span className="text-[9px] font-bold tracking-[0.4em] text-[#CE8E94] uppercase">
+                        {/* Branding Watermark */}
+                        <div className="absolute bottom-6 left-0 right-0 text-center">
+                            <span className="text-[10px] font-bold tracking-[0.3em] text-[#CE8E94]/40 uppercase">
                                 Reformer Pilates Malta
                             </span>
                         </div>
@@ -167,55 +168,55 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                 </div>
 
                 {/* Share Actions Grid */}
-                <div className="grid grid-cols-2 gap-4 mb-8">
+                <div className="grid grid-cols-2 gap-3 mb-6">
                     <button
-                        className={`flex items-center justify-center gap-3 p-4 rounded-full border border-[#FFF0F3] bg-white shadow-sm hover:bg-[#CE8E94] hover:text-white transition-all duration-300 group ${actionStatus === 'Instagram' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
+                        className={`flex items-center justify-center gap-2 p-3.5 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'Instagram' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
                         onClick={() => handleAction('Instagram')}
                     >
                         <Instagram className={`w-5 h-5 text-[#CE8E94] group-hover:text-white ${actionStatus === 'Instagram' ? 'text-white' : ''}`} />
-                        <span className="text-sm font-bold">{actionStatus === 'Instagram' ? 'Sharing...' : 'Instagram'}</span>
+                        <span className="text-xs font-bold">{actionStatus === 'Instagram' ? 'Sharing...' : 'Instagram'}</span>
                     </button>
 
                     <button
-                        className={`flex items-center justify-center gap-3 p-4 rounded-full border border-[#FFF0F3] bg-white shadow-sm hover:bg-[#CE8E94] hover:text-white transition-all duration-300 group ${actionStatus === 'Facebook' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
+                        className={`flex items-center justify-center gap-2 p-3.5 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'Facebook' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
                         onClick={() => handleAction('Facebook')}
                     >
                         <Facebook className={`w-5 h-5 text-[#CE8E94] group-hover:text-white ${actionStatus === 'Facebook' ? 'text-white' : ''}`} />
-                        <span className="text-sm font-bold">{actionStatus === 'Facebook' ? 'Sharing...' : 'Facebook'}</span>
+                        <span className="text-xs font-bold">{actionStatus === 'Facebook' ? 'Sharing...' : 'Facebook'}</span>
                     </button>
 
                     <button
-                        className={`flex items-center justify-center gap-3 p-4 rounded-full border border-[#FFF0F3] bg-white shadow-sm hover:bg-[#CE8E94] hover:text-white transition-all duration-300 group ${actionStatus === 'WhatsApp' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
+                        className={`flex items-center justify-center gap-2 p-3.5 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'WhatsApp' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
                         onClick={() => handleAction('WhatsApp')}
                     >
                         <MessageCircle className={`w-5 h-5 text-[#CE8E94] group-hover:text-white ${actionStatus === 'WhatsApp' ? 'text-white' : ''}`} />
-                        <span className="text-sm font-bold">{actionStatus === 'WhatsApp' ? 'Sharing...' : 'WhatsApp'}</span>
+                        <span className="text-xs font-bold">{actionStatus === 'WhatsApp' ? 'Sharing...' : 'WhatsApp'}</span>
                     </button>
 
                     <button
-                        className={`flex items-center justify-center gap-3 p-4 rounded-full border border-[#FFF0F3] bg-white shadow-sm hover:bg-[#CE8E94] hover:text-white transition-all duration-300 group ${actionStatus === 'X' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
+                        className={`flex items-center justify-center gap-2 p-3.5 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'X' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'}`}
                         onClick={() => handleAction('X')}
                     >
                         <Twitter className={`w-5 h-5 text-[#CE8E94] group-hover:text-white ${actionStatus === 'X' ? 'text-white' : ''}`} />
-                        <span className="text-sm font-bold">{actionStatus === 'X' ? 'Sharing...' : 'X'}</span>
+                        <span className="text-xs font-bold">{actionStatus === 'X' ? 'Sharing...' : 'X'}</span>
                     </button>
                 </div>
 
                 {/* Secondary Actions */}
-                <div className="flex justify-center gap-10">
+                <div className="flex justify-center gap-8">
                     <button
-                        className={`flex items-center gap-2 text-[11px] transition-colors font-bold tracking-widest uppercase ${actionStatus === 'Copied!' ? 'text-green-500' : 'text-gray-400 hover:text-[#CE8E94]'}`}
+                        className={`flex items-center gap-2 text-[11px] transition-colors font-bold tracking-wider uppercase ${actionStatus === 'Copied!' ? 'text-green-500' : 'text-gray-400 hover:text-[#CE8E94]'}`}
                         onClick={() => handleAction('Copy Link')}
                         disabled={actionStatus === 'Copied!'}
                     >
-                        <Link className="w-4 h-4" /> {actionStatus === 'Copied!' ? 'Copied!' : 'Copy Link'}
+                        <Link className="w-3.5 h-3.5" /> {actionStatus === 'Copied!' ? 'Copied!' : 'Copy Link'}
                     </button>
                     <button
-                        className={`flex items-center gap-2 text-[11px] transition-colors font-bold tracking-widest uppercase ${actionStatus === 'Saved!' ? 'text-green-500' : 'text-gray-400 hover:text-[#CE8E94]'}`}
+                        className={`flex items-center gap-2 text-[11px] transition-colors font-bold tracking-wider uppercase ${actionStatus === 'Saved!' ? 'text-green-500' : 'text-gray-400 hover:text-[#CE8E94]'}`}
                         onClick={() => handleAction('Download Image')}
                         disabled={actionStatus === 'Saved!'}
                     >
-                        <Download className="w-4 h-4" /> {actionStatus === 'Saved!' ? 'Saved!' : 'Save Image'}
+                        <Download className="w-3.5 h-3.5" /> {actionStatus === 'Saved!' ? 'Saved!' : 'Save Image'}
                     </button>
                 </div>
             </div>
