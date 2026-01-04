@@ -81,10 +81,13 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
     };
 
     const handleAction = async (platform: string) => {
-        if (isGenerating || actionInProgress) return;
+        // Only block if we are actually generating an image
+        if (isGenerating) return;
 
+        // Reset previous states to allow a fresh start for consecutive shares
         setActionInProgress(true);
         setActionStatus(platform);
+
         const text = `I just unlocked the ${achievementTitle} badge on Reformer Pilates Malta! 🏆`;
         const url = typeof window !== 'undefined' ? window.location.href : '';
         const filename = `pilates-badge-${achievementTitle.toLowerCase().replace(/\s+/g, '-')}.png`;
@@ -124,15 +127,11 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                                     title: achievementTitle,
                                     text: text,
                                 });
+                                // Native share successful
                                 setActionStatus('Done');
-                                setActionInProgress(false);
-                                setTimeout(() => setActionStatus(null), 2000);
-                                return;
                             } catch (shareErr) {
                                 console.log('Native share canceled or failed', shareErr);
-                                setActionInProgress(false);
                                 setActionStatus(null);
-                                return;
                             }
                         }
                     }
@@ -142,9 +141,6 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                         if (platform === 'Facebook') {
                             window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
                         } else if (platform === 'Instagram') {
-                            // Instagram does not have a direct web share API for images.
-                            // The best approach is to prompt download and instruct user.
-                            // For now, we'll just open Instagram's website.
                             window.open('https://instagram.com', '_blank', 'noopener,noreferrer');
                         } else if (platform === 'WhatsApp') {
                             window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank', 'noopener,noreferrer');
@@ -158,16 +154,17 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         } catch (err) {
             console.error('Action failed:', err);
             setIsGenerating(false);
-            setActionStatus(null); // Reset status on error
+            setActionStatus(null);
         }
 
-        // Final cleanup for non-native paths
-        // Reset progress immediately to allow consecutive shares, 
-        // but keep the 'Done' status for a moment for visual feedback.
+        // Release the logic lock immediately after the action is initiated (redirection or share sheet opened)
+        // This allows consecutive clicks without waiting for the status text to disappear.
         setActionInProgress(false);
+
+        // Visual feedback reset: Keep 'Done' for a very short time
         setTimeout(() => {
             setActionStatus(null);
-        }, 1500);
+        }, 800);
     };
 
     return (
