@@ -181,10 +181,19 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     <div className="flex justify-center mb-1 overflow-hidden w-full h-[320px] sm:h-[580px]">
                         {/* Scaling wrapper to fit the 480px container into the narrower Modal/Phone screen */}
                         <div className="scale-[0.58] min-[400px]:scale-[0.65] sm:scale-[0.9] origin-top flex-shrink-0">
-                            <div id="capture-container" className="p-[80px] bg-white rounded-[40px] flex-shrink-0 w-[480px]">
+                            <div id="capture-container" className="relative p-[80px] bg-white rounded-[40px] flex-shrink-0 w-[480px]">
+                                {/* Stable Halo Effect */}
+                                <div
+                                    className="absolute top-[56px] left-1/2 -translate-x-1/2 w-[480px] h-[480px] opacity-70 pointer-events-none"
+                                    style={{
+                                        background: 'radial-gradient(circle, rgba(206,142,148,0.45) 0%, rgba(206,142,148,0) 70%)',
+                                        filter: 'blur(35px)',
+                                        zIndex: 0
+                                    }}
+                                />
                                 <div
                                     id="share-card"
-                                    className="relative w-[320px] aspect-[1/1.35] flex flex-col items-center justify-between p-12 bg-[#FEF9F9] rounded-[100px] shadow-[0_45px_100px_-30px_rgba(206,142,148,0.25)] overflow-hidden"
+                                    className="relative z-10 w-[320px] aspect-[1/1.35] flex flex-col items-center justify-between p-12 bg-[#FEF9F9] rounded-[100px] overflow-hidden"
                                 >
                                     {/* Inner Card - Matches the 'Solaris' reference aesthetic */}
                                     <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-between bg-white rounded-[80px] p-8 shadow-[0_40px_80px_-15px_rgba(206,142,148,0.22)] my-3">
