@@ -6,7 +6,9 @@ import { Facebook, Instagram, Twitter, MessageCircle, Link, Download } from 'luc
 import * as htmlToImage from 'html-to-image';
 
 
+
 import { AlertModal } from './AlertModal';
+import { SHARE_BACKGROUND_BASE64 } from './shareBackgroundData';
 
 
 interface ShareModalProps {
@@ -192,9 +194,9 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                         <div className="scale-[0.22] min-[400px]:scale-[0.24] sm:scale-[0.32] origin-top flex-shrink-0">
                             {/* Off-screen/Capture Container (9:16 Portrait) */}
                             <div id="capture-container" className="relative w-[1080px] h-[1920px] flex flex-col items-center justify-center overflow-hidden bg-[#FFF0E5]">
-                                {/* 1. STATIC BACKGROUND IMAGE (Immutable Base) */}
+                                {/* 1. STATIC BACKGROUND IMAGE (Immutable Base64) */}
                                 <img
-                                    src="/share-background-base.png"
+                                    src={SHARE_BACKGROUND_BASE64}
                                     className="absolute inset-0 w-full h-full object-cover z-0"
                                     alt="Share Background"
                                 />
