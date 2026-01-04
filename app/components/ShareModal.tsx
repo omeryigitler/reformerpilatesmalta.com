@@ -204,51 +204,43 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                                     className="absolute inset-0 w-full h-full z-0"
                                     preserveAspectRatio="none"
                                 >
-                                    {/* 1.1 Background Glow - TUNED FOR IMAGE 1 (Wider & Softer) */}
+                                    {/* 1.1 Background Glow - MAXIMIZED FOR DREAMY EFFECT */}
                                     <defs>
                                         <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                                            <stop offset="0%" stopColor="rgba(206,142,148,0.45)" /> {/* Slightly reduced opacity for smoother fade */}
-                                            <stop offset="70%" stopColor="rgba(206,142,148,0.15)" /> {/* Extended mid-point for wider spread */}
+                                            <stop offset="0%" stopColor="rgba(206,142,148,0.4)" />
+                                            <stop offset="70%" stopColor="rgba(206,142,148,0.1)" />
                                             <stop offset="100%" stopColor="rgba(206,142,148,0)" />
                                         </radialGradient>
 
-                                        {/* 1.2 Soft Shadow Filter - TUNED FOR IMAGE 1 (Larger & Diffuse) */}
-                                        <filter id="softShadow" x="-100%" y="-100%" width="300%" height="300%">
-                                            <feGaussianBlur in="SourceAlpha" stdDeviation="60" result="blur" /> {/* Increased blur from 40 to 60 */}
-                                            <feOffset in="blur" dx="0" dy="50" result="offsetBlur" />
-                                            <feComponentTransfer>
-                                                <feFuncA type="linear" slope="0.25" /> {/* Reduced intensity for softer look */}
-                                            </feComponentTransfer>
-                                            <feMerge>
-                                                <feMergeNode />
-                                                <feMergeNode in="SourceGraphic" />
-                                            </feMerge>
+                                        {/* 1.2 Soft Shadow - SCALED 'shadow-lg' */}
+                                        <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+                                            <feDropShadow dx="0" dy="20" stdDeviation="25" floodColor="rgba(206,142,148,0.25)" />
                                         </filter>
                                     </defs>
 
                                     {/* Background Rect with Radial Glow */}
                                     <rect width="1080" height="1920" fill="#FFF0E5" />
-                                    {/* Tuned Glow Circle: Larger Radius (650 vs 500) and Blur (120px vs 80px) */}
-                                    <circle cx="540" cy="960" r="650" fill="url(#bgGlow)" filter="blur(120px)" opacity="0.8" />
+                                    {/* Glow: Radius 850px to ensure wide dispersion */}
+                                    <circle cx="540" cy="960" r="850" fill="url(#bgGlow)" filter="blur(120px)" opacity="0.8" />
 
-                                    {/* 1.3 The Card Shape (Outer) - Tuned Dimensions */}
+                                    {/* 1.3 The Card Shape (Outer) - MATHEMATICAL ORIGINAL (p-8 approx 80px margin -> 920px width) */}
                                     <rect
-                                        x="190"
-                                        y="480"
-                                        width="700"
-                                        height="960"
-                                        rx="200"
+                                        x="80"
+                                        y="410"
+                                        width="920"
+                                        height="1100"
+                                        rx="80"
                                         fill="#FEF9F9"
                                         filter="url(#softShadow)"
                                     />
 
                                     {/* 1.4 The Card Shape (Inner) */}
                                     <rect
-                                        x="214"
-                                        y="504"
-                                        width="652"
-                                        height="912"
-                                        rx="160"
+                                        x="104"
+                                        y="434"
+                                        width="872"
+                                        height="1052"
+                                        rx="56"
                                         fill="#FFFFFF"
                                     />
                                 </svg>
