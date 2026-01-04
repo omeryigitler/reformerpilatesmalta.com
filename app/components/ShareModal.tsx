@@ -20,7 +20,6 @@ interface ShareModalProps {
 export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon, achievementDescription }: ShareModalProps) => {
     const [actionStatus, setActionStatus] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
-    const [actionInProgress, setActionInProgress] = useState(false);
     const [preGeneratedBlob, setPreGeneratedBlob] = useState<Blob | null>(null);
     const [alertConfig, setAlertConfig] = useState<{
         isOpen: boolean;
@@ -85,7 +84,6 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         if (isGenerating) return;
 
         // Reset previous states to allow a fresh start for consecutive shares
-        setActionInProgress(true);
         setActionStatus(platform);
 
         const text = `I just unlocked the ${achievementTitle} badge on Reformer Pilates Malta! 🏆`;
@@ -159,7 +157,6 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
 
         // Release the logic lock immediately after the action is initiated (redirection or share sheet opened)
         // This allows consecutive clicks without waiting for the status text to disappear.
-        setActionInProgress(false);
 
         // Visual feedback reset: Keep 'Done' for a very short time
         setTimeout(() => {
