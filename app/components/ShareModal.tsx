@@ -95,9 +95,8 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         const url = typeof window !== 'undefined' ? window.location.href : '';
         const filename = `pilates-badge-${achievementTitle.toLowerCase().replace(/\s+/g, '-')}.png`;
 
-        // CATEGORY 1: Direct Redirections (NO BLOB NEEDED)
-        // Opening these immediately preserves user gesture and bypasses all pop-up blockers.
-        if (['Facebook', 'Instagram', 'WhatsApp', 'X', 'Copy Link'].includes(platform)) {
+        // CATEGORY 1: Direct Redirections (Link Only)
+        if (['Facebook', 'WhatsApp', 'X', 'Copy Link'].includes(platform)) {
             if (platform === 'Copy Link') {
                 try {
                     await navigator.clipboard.writeText(`${text} ${url}`);
@@ -108,9 +107,6 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
             } else if (platform === 'Facebook') {
                 window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
                 setActionStatus('Done');
-            } else if (platform === 'Instagram') {
-                window.open('https://instagram.com', '_blank', 'noopener,noreferrer');
-                setActionStatus('Done');
             } else if (platform === 'WhatsApp') {
                 window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank', 'noopener,noreferrer');
                 setActionStatus('Done');
@@ -120,11 +116,11 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
             }
 
             // Fast reset for redirections
-            setTimeout(() => setActionStatus(null), 800);
+            setTimeout(() => setActionStatus(null), 600);
             return;
         }
 
-        // CATEGORY 2: Blob-Dependent Actions (Download or Native Share)
+        // CATEGORY 2: Blob-Dependent Actions (Image Share/Download)
         if (isGeneratingRef.current) return;
 
         try {
@@ -139,8 +135,8 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
             if (platform === 'Download Image' && blob) {
                 triggerDownload(blob, filename);
                 setActionStatus('Saved!');
-            } else if (platform === 'Share' || platform === 'Native Share') {
-                // Native Sharing (Recommended for mobile apps/browsers)
+            } else if (platform === 'Instagram' || platform === 'Native Share') {
+                // Image-based sharing (Instagram or System Share)
                 if (blob && navigator.share) {
                     const file = new File([blob], filename, { type: 'image/png' });
                     if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -153,9 +149,18 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                             setActionStatus('Done');
                         } catch (shareErr) {
                             console.log('Native share canceled', shareErr);
+                            // If user cancels, we just reset
                             setActionStatus(null);
                         }
+                    } else if (platform === 'Instagram') {
+                        // If cannot share files but specifically clicked Instagram, fallback to link
+                        window.open('https://instagram.com', '_blank', 'noopener,noreferrer');
+                        setActionStatus('Done');
                     }
+                } else if (platform === 'Instagram') {
+                    // Fallback for desktop/non-share browsers
+                    window.open('https://instagram.com', '_blank', 'noopener,noreferrer');
+                    setActionStatus('Done');
                 }
             }
         } catch (err) {
@@ -164,7 +169,8 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         } finally {
             setIsGenerating(false);
             isGeneratingRef.current = false;
-            setTimeout(() => setActionStatus(null), 1200);
+            // Immediate reset after a short visual confirm
+            setTimeout(() => setActionStatus(null), 800);
         }
     };
 
