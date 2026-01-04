@@ -129,14 +129,15 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                             />
 
                             {/* CONTENT OVERLAY - PRESERVING EXACT ORIGINAL STYLING */}
-                            <div className="relative z-10 p-8 rounded-3xl bg-white shadow-lg border border-[#CE8E94]/10 flex flex-col items-center w-[65%]"> {/* Approximating the visual width relative to 1080p */}
-                                <div className="text-[5rem] mb-8 flex justify-center text-[#CE8E94]">
+                            {/* CONTENT OVERLAY - STRICTLY 15:23 VISUALS (Small Card) */}
+                            <div className="bg-gradient-to-br from-[#FFF0F3] to-[#F5F1EE] rounded-3xl p-8 mb-8 shadow-lg border border-[#CE8E94]/10 transform scale-[2.5] origin-center flex flex-col items-center justify-center">
+                                <div className="text-6xl mb-4 flex justify-center text-[#CE8E94]">
                                     {achievementIcon}
                                 </div>
-                                <div className="text-2xl font-bold tracking-widest text-[#B5838D] uppercase mb-4 text-center">
+                                <div className="text-sm font-bold tracking-widest text-[#B5838D] uppercase mb-2 text-center">
                                     {achievementTitle}
                                 </div>
-                                <div className="text-lg text-gray-400 italic font-medium text-center max-w-md">
+                                <div className="text-xs text-gray-400 italic font-medium text-center max-w-[300px]">
                                     {achievementDescription}
                                 </div>
                             </div>
