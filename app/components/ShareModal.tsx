@@ -162,10 +162,12 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         }
 
         // Final cleanup for non-native paths
+        // Reset progress immediately to allow consecutive shares, 
+        // but keep the 'Done' status for a moment for visual feedback.
+        setActionInProgress(false);
         setTimeout(() => {
-            setActionInProgress(false);
             setActionStatus(null);
-        }, 2000);
+        }, 1500);
     };
 
     return (
