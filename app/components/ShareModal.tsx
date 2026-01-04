@@ -82,14 +82,6 @@ const BadgeStoryContent = ({ title, icon, description }: { title: string, icon: 
                             {`"`}{description}{`"`}
                         </div>
                     </div>
-
-                    {/* Branding Anchor */}
-                    <div className="w-full flex justify-center pb-16">
-                        <div className="w-48 h-1 bg-gradient-to-r from-transparent via-[#CE8E94]/20 to-transparent mb-12" />
-                        <div className="absolute bottom-20 text-[#CE8E94]/30 text-2xl font-bold tracking-[0.2em] uppercase">
-                            Reformer Pilates Malta
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
