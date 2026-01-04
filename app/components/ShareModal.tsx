@@ -204,43 +204,43 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                                     className="absolute inset-0 w-full h-full z-0"
                                     preserveAspectRatio="none"
                                 >
-                                    {/* 1.1 Background Glow - MAXIMIZED FOR DREAMY EFFECT */}
+                                    {/* 1.1 Background Glow - TUNED FOR IMAGE 1 (Small & Elegant) */}
                                     <defs>
                                         <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                                            <stop offset="0%" stopColor="rgba(206,142,148,0.4)" />
-                                            <stop offset="70%" stopColor="rgba(206,142,148,0.1)" />
+                                            <stop offset="0%" stopColor="rgba(206,142,148,0.35)" />
+                                            <stop offset="60%" stopColor="rgba(206,142,148,0.1)" />
                                             <stop offset="100%" stopColor="rgba(206,142,148,0)" />
                                         </radialGradient>
 
-                                        {/* 1.2 Soft Shadow - SCALED 'shadow-lg' */}
+                                        {/* 1.2 Soft Shadow - SCALED for Small Card */}
                                         <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
-                                            <feDropShadow dx="0" dy="20" stdDeviation="25" floodColor="rgba(206,142,148,0.25)" />
+                                            <feDropShadow dx="0" dy="30" stdDeviation="30" floodColor="rgba(206,142,148,0.2)" />
                                         </filter>
                                     </defs>
 
                                     {/* Background Rect with Radial Glow */}
                                     <rect width="1080" height="1920" fill="#FFF0E5" />
-                                    {/* Glow: Radius 850px to ensure wide dispersion */}
-                                    <circle cx="540" cy="960" r="850" fill="url(#bgGlow)" filter="blur(120px)" opacity="0.8" />
+                                    {/* Glow: Reduced spread to match the smaller card focus */}
+                                    <circle cx="540" cy="960" r="600" fill="url(#bgGlow)" filter="blur(100px)" opacity="0.8" />
 
-                                    {/* 1.3 The Card Shape (Outer) - MATHEMATICAL ORIGINAL (p-8 approx 80px margin -> 920px width) */}
+                                    {/* 1.3 The Card Shape (Outer) - REDUCED DIMENSIONS (620px wide) */}
                                     <rect
-                                        x="80"
-                                        y="410"
-                                        width="920"
-                                        height="1100"
-                                        rx="80"
+                                        x="230"
+                                        y="560"
+                                        width="620"
+                                        height="800"
+                                        rx="120"
                                         fill="#FEF9F9"
                                         filter="url(#softShadow)"
                                     />
 
                                     {/* 1.4 The Card Shape (Inner) */}
                                     <rect
-                                        x="104"
-                                        y="434"
-                                        width="872"
-                                        height="1052"
-                                        rx="56"
+                                        x="254"
+                                        y="584"
+                                        width="572"
+                                        height="752"
+                                        rx="90"
                                         fill="#FFFFFF"
                                     />
                                 </svg>
