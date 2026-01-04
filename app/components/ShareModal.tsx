@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Modal } from './Modal';
 import { Facebook, Instagram, Twitter, MessageCircle, Link, Download } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
-import { shareBackgroundBase64 } from '@/app/data/shareBackgroundBase64';
+
 
 
 interface ShareModalProps {
@@ -120,17 +120,10 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                 <div className="relative flex justify-center mb-8">
                     {/* Visible Preview (Scaled Down) */}
                     <div className="transform scale-[0.4] origin-top h-[320px] -mb-[480px]"> {/* Hack to show large content scaled down */}
-                        <div id="capture-container" className="relative w-[1080px] h-[1920px] flex flex-col items-center justify-center overflow-hidden">
-                            {/* STATIC IMAGE BACKGROUND - Replaces CSS Gradient to FIX BLANK EXPORT */}
-                            <img
-                                src={shareBackgroundBase64}
-                                alt="Background"
-                                className="absolute inset-0 w-full h-full object-cover z-0"
-                            />
+                        <div id="capture-container" className="relative w-[1080px] h-[1920px] flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#FFF0F3] to-[#F5F1EE]">
 
-                            {/* CONTENT OVERLAY - PRESERVING EXACT ORIGINAL STYLING */}
                             {/* CONTENT OVERLAY - STRICTLY 15:23 VISUALS (Small Card) */}
-                            <div className="bg-gradient-to-br from-[#FFF0F3] to-[#F5F1EE] rounded-3xl p-8 mb-8 shadow-lg border border-[#CE8E94]/10 transform scale-[2.5] origin-center flex flex-col items-center justify-center">
+                            <div className="bg-white rounded-3xl p-8 mb-8 shadow-lg border border-[#CE8E94]/10 transform scale-[2.5] origin-center flex flex-col items-center justify-center w-[400px]">
                                 <div className="text-6xl mb-4 flex justify-center text-[#CE8E94]">
                                     {achievementIcon}
                                 </div>
