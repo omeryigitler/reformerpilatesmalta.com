@@ -21,6 +21,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
     const [actionStatus, setActionStatus] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [actionInProgress, setActionInProgress] = useState(false);
+    const [preGeneratedBlob, setPreGeneratedBlob] = useState<Blob | null>(null);
     const [alertConfig, setAlertConfig] = useState<{
         isOpen: boolean;
         title: string;
@@ -41,16 +42,32 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         if (!element) return null;
 
         try {
+            // Wait a tiny bit for styles to be fully computed if modal just opened
+            await new Promise(resolve => setTimeout(resolve, 100));
             return await htmlToImage.toBlob(element, {
                 pixelRatio: 2,
                 backgroundColor: '#FFFFFF',
                 cacheBust: true,
+                skipAutoScale: true,
             });
         } catch (err) {
             console.error('Image generation failed:', err);
             return null;
         }
     };
+
+    // Pre-generate the blob as soon as the modal opens to make sharing synchronous
+    React.useEffect(() => {
+        if (isOpen) {
+            const timer = setTimeout(async () => {
+                const blob = await generateImageBlob();
+                if (blob) setPreGeneratedBlob(blob);
+            }, 300); // Give modal animation time to settle
+            return () => clearTimeout(timer);
+        } else {
+            setPreGeneratedBlob(null);
+        }
+    }, [isOpen]);
 
     const triggerDownload = (blob: Blob, filename: string) => {
         const url = URL.createObjectURL(blob);
@@ -80,9 +97,14 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                 setActionStatus('Copied!');
             }
             else {
-                setIsGenerating(true);
-                const blob = await generateImageBlob();
-                setIsGenerating(false);
+                // Use pre-generated blob or generate it on the fly if not ready
+                let blob = preGeneratedBlob;
+                if (!blob) {
+                    setIsGenerating(true);
+                    blob = await generateImageBlob();
+                    setIsGenerating(false);
+                    if (blob) setPreGeneratedBlob(blob);
+                }
 
                 if (platform === 'Download Image') {
                     if (blob) {
@@ -103,13 +125,11 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                                     text: text,
                                 });
                                 setActionStatus('Done');
-                                // Reset status and exit early - DO NOT proceed to fallback
                                 setActionInProgress(false);
                                 setTimeout(() => setActionStatus(null), 2000);
                                 return;
                             } catch (shareErr) {
                                 console.log('Native share canceled or failed', shareErr);
-                                // If they canceled the native menu, we don't want to suddenly pop a window.open redirection loop
                                 setActionInProgress(false);
                                 setActionStatus(null);
                                 return;
@@ -117,7 +137,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                         }
                     }
 
-                    // 2. Fallbacks (Only if native share was not even attempted)
+                    // 2. Fallbacks (Synchronous window.open for better browser compatibility)
                     if (!triedNativeShare) {
                         if (platform === 'Facebook') {
                             window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
