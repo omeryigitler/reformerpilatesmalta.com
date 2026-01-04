@@ -183,25 +183,24 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                         Show off your new <strong>{achievementTitle}</strong> badge to the world!
                     </p>
 
-                    {/* Clean UI Preview (Not used for capture) */}
+                    {/* Original Aesthetics UI Preview (Matching User's Favorite Design) */}
                     <div className="flex justify-center mb-4 overflow-hidden w-full h-[320px] sm:h-[520px] bg-white/50 rounded-2xl border border-[#CE8E94]/10 shadow-inner">
-                        <div className="scale-[0.6] sm:scale-[0.85] origin-center flex flex-col items-center justify-center">
-                            <div className="relative p-12 bg-white rounded-[40px] shadow-xl w-[380px] flex flex-col items-center">
-                                {/* Simplified UI Glow */}
+                        <div className="scale-[0.5] sm:scale-[0.7] origin-center flex flex-col items-center justify-center">
+                            <div className="relative w-[500px] h-[888px] bg-[#FFF0E5] flex flex-col items-center justify-center overflow-hidden rounded-[80px]">
                                 <div
-                                    className="absolute inset-0 opacity-40 pointer-events-none"
+                                    className="absolute inset-0 w-full h-full opacity-60"
                                     style={{
-                                        background: 'radial-gradient(circle, rgba(206,142,148,0.4) 0%, rgba(206,142,148,0) 70%)',
-                                        filter: 'blur(30px)',
+                                        background: 'radial-gradient(circle at center, rgba(206,142,148,0.5) 0%, rgba(206,142,148,0.1) 60%, rgba(206,142,148,0) 100%)',
+                                        filter: 'blur(40px)',
                                         zIndex: 0
                                     }}
                                 />
                                 <div
-                                    className="relative z-10 w-[280px] aspect-[1/1.35] flex flex-col items-center justify-between p-8 bg-[#FEF9F9] rounded-[80px]"
+                                    className="relative z-10 w-[340px] aspect-[1/1.35] flex flex-col items-center justify-between p-12 bg-[#FEF9F9] rounded-[100px] shadow-xl"
                                 >
-                                    <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-between bg-white rounded-[60px] p-6 shadow-sm my-2">
+                                    <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-between bg-white rounded-[80px] p-8 shadow-md my-4">
                                         <div className="flex-1 flex flex-col items-center justify-center w-full">
-                                            <div className="text-5xl flex justify-center text-[#CE8E94] mb-4">
+                                            <div className="text-6xl flex justify-center text-[#CE8E94] mb-8">
                                                 {achievementTitle === 'SOLARIS' ? (
                                                     <svg viewBox="0 0 100 100" className="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                         <circle cx="50" cy="50" r="12" stroke="currentColor" strokeWidth="3" />
@@ -218,10 +217,10 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                                                     achievementIcon
                                                 )}
                                             </div>
-                                            <div className="text-xl font-bold tracking-[0.2em] text-[#B5838D] uppercase mb-4 text-center">
+                                            <div className="text-xl font-bold tracking-[0.25em] text-[#B5838D] uppercase mb-4 text-center">
                                                 {achievementTitle}
                                             </div>
-                                            <div className="text-[11px] text-gray-400 italic text-center px-1">
+                                            <div className="text-[12px] text-gray-400 italic text-center px-2">
                                                 {`"`}{achievementDescription}{`"`}
                                             </div>
                                         </div>
@@ -296,31 +295,25 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                         </button>
                     </div>
                 </div>
-            </Modal >
+            </Modal>
 
             {/* HIDDEN MASTER CAPTURE CONTAINER (The Shadow) */}
-            {/* Using absolute pixel values (1080x1920) and no scaling to ensure perfect coordinate calculation by html-to-image */}
             <div
                 id="master-capture-container"
                 className="fixed left-[-9999px] top-0 w-[1080px] h-[1920px] bg-[#FFF0E5] flex flex-col items-center justify-center overflow-hidden"
                 style={{ zIndex: -1000 }}
             >
-                {/* Professional Background Glow (Story Style) */}
                 <div
                     className="absolute inset-0 w-full h-full opacity-60"
                     style={{
-                        // Using explicit pixel center for the 1080x1920 canvas to avoid any browser calculation errors
                         background: 'radial-gradient(circle at 540px 960px, rgba(206,142,148,0.5) 0%, rgba(206,142,148,0.1) 60%, rgba(206,142,148,0) 100%)',
                         filter: 'blur(80px)',
                         zIndex: 0
                     }}
                 />
-
-                {/* Centered Achievement Card - EXACT 1:1 Scale */}
                 <div
                     className="relative z-10 w-[680px] aspect-[1/1.35] flex flex-col items-center justify-between p-24 bg-[#FEF9F9] rounded-[200px] shadow-[0_60px_120px_-30px_rgba(206,142,148,0.3)]"
                 >
-                    {/* Inner Card Wrapper */}
                     <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-between bg-white rounded-[160px] p-16 shadow-[0_40px_80px_-15px_rgba(206,142,148,0.22)] my-6">
                         <div className="flex-1 flex flex-col items-center justify-center w-full">
                             <div className="text-8xl flex justify-center text-[#CE8E94] filter drop-shadow-[0_12px_24px_rgba(206,142,148,0.2)] mb-12 transform scale-[2.2]">
