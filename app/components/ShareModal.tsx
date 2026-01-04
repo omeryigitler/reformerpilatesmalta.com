@@ -235,22 +235,22 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
 
     return (
         <>
-            <Modal onClose={onClose} className="max-w-[450px]" useDefaultPadding={false}>
-                <div className="text-center pt-10 pb-6 px-6 overflow-hidden">
-                    <h3 className="text-2xl font-bold text-[#CE8E94] mb-1 tracking-tight">Share Your Success</h3>
-                    <p className="text-gray-400 text-sm mb-6">
+            <Modal onClose={onClose} className="max-w-[420px]" useDefaultPadding={false}>
+                <div className="text-center pt-8 pb-4 px-4 overflow-hidden">
+                    <h3 className="text-xl font-bold text-[#CE8E94] mb-0.5 tracking-tight">Share Your Success</h3>
+                    <p className="text-gray-400 text-[12px] mb-4">
                         Show off your new <strong>{achievementTitle}</strong> badge to the world!
                     </p>
 
-                    {/* PREMIUM UI PREVIEW - Fill Modal Elegantly */}
-                    <div className="flex justify-center mb-8 overflow-hidden w-full h-[520px] sm:h-[680px] bg-white rounded-[40px] border border-[#CE8E94]/10 shadow-inner relative items-center">
-                        <div className="scale-[0.26] min-[380px]:scale-[0.28] sm:scale-[0.35] origin-center flex-shrink-0">
+                    {/* PREMIUM UI PREVIEW - Optimized Scaling for Compact Feel */}
+                    <div className="flex justify-center mb-6 overflow-hidden w-full h-[320px] sm:h-[420px] bg-white rounded-3xl border border-[#CE8E94]/10 shadow-inner relative items-center">
+                        <div className="scale-[0.16] min-[380px]:scale-[0.18] sm:scale-[0.22] origin-center flex-shrink-0">
                             <BadgeStoryContent title={achievementTitle} icon={achievementIcon} description={achievementDescription} />
                         </div>
                     </div>
 
                     {/* ACTION GRID */}
-                    <div className="grid grid-cols-2 gap-3 mb-6 px-2">
+                    <div className="grid grid-cols-2 gap-2 mb-4 px-2">
                         <SocialButton icon={Instagram} label="Instagram" status={actionStatus} onClick={() => handleAction('Instagram')} disabled={isGenerating} />
                         <SocialButton icon={Facebook} label="Facebook" status={actionStatus} onClick={() => handleAction('Facebook')} disabled={isGenerating} />
                         <SocialButton icon={MessageCircle} label="WhatsApp" status={actionStatus} onClick={() => handleAction('WhatsApp')} disabled={isGenerating} />
@@ -258,9 +258,9 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     </div>
 
                     {/* UTILITY ACTIONS */}
-                    <div className="flex justify-center gap-10 pb-2">
+                    <div className="flex justify-center gap-8 pb-2">
                         <UtilityButton icon={Link} label="Copy Link" status={actionStatus} activeLabel="Copied!" onClick={() => handleAction('Copy Link')} />
-                        <UtilityButton icon={Download} label="Save Image" status={isGenerating ? 'Generating...' : actionStatus} activeLabel="Saved!" onClick={() => handleAction('Download Image')} />
+                        <UtilityButton icon={Download} label="Save Image" status={isGenerating ? 'Wait...' : actionStatus} activeLabel="Saved!" onClick={() => handleAction('Download Image')} />
                     </div>
                 </div>
             </Modal>
