@@ -8,7 +8,8 @@ import * as htmlToImage from 'html-to-image';
 
 
 import { AlertModal } from './AlertModal';
-import { SHARE_BACKGROUND_BASE64 } from './shareBackgroundData';
+
+
 
 
 interface ShareModalProps {
@@ -194,12 +195,62 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                         <div className="scale-[0.22] min-[400px]:scale-[0.24] sm:scale-[0.32] origin-top flex-shrink-0">
                             {/* Off-screen/Capture Container (9:16 Portrait) */}
                             <div id="capture-container" className="relative w-[1080px] h-[1920px] flex flex-col items-center justify-center overflow-hidden bg-[#FFF0E5]">
-                                {/* 1. STATIC BACKGROUND IMAGE (Immutable Base64) */}
-                                <img
-                                    src={SHARE_BACKGROUND_BASE64}
-                                    className="absolute inset-0 w-full h-full object-cover z-0"
-                                    alt="Share Background"
-                                />
+                                {/* 1. VECTOR BACKGROUND (Replaces Image to Prevent Overlap & Shifts) */}
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="1080"
+                                    height="1920"
+                                    viewBox="0 0 1080 1920"
+                                    className="absolute inset-0 w-full h-full z-0"
+                                    preserveAspectRatio="none"
+                                >
+                                    {/* 1.1 Background Glow */}
+                                    <defs>
+                                        <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                                            <stop offset="0%" stopColor="rgba(206,142,148,0.5)" />
+                                            <stop offset="60%" stopColor="rgba(206,142,148,0.1)" />
+                                            <stop offset="100%" stopColor="rgba(206,142,148,0)" />
+                                        </radialGradient>
+
+                                        {/* 1.2 Soft Shadow Filter - Replaces box-shadow */}
+                                        <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+                                            <feGaussianBlur in="SourceAlpha" stdDeviation="40" result="blur" />
+                                            <feOffset in="blur" dx="0" dy="60" result="offsetBlur" />
+                                            <feComponentTransfer>
+                                                <feFuncA type="linear" slope="0.3" />
+                                            </feComponentTransfer>
+                                            <feMerge>
+                                                <feMergeNode />
+                                                <feMergeNode in="SourceGraphic" />
+                                            </feMerge>
+                                        </filter>
+                                    </defs>
+
+                                    {/* Background Rect with Radial Glow */}
+                                    <rect width="1080" height="1920" fill="#FFF0E5" />
+                                    <circle cx="540" cy="960" r="500" fill="url(#bgGlow)" filter="blur(80px)" opacity="0.6" />
+
+                                    {/* 1.3 The Card Shape (Outer) */}
+                                    <rect
+                                        x="200"
+                                        y="492"
+                                        width="680"
+                                        height="936"
+                                        rx="200"
+                                        fill="#FEF9F9"
+                                        filter="url(#softShadow)"
+                                    />
+
+                                    {/* 1.4 The Card Shape (Inner) */}
+                                    <rect
+                                        x="224"
+                                        y="516"
+                                        width="632"
+                                        height="888"
+                                        rx="160"
+                                        fill="#FFFFFF"
+                                    />
+                                </svg>
 
                                 {/* 2. DYNAMIC CONTENT OVERLAY (Perfectly Aligned to Base Image) */}
                                 <div className="relative z-10 w-full h-full flex flex-col items-center justify-center pb-[80px]">
