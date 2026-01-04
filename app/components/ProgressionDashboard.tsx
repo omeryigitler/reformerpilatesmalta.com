@@ -73,7 +73,7 @@ export const ProgressionDashboard: React.FC<ProgressionDashboardProps> = ({
                                                     level.description}
                                         </p>
                                     </div>
-                                    {isActive && (
+                                    {isUnlocked && (
                                         <button
                                             className="action-btn"
                                             style={{ width: 'auto' }}
