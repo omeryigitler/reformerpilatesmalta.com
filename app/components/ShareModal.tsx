@@ -142,6 +142,9 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                         if (platform === 'Facebook') {
                             window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
                         } else if (platform === 'Instagram') {
+                            // Instagram does not have a direct web share API for images.
+                            // The best approach is to prompt download and instruct user.
+                            // For now, we'll just open Instagram's website.
                             window.open('https://instagram.com', '_blank', 'noopener,noreferrer');
                         } else if (platform === 'WhatsApp') {
                             window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank', 'noopener,noreferrer');
@@ -155,6 +158,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         } catch (err) {
             console.error('Action failed:', err);
             setIsGenerating(false);
+            setActionStatus(null); // Reset status on error
         }
 
         // Final cleanup for non-native paths
@@ -245,44 +249,44 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     {/* Share Actions Grid */}
                     <div className="grid grid-cols-2 gap-2 mb-3 px-4">
                         <button
-                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'Instagram' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'} ${isGenerating ? 'opacity-50' : ''}`}
+                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 transition-all duration-300 shadow-sm group ${actionStatus === 'Instagram' ? 'bg-[#CE8E94] text-white' : 'bg-white text-gray-600'} ${isGenerating ? 'opacity-50' : ''}`}
                             onClick={() => handleAction('Instagram')}
                             disabled={isGenerating}
                         >
-                            <Instagram className={`w-4 h-4 text-[#CE8E94] group-hover:text-white ${actionStatus === 'Instagram' ? 'text-white' : ''}`} />
+                            <Instagram className={`w-4 h-4 group-hover:text-white ${actionStatus === 'Instagram' ? 'text-white' : 'text-[#CE8E94]'}`} />
                             <span className="text-[11px] font-bold text-nowrap">
                                 {isGenerating && actionStatus === 'Instagram' ? 'Sharing...' : (actionStatus === 'Instagram' ? 'Done' : 'Instagram')}
                             </span>
                         </button>
 
                         <button
-                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'Facebook' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'} ${isGenerating ? 'opacity-50' : ''}`}
+                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 transition-all duration-300 shadow-sm group ${actionStatus === 'Facebook' ? 'bg-[#CE8E94] text-white' : 'bg-white text-gray-600'} ${isGenerating ? 'opacity-50' : ''}`}
                             onClick={() => handleAction('Facebook')}
                             disabled={isGenerating}
                         >
-                            <Facebook className={`w-4 h-4 text-[#CE8E94] group-hover:text-white ${actionStatus === 'Facebook' ? 'text-white' : ''}`} />
+                            <Facebook className={`w-4 h-4 group-hover:text-white ${actionStatus === 'Facebook' ? 'text-white' : 'text-[#CE8E94]'}`} />
                             <span className="text-[11px] font-bold text-nowrap">
                                 {isGenerating && actionStatus === 'Facebook' ? 'Sharing...' : (actionStatus === 'Facebook' ? 'Done' : 'Facebook')}
                             </span>
                         </button>
 
                         <button
-                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'WhatsApp' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'} ${isGenerating ? 'opacity-50' : ''}`}
+                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 transition-all duration-300 shadow-sm group ${actionStatus === 'WhatsApp' ? 'bg-[#CE8E94] text-white' : 'bg-white text-gray-600'} ${isGenerating ? 'opacity-50' : ''}`}
                             onClick={() => handleAction('WhatsApp')}
                             disabled={isGenerating}
                         >
-                            <MessageCircle className={`w-4 h-4 text-[#CE8E94] group-hover:text-white ${actionStatus === 'WhatsApp' ? 'text-white' : ''}`} />
+                            <MessageCircle className={`w-4 h-4 group-hover:text-white ${actionStatus === 'WhatsApp' ? 'text-white' : 'text-[#CE8E94]'}`} />
                             <span className="text-[11px] font-bold text-nowrap">
                                 {isGenerating && actionStatus === 'WhatsApp' ? 'Sharing...' : (actionStatus === 'WhatsApp' ? 'Done' : 'WhatsApp')}
                             </span>
                         </button>
 
                         <button
-                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white transition-all duration-300 shadow-sm group ${actionStatus === 'X' ? 'bg-[#CE8E94] text-white' : 'text-gray-600'} ${isGenerating ? 'opacity-50' : ''}`}
+                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 transition-all duration-300 shadow-sm group ${actionStatus === 'X' ? 'bg-[#CE8E94] text-white' : 'bg-white text-gray-600'} ${isGenerating ? 'opacity-50' : ''}`}
                             onClick={() => handleAction('X')}
                             disabled={isGenerating}
                         >
-                            <Twitter className={`w-4 h-4 text-[#CE8E94] group-hover:text-white ${actionStatus === 'X' ? 'text-white' : ''}`} />
+                            <Twitter className={`w-4 h-4 group-hover:text-white ${actionStatus === 'X' ? 'text-white' : 'text-[#CE8E94]'}`} />
                             <span className="text-[11px] font-bold text-nowrap">
                                 {isGenerating && actionStatus === 'X' ? 'Sharing...' : (actionStatus === 'X' ? 'Done' : 'X')}
                             </span>
