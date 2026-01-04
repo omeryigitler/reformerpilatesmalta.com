@@ -191,79 +191,61 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                         {/* Scaling wrapper to fit the 1080x1920 Story Canvas into the Modal UI */}
                         <div className="scale-[0.22] min-[400px]:scale-[0.24] sm:scale-[0.32] origin-top flex-shrink-0">
                             {/* Off-screen/Capture Container (9:16 Portrait) */}
-                            <div id="capture-container" className="relative w-[1080px] h-[1920px] bg-[#FFF0E5] flex flex-col items-center justify-center overflow-hidden">
+                            <div id="capture-container" className="relative w-[1080px] h-[1920px] flex flex-col items-center justify-center overflow-hidden bg-[#FFF0E5]">
+                                {/* 1. STATIC BACKGROUND IMAGE (Immutable Base) */}
+                                <img
+                                    src="/share-background-base.png"
+                                    className="absolute inset-0 w-full h-full object-cover z-0"
+                                    alt="Share Background"
+                                />
 
-                                {/* Professional Background Layer (Bottom) - SVG for Stable Rendering */}
-                                <div className="absolute inset-0 w-full h-full opacity-60" style={{ zIndex: 0 }}>
-                                    <svg viewBox="0 0 1080 1920" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-                                        <g filter="url(#glow-filter)">
-                                            <circle cx="540" cy="960" r="500" fill="#CE8E94" fillOpacity="0.4" />
-                                        </g>
-                                        <defs>
-                                            <filter id="glow-filter" x="-500" y="0" width="2080" height="2000" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-                                                <feGaussianBlur stdDeviation="120" result="effect1_foregroundBlur" />
-                                            </filter>
-                                        </defs>
-                                    </svg>
-                                </div>
+                                {/* 2. DYNAMIC CONTENT OVERLAY (Perfectly Aligned to Base Image) */}
+                                <div className="relative z-10 w-full h-full flex flex-col items-center justify-center pb-[80px]">
+                                    {/* Icon Slot - Adjusted to match the card center in the PNG */}
+                                    <div className="text-8xl flex justify-center text-[#CE8E94] filter drop-shadow-[0_8px_16px_rgba(206,142,148,0.15)] mb-10 transform scale-[1.6]">
+                                        {achievementTitle === 'SOLARIS' ? (
+                                            <svg viewBox="0 0 100 100" className="w-16 h-16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <circle cx="50" cy="50" r="12" stroke="currentColor" strokeWidth="2.5" />
+                                                <line x1="50" y1="28" x2="50" y2="10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                <line x1="50" y1="72" x2="50" y2="90" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                <line x1="72" y1="50" x2="90" y2="50" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                <line x1="28" y1="50" x2="10" y2="50" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                <line x1="66" y1="34" x2="79" y2="21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                <line x1="34" y1="66" x2="21" y2="79" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                <line x1="66" y1="66" x2="79" y2="79" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                <line x1="34" y1="34" x2="21" y2="21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                            </svg>
+                                        ) : (
+                                            achievementIcon
+                                        )}
+                                    </div>
 
-                                {/* Centered Achievement Card */}
-                                <div
-                                    id="share-card"
-                                    className="relative z-10 w-[680px] aspect-[1/1.35] flex flex-col items-center justify-between p-24 bg-[#FEF9F9] rounded-[200px] shadow-[0_60px_120px_-30px_rgba(206,142,148,0.3)]"
-                                >
-                                    {/* Inner Card */}
-                                    <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-between bg-white rounded-[160px] p-16 shadow-[0_40px_80px_-15px_rgba(206,142,148,0.22)] my-6">
-                                        {/* Achievement Icon Area */}
-                                        <div className="flex-1 flex flex-col items-center justify-center w-full">
-                                            <div className="text-8xl flex justify-center text-[#CE8E94] filter drop-shadow-[0_8px_16px_rgba(206,142,148,0.15)] mb-12 transform scale-150">
-                                                {achievementTitle === 'SOLARIS' ? (
-                                                    <svg viewBox="0 0 100 100" className="w-16 h-16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        {/* Center Circle */}
-                                                        <circle cx="50" cy="50" r="12" stroke="currentColor" strokeWidth="2.5" />
-                                                        {/* 8 Thin Rays */}
-                                                        <line x1="50" y1="28" x2="50" y2="10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                        <line x1="50" y1="72" x2="50" y2="90" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                        <line x1="72" y1="50" x2="90" y2="50" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                        <line x1="28" y1="50" x2="10" y2="50" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                        <line x1="66" y1="34" x2="79" y2="21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                        <line x1="34" y1="66" x2="21" y2="79" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                        <line x1="66" y1="66" x2="79" y2="79" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                        <line x1="34" y1="34" x2="21" y2="21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                    </svg>
-                                                ) : (
-                                                    achievementIcon
-                                                )}
-                                            </div>
+                                    {/* Title */}
+                                    <div className="text-5xl font-bold tracking-[0.35em] text-[#B5838D] uppercase mb-8 leading-none text-center pl-[0.2em]">
+                                        {achievementTitle}
+                                    </div>
 
-                                            {/* Badge Title */}
-                                            <div className="text-4xl font-bold tracking-[0.35em] text-[#B5838D] uppercase mb-8 leading-none text-center">
-                                                {achievementTitle}
-                                            </div>
-                                            {/* Description */}
-                                            <div className="text-[22px] text-gray-500 italic font-medium text-center leading-relaxed px-4">
-                                                {`"`}{achievementDescription}{`"`}
-                                            </div>
-                                        </div>
-                                        {/* Branding Watermark */}
-                                        <div className="w-full flex justify-center pb-12">
-                                            <div className="w-40 h-40 text-[#CE8E94]/45">
-                                                <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    {/* Five Rays */}
-                                                    <line x1="50" y1="15" x2="50" y2="0" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                                                    <line x1="28" y1="22" x2="18" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                                                    <line x1="72" y1="22" x2="82" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                                                    <line x1="12" y1="38" x2="0" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                                                    <line x1="88" y1="38" x2="100" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                    {/* Description */}
+                                    <div className="text-[26px] text-gray-500 italic font-medium text-center leading-relaxed px-16 max-w-[700px]">
+                                        {`"`}{achievementDescription}{`"`}
+                                    </div>
 
-                                                    {/* Eye Shape */}
-                                                    <path d="M10 55C10 55 25 35 50 35C75 35 90 55 90 55C90 55 75 75 50 75C25 75 10 55 10 55Z" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-
-                                                    {/* Pupil */}
-                                                    <circle cx="50" cy="55" r="10" stroke="currentColor" strokeWidth="4" />
-                                                </svg>
-                                            </div>
-                                        </div>
+                                    {/* Eye Icon is already in the PNG, but if we need it dynamic we can add it here. 
+                                        Assuming the base PNG includes the eye as shown in user's image. 
+                                        If not, I will add it back absolutely positioned at the bottom.
+                                        Based on user request "I want exactly this image", I'm assuming the PNG has the eye.
+                                        BUT to be safe and ensure high quality vector, I'll overlay the SVG eye exactly where it should be.
+                                    */}
+                                    <div className="absolute bottom-[460px] opacity-40 text-[#CE8E94]">
+                                        <svg viewBox="0 0 100 80" width="160" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <line x1="50" y1="15" x2="50" y2="0" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                            <line x1="28" y1="22" x2="18" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                            <line x1="72" y1="22" x2="82" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                            <line x1="12" y1="38" x2="0" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                            <line x1="88" y1="38" x2="100" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                            <path d="M10 55C10 55 25 35 50 35C75 35 90 55 90 55C90 55 75 75 50 75C25 75 10 55 10 55Z" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+                                            <circle cx="50" cy="55" r="10" stroke="currentColor" strokeWidth="4" />
+                                        </svg>
                                     </div>
                                 </div>
                             </div>
