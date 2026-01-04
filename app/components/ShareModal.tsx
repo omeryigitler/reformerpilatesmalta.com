@@ -130,7 +130,8 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                             />
 
                             {/* CONTENT OVERLAY - STRICTLY 15:23 VISUALS (Small Card) */}
-                            <div className="bg-gradient-to-br from-[#FFF0F3] to-[#F5F1EE] rounded-3xl p-8 mb-8 shadow-lg border border-[#CE8E94]/10 transform scale-[2.5] origin-center flex flex-col items-center justify-center">
+                            {/* CONTENT OVERLAY - REMOVED CSS SHELL TO PREVENT DUPLICATION (Text Only) */}
+                            <div className="transform scale-[2.5] origin-center flex flex-col items-center justify-center p-8 mb-8">
                                 <div className="text-6xl mb-4 flex justify-center text-[#CE8E94]">
                                     {achievementIcon}
                                 </div>
