@@ -82,6 +82,21 @@ const BadgeStoryContent = ({ title, icon, description }: { title: string, icon: 
                             {`"`}{description}{`"`}
                         </div>
                     </div>
+
+                    {/* Bottom Eye Decoration */}
+                    <div className="w-full flex justify-center pb-16">
+                        <div className="w-48 h-48 text-[#CE8E94]/40">
+                            <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <line x1="50" y1="15" x2="50" y2="0" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                <line x1="28" y1="22" x2="18" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                <line x1="72" y1="22" x2="82" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                <line x1="12" y1="38" x2="0" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                <line x1="88" y1="38" x2="100" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                <path d="M10 55C10 55 25 35 50 35C75 35 90 55 90 55C90 55 75 75 50 75C25 75 10 55 10 55Z" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+                                <circle cx="50" cy="55" r="10" stroke="currentColor" strokeWidth="4" />
+                            </svg>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
