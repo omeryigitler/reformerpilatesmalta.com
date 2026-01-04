@@ -44,12 +44,15 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
             await new Promise(resolve => setTimeout(resolve, 100));
             // Perform generation on the high-res off-screen container
             return await htmlToImage.toBlob(element, {
-                pixelRatio: 1, // We already use 1080x1920, so 1 is enough
+                pixelRatio: 2, // CRISP HD VERSION
                 backgroundColor: '#FFF0E5',
                 cacheBust: true,
                 skipAutoScale: true,
                 width: 1080,
-                height: 1920
+                height: 1920,
+                style: {
+                    transform: 'scale(1)', // PREVENTION OF SCALING BUGS
+                }
             });
         } catch (err) {
             console.error('Image generation failed:', err);
@@ -190,15 +193,19 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                             {/* Off-screen/Capture Container (9:16 Portrait) */}
                             <div id="capture-container" className="relative w-[1080px] h-[1920px] bg-[#FFF0E5] flex flex-col items-center justify-center overflow-hidden">
 
-                                {/* Professional Background Glow (Story Style) */}
-                                <div
-                                    className="absolute inset-0 w-full h-full opacity-60"
-                                    style={{
-                                        background: 'radial-gradient(circle at center, rgba(206,142,148,0.5) 0%, rgba(206,142,148,0.1) 60%, rgba(206,142,148,0) 100%)',
-                                        filter: 'blur(80px)',
-                                        zIndex: 0
-                                    }}
-                                />
+                                {/* Professional Background Layer (Bottom) - SVG for Stable Rendering */}
+                                <div className="absolute inset-0 w-full h-full opacity-60" style={{ zIndex: 0 }}>
+                                    <svg viewBox="0 0 1080 1920" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+                                        <g filter="url(#glow-filter)">
+                                            <circle cx="540" cy="960" r="500" fill="#CE8E94" fillOpacity="0.4" />
+                                        </g>
+                                        <defs>
+                                            <filter id="glow-filter" x="-500" y="0" width="2080" height="2000" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                                                <feGaussianBlur stdDeviation="120" result="effect1_foregroundBlur" />
+                                            </filter>
+                                        </defs>
+                                    </svg>
+                                </div>
 
                                 {/* Centered Achievement Card */}
                                 <div
