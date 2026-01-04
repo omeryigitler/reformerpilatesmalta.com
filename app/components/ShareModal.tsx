@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Modal } from './Modal';
 import { Facebook, Instagram, Twitter, MessageCircle, Link, Download } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
@@ -20,6 +20,7 @@ interface ShareModalProps {
 export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon, achievementDescription }: ShareModalProps) => {
     const [actionStatus, setActionStatus] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
+    const isGeneratingRef = useRef(false);
     const [preGeneratedBlob, setPreGeneratedBlob] = useState<Blob | null>(null);
     const [alertConfig, setAlertConfig] = useState<{
         isOpen: boolean;
@@ -57,12 +58,16 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
     React.useEffect(() => {
         if (isOpen) {
             const timer = setTimeout(async () => {
+                if (isGeneratingRef.current) return;
+                isGeneratingRef.current = true;
                 const blob = await generateImageBlob();
                 if (blob) setPreGeneratedBlob(blob);
+                isGeneratingRef.current = false;
             }, 300); // Give modal animation time to settle
             return () => clearTimeout(timer);
         } else {
             setPreGeneratedBlob(null);
+            isGeneratingRef.current = false;
         }
     }, [isOpen]);
 
@@ -80,10 +85,11 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
     };
 
     const handleAction = async (platform: string) => {
-        // Only block if we are actually generating an image
-        if (isGenerating) return;
+        // Only block if we are actually generating an image right now
+        if (isGeneratingRef.current) return;
 
         // Reset previous states to allow a fresh start for consecutive shares
+        // Resetting status to platform gives immediate visual feedback
         setActionStatus(platform);
 
         const text = `I just unlocked the ${achievementTitle} badge on Reformer Pilates Malta! 🏆`;
@@ -102,8 +108,8 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                 let blob = preGeneratedBlob;
                 if (!blob) {
                     setIsGenerating(true);
+                    isGeneratingRef.current = true;
                     blob = await generateImageBlob();
-                    setIsGenerating(false);
                     if (blob) setPreGeneratedBlob(blob);
                 }
 
@@ -125,7 +131,6 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                                     title: achievementTitle,
                                     text: text,
                                 });
-                                // Native share successful
                                 setActionStatus('Done');
                             } catch (shareErr) {
                                 console.log('Native share canceled or failed', shareErr);
@@ -151,17 +156,15 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
             }
         } catch (err) {
             console.error('Action failed:', err);
+            setActionStatus(null);
+        } finally {
             setIsGenerating(false);
-            setActionStatus(null);
+            isGeneratingRef.current = false;
+            // Visual feedback reset: Keep 'Done' for a very short time
+            setTimeout(() => {
+                setActionStatus(null);
+            }, 800);
         }
-
-        // Release the logic lock immediately after the action is initiated (redirection or share sheet opened)
-        // This allows consecutive clicks without waiting for the status text to disappear.
-
-        // Visual feedback reset: Keep 'Done' for a very short time
-        setTimeout(() => {
-            setActionStatus(null);
-        }, 800);
     };
 
     return (
