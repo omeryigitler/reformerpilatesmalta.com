@@ -34,8 +34,6 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         type: 'info'
     });
 
-    if (!isOpen) return null;
-
     // Helper to generate a blob from the badge card
     const generateImageBlob = async (): Promise<Blob | null> => {
         const element = document.getElementById('capture-container');
@@ -68,6 +66,8 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
             setPreGeneratedBlob(null);
         }
     }, [isOpen]);
+
+    if (!isOpen) return null;
 
     const triggerDownload = (blob: Blob, filename: string) => {
         const url = URL.createObjectURL(blob);
