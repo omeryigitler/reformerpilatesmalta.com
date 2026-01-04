@@ -42,11 +42,14 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         try {
             // Wait a tiny bit for styles to be fully computed if modal just opened
             await new Promise(resolve => setTimeout(resolve, 100));
+            // Perform generation on the high-res off-screen container
             return await htmlToImage.toBlob(element, {
-                pixelRatio: 2,
-                backgroundColor: '#FFFFFF',
+                pixelRatio: 1, // We already use 1080x1920, so 1 is enough
+                backgroundColor: '#FFF0E5',
                 cacheBust: true,
                 skipAutoScale: true,
+                width: 1080,
+                height: 1920
             });
         } catch (err) {
             console.error('Image generation failed:', err);
@@ -85,85 +88,83 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
     };
 
     const handleAction = async (platform: string) => {
-        // Only block if we are actually generating an image right now
-        if (isGeneratingRef.current) return;
-
-        // Reset previous states to allow a fresh start for consecutive shares
-        // Resetting status to platform gives immediate visual feedback
+        // Reset previous state for immediate visual feedback
         setActionStatus(platform);
 
         const text = `I just unlocked the ${achievementTitle} badge on Reformer Pilates Malta! 🏆`;
         const url = typeof window !== 'undefined' ? window.location.href : '';
         const filename = `pilates-badge-${achievementTitle.toLowerCase().replace(/\s+/g, '-')}.png`;
 
-        let triedNativeShare = false;
+        // CATEGORY 1: Direct Redirections (NO BLOB NEEDED)
+        // Opening these immediately preserves user gesture and bypasses all pop-up blockers.
+        if (['Facebook', 'Instagram', 'WhatsApp', 'X', 'Copy Link'].includes(platform)) {
+            if (platform === 'Copy Link') {
+                try {
+                    await navigator.clipboard.writeText(`${text} ${url}`);
+                    setActionStatus('Copied!');
+                } catch (err) {
+                    console.error('Clipboard failed', err);
+                }
+            } else if (platform === 'Facebook') {
+                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+                setActionStatus('Done');
+            } else if (platform === 'Instagram') {
+                window.open('https://instagram.com', '_blank', 'noopener,noreferrer');
+                setActionStatus('Done');
+            } else if (platform === 'WhatsApp') {
+                window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank', 'noopener,noreferrer');
+                setActionStatus('Done');
+            } else if (platform === 'X') {
+                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
+                setActionStatus('Done');
+            }
+
+            // Fast reset for redirections
+            setTimeout(() => setActionStatus(null), 800);
+            return;
+        }
+
+        // CATEGORY 2: Blob-Dependent Actions (Download or Native Share)
+        if (isGeneratingRef.current) return;
 
         try {
-            if (platform === 'Copy Link') {
-                await navigator.clipboard.writeText(`${text} ${url}`);
-                setActionStatus('Copied!');
+            let blob = preGeneratedBlob;
+            if (!blob) {
+                setIsGenerating(true);
+                isGeneratingRef.current = true;
+                blob = await generateImageBlob();
+                if (blob) setPreGeneratedBlob(blob);
             }
-            else {
-                // Use pre-generated blob or generate it on the fly if not ready
-                let blob = preGeneratedBlob;
-                if (!blob) {
-                    setIsGenerating(true);
-                    isGeneratingRef.current = true;
-                    blob = await generateImageBlob();
-                    if (blob) setPreGeneratedBlob(blob);
-                }
 
-                if (platform === 'Download Image') {
-                    if (blob) {
-                        triggerDownload(blob, filename);
-                        setActionStatus('Saved!');
-                    }
-                }
-                else {
-                    // 1. Try Native Sharing (Recommended for mobile)
-                    if (blob && navigator.share) {
-                        const file = new File([blob], filename, { type: 'image/png' });
-                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                            triedNativeShare = true;
-                            try {
-                                await navigator.share({
-                                    files: [file],
-                                    title: achievementTitle,
-                                    text: text,
-                                });
-                                setActionStatus('Done');
-                            } catch (shareErr) {
-                                console.log('Native share canceled or failed', shareErr);
-                                setActionStatus(null);
-                            }
+            if (platform === 'Download Image' && blob) {
+                triggerDownload(blob, filename);
+                setActionStatus('Saved!');
+            } else if (platform === 'Share' || platform === 'Native Share') {
+                // Native Sharing (Recommended for mobile apps/browsers)
+                if (blob && navigator.share) {
+                    const file = new File([blob], filename, { type: 'image/png' });
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: achievementTitle,
+                                text: text,
+                            });
+                            setActionStatus('Done');
+                        } catch (shareErr) {
+                            console.log('Native share canceled', shareErr);
+                            setActionStatus(null);
                         }
-                    }
-
-                    // 2. Fallbacks (Synchronous window.open for better browser compatibility)
-                    if (!triedNativeShare) {
-                        if (platform === 'Facebook') {
-                            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
-                        } else if (platform === 'Instagram') {
-                            window.open('https://instagram.com', '_blank', 'noopener,noreferrer');
-                        } else if (platform === 'WhatsApp') {
-                            window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank', 'noopener,noreferrer');
-                        } else if (platform === 'X') {
-                            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
-                        }
-                        setActionStatus('Done');
                     }
                 }
             }
         } catch (err) {
-            console.error('Action failed:', err);
+            console.error('Blob action failed:', err);
             setActionStatus(null);
         } finally {
             setIsGenerating(false);
             isGeneratingRef.current = false;
-            // Visual feedback reset: Keep 'Done' for a very short time
-            setTimeout(() => {
-                setActionStatus(null);
-            }, 800);
+            setTimeout(() => setActionStatus(null), 1200);
         }
     };
 
@@ -176,29 +177,33 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                         Show off your new <strong>{achievementTitle}</strong> badge to the world!
                     </p>
 
-                    {/* Story-Ready Achievement Card */}
-                    <div className="flex justify-center mb-1 overflow-hidden w-full h-[320px] sm:h-[580px]">
-                        {/* Scaling wrapper to fit the 480px container into the narrower Modal/Phone screen */}
-                        <div className="scale-[0.58] min-[400px]:scale-[0.65] sm:scale-[0.9] origin-top flex-shrink-0">
-                            <div id="capture-container" className="relative p-[80px] bg-white rounded-[40px] flex-shrink-0 w-[480px]">
-                                {/* Stable Halo Effect */}
+                    {/* Story-Ready Achievement Card Preview */}
+                    <div className="flex justify-center mb-1 overflow-hidden w-full h-[450px] sm:h-[620px]">
+                        {/* Scaling wrapper to fit the 1080x1920 Story Canvas into the Modal UI */}
+                        <div className="scale-[0.22] min-[400px]:scale-[0.24] sm:scale-[0.32] origin-top flex-shrink-0">
+                            {/* Off-screen/Capture Container (9:16 Portrait) */}
+                            <div id="capture-container" className="relative w-[1080px] h-[1920px] bg-[#FFF0E5] flex flex-col items-center justify-center overflow-hidden">
+
+                                {/* Professional Background Glow (Story Style) */}
                                 <div
-                                    className="absolute top-[56px] left-1/2 -translate-x-1/2 w-[480px] h-[480px] opacity-70 pointer-events-none"
+                                    className="absolute inset-0 w-full h-full opacity-60"
                                     style={{
-                                        background: 'radial-gradient(circle, rgba(206,142,148,0.45) 0%, rgba(206,142,148,0) 70%)',
-                                        filter: 'blur(35px)',
+                                        background: 'radial-gradient(circle at center, rgba(206,142,148,0.5) 0%, rgba(206,142,148,0.1) 60%, rgba(206,142,148,0) 100%)',
+                                        filter: 'blur(80px)',
                                         zIndex: 0
                                     }}
                                 />
+
+                                {/* Centered Achievement Card */}
                                 <div
                                     id="share-card"
-                                    className="relative z-10 w-[320px] aspect-[1/1.35] flex flex-col items-center justify-between p-12 bg-[#FEF9F9] rounded-[100px] overflow-hidden"
+                                    className="relative z-10 w-[680px] aspect-[1/1.35] flex flex-col items-center justify-between p-24 bg-[#FEF9F9] rounded-[200px] shadow-[0_60px_120px_-30px_rgba(206,142,148,0.3)]"
                                 >
-                                    {/* Inner Card - Matches the 'Solaris' reference aesthetic */}
-                                    <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-between bg-white rounded-[80px] p-8 shadow-[0_40px_80px_-15px_rgba(206,142,148,0.22)] my-3">
-                                        {/* Achievement Icon Area - Centered for mobile feel */}
+                                    {/* Inner Card */}
+                                    <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-between bg-white rounded-[160px] p-16 shadow-[0_40px_80px_-15px_rgba(206,142,148,0.22)] my-6">
+                                        {/* Achievement Icon Area */}
                                         <div className="flex-1 flex flex-col items-center justify-center w-full">
-                                            <div className="text-5xl flex justify-center text-[#CE8E94] filter drop-shadow-[0_4px_8px_rgba(206,142,148,0.12)] mb-4">
+                                            <div className="text-8xl flex justify-center text-[#CE8E94] filter drop-shadow-[0_8px_16px_rgba(206,142,148,0.15)] mb-12 transform scale-150">
                                                 {achievementTitle === 'SOLARIS' ? (
                                                     <svg viewBox="0 0 100 100" className="w-16 h-16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                         {/* Center Circle */}
@@ -218,20 +223,18 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                                                 )}
                                             </div>
 
-                                            {/* Badge Title - Pixel Perfect spacing */}
-                                            <div className="text-xl font-bold tracking-[0.35em] text-[#B5838D] uppercase mb-4 leading-none text-center">
+                                            {/* Badge Title */}
+                                            <div className="text-4xl font-bold tracking-[0.35em] text-[#B5838D] uppercase mb-8 leading-none text-center">
                                                 {achievementTitle}
                                             </div>
-
                                             {/* Description */}
-                                            <div className="text-[11.5px] text-gray-500 italic font-medium text-center leading-relaxed px-1">
+                                            <div className="text-[22px] text-gray-500 italic font-medium text-center leading-relaxed px-4">
                                                 {`"`}{achievementDescription}{`"`}
                                             </div>
                                         </div>
-
-                                        {/* Branding Watermark - Bottom Centered (Custom Eye Logo) */}
-                                        <div className="w-full flex justify-center pb-8">
-                                            <div className="w-20 h-20 text-[#CE8E94]/45">
+                                        {/* Branding Watermark */}
+                                        <div className="w-full flex justify-center pb-12">
+                                            <div className="w-40 h-40 text-[#CE8E94]/45">
                                                 <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                     {/* Five Rays */}
                                                     <line x1="50" y1="15" x2="50" y2="0" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
