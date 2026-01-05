@@ -57,7 +57,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
     const renderDesign = (isCapture: boolean) => (
         <div
             id={isCapture ? "capture-container" : undefined}
-            className="relative w-[1080px] h-[1920px] bg-[#FFF0E5] flex flex-col items-center justify-start overflow-hidden pt-[240px]"
+            className="relative w-[1080px] h-[1920px] bg-[#FFF0E5] flex flex-col items-center justify-center overflow-hidden"
         >
             {/* Professional Background Glow (Story Style) */}
             <div
@@ -72,8 +72,8 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
             {/* Centered Achievement Card ( with drop-shadow fix ) */}
             <div
                 style={{
-                    width: '620px',
-                    aspectRatio: '1/1.5',
+                    width: '680px',
+                    aspectRatio: '1/1.35',
                     backgroundColor: '#FEF9F9',
                     borderRadius: '200px',
                     display: 'flex',
@@ -89,7 +89,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                 {/* Inner Card */}
                 <div style={{
                     width: '100%',
-                    height: '92%',
+                    flex: 1,
                     backgroundColor: 'white',
                     borderRadius: '160px',
                     display: 'flex',
@@ -97,10 +97,11 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     padding: '64px',
-                    filter: 'drop-shadow(0 20px 30px rgba(206,142,148,0.12))'
+                    filter: 'drop-shadow(0 20px 30px rgba(206,142,148,0.12))',
+                    margin: '24px 0'
                 }}>
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                        <div style={{ fontSize: '160px', color: '#CE8E94', marginBottom: '48px', display: 'flex', justifyContent: 'center' }}>
+                        <div style={{ fontSize: '120px', color: '#CE8E94', marginBottom: '48px', display: 'flex', justifyContent: 'center' }}>
                             {achievementTitle === 'SOLARIS' ? (
                                 <svg viewBox="0 0 100 100" style={{ width: '130px', height: '130px' }} fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <circle cx="50" cy="50" r="12" stroke="currentColor" strokeWidth="2.5" />
@@ -244,8 +245,8 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
 
     return (
         <>
-            <Modal onClose={onClose} className="max-w-[420px]" useDefaultPadding={false}>
-                <div className="text-center pt-8 pb-4 px-4 overflow-hidden">
+            <Modal onClose={onClose} className="max-w-xl">
+                <div className="text-center p-6 pt-8 overflow-hidden">
                     <h3 className="text-xl font-bold text-[#CE8E94] mb-0.5 tracking-tight">Share Your Success</h3>
                     <p className="text-gray-400 text-[12px] mb-3">
                         Show off your new <strong>{achievementTitle}</strong> badge to the world!
