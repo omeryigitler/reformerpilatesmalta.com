@@ -152,43 +152,47 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             {/* --- VISUAL DECORATIONS (MIMIC 15:23 DESIGN) --- */}
 
             {/* Top Soft Glow/Gradient Overlay */}
-            <div className="absolute top-0 inset-x-0 h-1/3 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+            <div className={`absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent pointer-events-none ${isCapture ? 'opacity-100' : 'opacity-50'}`} />
 
-            {/* CENTER OVAL CARD */}
-            <div className={`relative flex flex-col items-center justify-center rounded-[60px] ${theme.card} ${isCapture ? 'w-[640px] px-12 py-16 shadow-[0_30px_60px_rgba(0,0,0,0.08)]' : 'w-[200px] py-10 px-4 rounded-[30px] shadow-lg'}`}>
+            {/* CENTER OVAL CARD or CONTENT WRAPPER */}
+            {/* Using scale-[2.5] directly on the wrapper in 'capture' mode to match 15:23 proportions exactly */}
+            <div className={`relative flex flex-col items-center justify-center ${isCapture ? 'transform scale-[2.5]' : 'transform scale-100'}`}>
 
-                {/* ICON & STAR GROUP */}
-                <div className={`flex flex-col items-center mb-6`}>
-                    {/* Top Icon (Dynamic from Props) */}
-                    <div className={`${theme.accent} ${isCapture ? 'text-[120px] mb-4' : 'text-4xl mb-2'}`}>
-                        {achievementIcon}
-                    </div>
+                {/* THE CARD ITSELF */}
+                <div className={`relative flex flex-col items-center justify-center rounded-[40px] ${theme.card} shadow-[0_20px_40px_rgba(0,0,0,0.1)] border border-white/50 w-[260px] py-12 px-6`}>
 
-                    {/* Main Title (LEVEL) */}
-                    <div className={`font-bold uppercase tracking-[0.2em] leading-none text-center ${theme.text} ${isCapture ? 'text-6xl mb-4' : 'text-xl mb-2'}`}>
-                        {achievementTitle}
-                    </div>
+                    {/* ICON & STAR GROUP */}
+                    <div className={`flex flex-col items-center`}>
+                        {/* Top Icon (Dynamic from Props) */}
+                        <div className={`${theme.accent} text-5xl mb-4 drop-shadow-sm`}>
+                            {achievementIcon}
+                        </div>
 
-                    {/* Quote / Subtitle */}
-                    <div className={`italic font-medium text-center opacity-80 ${theme.text} ${isCapture ? 'text-xl max-w-[400px]' : 'text-[8px] max-w-[120px]'}`}>
-                        &quot;{achievementDescription}&quot;
-                    </div>
+                        {/* Main Title (LEVEL) */}
+                        <div className={`font-bold uppercase tracking-[0.25em] leading-none text-center ${theme.text} text-2xl mb-3`}>
+                            {achievementTitle}
+                        </div>
 
-                    {/* Bottom Eye Icon (SVG) */}
-                    <div className={`${theme.accent} ${isCapture ? 'w-20 h-20 mt-8 opacity-60' : 'w-6 h-6 mt-4 opacity-60'}`}>
-                        <svg viewBox="0 0 100 80" fill="none" stroke="currentColor" strokeWidth={isCapture ? "3" : "6"}>
-                            <path d="M10 55C10 55 25 35 50 35C75 35 90 55 90 55C90 55 75 75 50 75C25 75 10 55 10 55Z" strokeLinecap="round" strokeLinejoin="round" />
-                            <circle cx="50" cy="55" r="10" />
-                        </svg>
+                        {/* Quote / Subtitle */}
+                        <div className={`italic font-medium text-center opacity-80 ${theme.text} text-[10px] leading-relaxed max-w-[140px]`}>
+                            &quot;{achievementDescription}&quot;
+                        </div>
+
+                        {/* Bottom Eye Icon (SVG) */}
+                        <div className={`${theme.accent} w-8 h-8 mt-6 opacity-60`}>
+                            <svg viewBox="0 0 100 80" fill="none" stroke="currentColor" strokeWidth="6">
+                                <path d="M10 55C10 55 25 35 50 35C75 35 90 55 90 55C90 55 75 75 50 75C25 75 10 55 10 55Z" strokeLinecap="round" strokeLinejoin="round" />
+                                <circle cx="50" cy="55" r="10" />
+                            </svg>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Bottom Text (Visual Balance) */}
-            <div className={`absolute bottom-32 text-center font-medium italic opacity-70 ${theme.sub} ${isCapture ? 'text-3xl tracking-wider' : 'hidden'}`}>
-                Your {achievementTitle.toLowerCase()} journey begins.
+                {/* Bottom Text (Outside Card) */}
+                <div className={`text-center font-medium italic opacity-70 ${theme.sub} text-xs tracking-wider mt-12 max-w-[200px]`}>
+                    Your {achievementTitle.toLowerCase()} journey begins.
+                </div>
             </div>
-
         </div>
     );
 
@@ -204,6 +208,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                     zIndex: -1,
                     opacity: 0,
                     pointerEvents: 'none',
+                    // Move far away
                     transform: 'translateX(-9999px)'
                 }}
             >
