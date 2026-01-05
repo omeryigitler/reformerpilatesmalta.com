@@ -6,8 +6,6 @@ import { Facebook, Instagram, Twitter, MessageCircle, Link, Download } from 'luc
 import * as htmlToImage from 'html-to-image';
 import { shareBackgroundBase64 } from '@/app/data/shareBackgroundBase64';
 
-
-
 interface ShareModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -19,19 +17,22 @@ interface ShareModalProps {
 export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon, achievementDescription }: ShareModalProps) => {
     const [actionStatus, setActionStatus] = useState<string | null>(null);
 
+    // If not open, don't render anything
     if (!isOpen) return null;
 
     const generateImageBlob = async (): Promise<Blob | null> => {
+        // Target the hidden high-res container
         const element = document.getElementById('capture-container');
         if (!element) return null;
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 100)); // small delay for render
+            // Small delay to ensure rendering artifacts are cleared if any
+            await new Promise(resolve => setTimeout(resolve, 100));
+
             return await htmlToImage.toBlob(element, {
-                pixelRatio: 2, // High quality export
+                pixelRatio: 1, // 1:1 since the container is already 1080x1920
                 style: { transform: 'scale(1)' },
                 backgroundColor: '#FFF0E5',
-                // Force dimensions to Instagram Story
                 width: 1080,
                 height: 1920
             });
@@ -57,7 +58,6 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     link.href = URL.createObjectURL(blob);
                     link.click();
                 } else if (platform === 'Instagram' && navigator.share && navigator.canShare) {
-                    // Attempt native share for Instagram Story
                     const file = new File([blob], 'pilates-story.png', { type: 'image/png' });
                     if (navigator.canShare({ files: [file] })) {
                         try {
@@ -68,7 +68,6 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                             });
                         } catch (err) {
                             console.error('Share failed:', err);
-                            // Fallback
                             window.open('https://instagram.com', '_blank');
                         }
                     } else {
@@ -77,9 +76,11 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                 } else {
                     window.open('https://instagram.com', '_blank');
                 }
+            } else {
+                // If blob generation failed, fallback
+                if (platform === 'Instagram') window.open('https://instagram.com', '_blank');
             }
         } else {
-            // ... existing logic for other platforms
             setTimeout(() => {
                 if (platform === 'Facebook') {
                     window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank');
@@ -106,9 +107,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         <Modal onClose={onClose}>
             <div className="text-center">
                 <div className="flex justify-between items-center mb-2">
-                    {/* Placeholder for header spacing if needed */}
                     <div></div>
-                    {/* Close button is handled by generic Modal, but we can have custom header too */}
                 </div>
 
                 <h3 className="text-2xl font-bold text-[#CE8E94] mb-2">Share Your Success</h3>
@@ -116,31 +115,46 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     Show off your new <strong>{achievementTitle}</strong> badge to the world!
                 </p>
 
-                {/* Preview Card */}
-                {/* Preview Card Area - Includes hidden capture container for high-res export */}
-                <div className="relative flex justify-center mb-8">
-                    {/* Visible Preview (Scaled Down) */}
-                    <div className="transform scale-[0.4] origin-top h-[320px] -mb-[480px]"> {/* Hack to show large content scaled down */}
-                        <div id="capture-container" className="relative w-[1080px] h-[1920px] flex flex-col items-center justify-center overflow-hidden">
-                            {/* STATIC IMAGE BACKGROUND - Replaces CSS Gradient with VALID image */}
-                            <img
-                                src={shareBackgroundBase64}
-                                alt="Background"
-                                className="absolute inset-0 w-full h-full object-cover z-0"
-                            />
+                {/* --- VISIBLE PREVIEW CARD (User Sees This) --- */}
+                {/* Clean CSS representation without the scaling hacks causing glitches */}
+                <div className="relative w-full max-w-[320px] mx-auto aspect-[9/16] rounded-xl overflow-hidden shadow-lg mb-8 border border-gray-100">
+                    <img
+                        src={shareBackgroundBase64}
+                        alt="Background"
+                        className="absolute inset-0 w-full h-full object-cover z-0"
+                    />
+                    <div className="relative z-10 flex flex-col items-center justify-center h-full p-6 text-center">
+                        <div className="text-6xl mb-6 text-[#CE8E94] drop-shadow-sm">
+                            {achievementIcon}
+                        </div>
+                        <div className="text-xl font-bold tracking-widest text-[#B5838D] uppercase mb-3">
+                            {achievementTitle}
+                        </div>
+                        <div className="text-xs text-gray-500 italic font-medium max-w-[200px]">
+                            {achievementDescription}
+                        </div>
+                    </div>
+                </div>
 
-                            {/* CONTENT OVERLAY - STRICTLY 15:23 VISUALS (Small Card) */}
-                            {/* CONTENT OVERLAY - REMOVED CSS SHELL TO PREVENT DUPLICATION (Text Only) */}
-                            <div className="transform scale-[2.5] origin-center flex flex-col items-center justify-center p-8 mb-8">
-                                <div className="text-6xl mb-4 flex justify-center text-[#CE8E94]">
-                                    {achievementIcon}
-                                </div>
-                                <div className="text-sm font-bold tracking-widest text-[#B5838D] uppercase mb-2 text-center">
-                                    {achievementTitle}
-                                </div>
-                                <div className="text-xs text-gray-400 italic font-medium text-center max-w-[300px]">
-                                    {achievementDescription}
-                                </div>
+                {/* --- HIDDEN HIGH-RES CAPTURE CONTAINER (System Uses This) --- */}
+                {/* Strictly 1080x1920, using the 'Working System' structure but isolated to prevent visual bugs */}
+                <div className="fixed top-0 left-0 pointer-events-none opacity-0 z-[-1]" style={{ transform: 'translateX(-9999px)' }}>
+                    <div id="capture-container" className="relative w-[1080px] h-[1920px] flex flex-col items-center justify-center overflow-hidden">
+                        <img
+                            src={shareBackgroundBase64}
+                            alt="Background"
+                            className="absolute inset-0 w-full h-full object-cover z-0"
+                        />
+                        <div className="relative z-10 flex flex-col items-center justify-center p-16 text-center">
+                            {/* Scaled up content for 1080p */}
+                            <div className="text-[200px] mb-12 text-[#CE8E94]">
+                                {achievementIcon}
+                            </div>
+                            <div className="text-6xl font-bold tracking-[0.2em] text-[#B5838D] uppercase mb-10">
+                                {achievementTitle}
+                            </div>
+                            <div className="text-4xl text-gray-500 italic font-medium max-w-[800px]">
+                                {achievementDescription}
                             </div>
                         </div>
                     </div>
