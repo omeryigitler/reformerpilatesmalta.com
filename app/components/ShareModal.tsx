@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Modal } from './Modal';
 import { Facebook, Instagram, Twitter, MessageCircle, Link, Download } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
-import { shareBackgroundBase64 } from '@/app/data/shareBackgroundBase64';
 
+
+import { AlertModal } from './AlertModal';
 
 
 interface ShareModalProps {
@@ -18,20 +19,35 @@ interface ShareModalProps {
 
 export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon, achievementDescription }: ShareModalProps) => {
     const [actionStatus, setActionStatus] = useState<string | null>(null);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const isGeneratingRef = useRef(false);
+    const [preGeneratedBlob, setPreGeneratedBlob] = useState<Blob | null>(null);
+    const [alertConfig, setAlertConfig] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        type: 'info' | 'success' | 'error';
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        type: 'info'
+    });
 
-    if (!isOpen) return null;
-
+    // Helper to generate a blob from the badge card
     const generateImageBlob = async (): Promise<Blob | null> => {
         const element = document.getElementById('capture-container');
         if (!element) return null;
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 100)); // small delay for render
+            // Wait a tiny bit for styles to be fully computed if modal just opened
+            await new Promise(resolve => setTimeout(resolve, 100));
+            // Perform generation on the high-res off-screen container
             return await htmlToImage.toBlob(element, {
-                pixelRatio: 2, // High quality export
-                style: { transform: 'scale(1)' },
+                pixelRatio: 1, // We already use 1080x1920, so 1 is enough
                 backgroundColor: '#FFF0E5',
-                // Force dimensions to Instagram Story
+                cacheBust: true,
+                skipAutoScale: true,
                 width: 1080,
                 height: 1920
             });
@@ -41,162 +57,286 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         }
     };
 
+    // Pre-generate the blob as soon as the modal opens to make sharing synchronous
+    React.useEffect(() => {
+        if (isOpen) {
+            const timer = setTimeout(async () => {
+                if (isGeneratingRef.current) return;
+                isGeneratingRef.current = true;
+                const blob = await generateImageBlob();
+                if (blob) setPreGeneratedBlob(blob);
+                isGeneratingRef.current = false;
+            }, 300); // Give modal animation time to settle
+            return () => clearTimeout(timer);
+        } else {
+            setPreGeneratedBlob(null);
+            isGeneratingRef.current = false;
+        }
+    }, [isOpen]);
+
+    if (!isOpen) return null;
+
+    const triggerDownload = (blob: Blob, filename: string) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
     const handleAction = async (platform: string) => {
+        // Reset previous state for immediate visual feedback
         setActionStatus(platform);
 
         const text = `I just unlocked the ${achievementTitle} badge on Reformer Pilates Malta! 🏆`;
         const url = typeof window !== 'undefined' ? window.location.href : '';
+        const filename = `pilates-badge-${achievementTitle.toLowerCase().replace(/\s+/g, '-')}.png`;
 
-        // Generate image if needed for download or share
-        if (platform === 'Download Image' || platform === 'Instagram') {
-            const blob = await generateImageBlob();
-            if (blob) {
-                if (platform === 'Download Image') {
-                    const link = document.createElement('a');
-                    link.download = `pilates-achievement-${Date.now()}.png`;
-                    link.href = URL.createObjectURL(blob);
-                    link.click();
-                } else if (platform === 'Instagram' && navigator.share && navigator.canShare) {
-                    // Attempt native share for Instagram Story
-                    const file = new File([blob], 'pilates-story.png', { type: 'image/png' });
-                    if (navigator.canShare({ files: [file] })) {
+        // CATEGORY 1: Direct Redirections (Link Only)
+        if (['Facebook', 'WhatsApp', 'X', 'Copy Link'].includes(platform)) {
+            if (platform === 'Copy Link') {
+                try {
+                    await navigator.clipboard.writeText(`${text} ${url}`);
+                    setActionStatus('Copied!');
+                } catch (err) {
+                    console.error('Clipboard failed', err);
+                }
+            } else if (platform === 'Facebook') {
+                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+                setActionStatus('Done');
+            } else if (platform === 'WhatsApp') {
+                window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank', 'noopener,noreferrer');
+                setActionStatus('Done');
+            } else if (platform === 'X') {
+                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
+                setActionStatus('Done');
+            }
+
+            // Fast reset for redirections
+            setTimeout(() => setActionStatus(null), 600);
+            return;
+        }
+
+        // CATEGORY 2: Blob-Dependent Actions (Image Share/Download)
+        if (isGeneratingRef.current) return;
+
+        try {
+            let blob = preGeneratedBlob;
+            if (!blob) {
+                setIsGenerating(true);
+                isGeneratingRef.current = true;
+                blob = await generateImageBlob();
+                if (blob) setPreGeneratedBlob(blob);
+            }
+
+            if (platform === 'Download Image' && blob) {
+                triggerDownload(blob, filename);
+                setActionStatus('Saved!');
+            } else if (platform === 'Instagram' || platform === 'Native Share') {
+                // Image-based sharing (Instagram or System Share)
+                if (blob && navigator.share) {
+                    const file = new File([blob], filename, { type: 'image/png' });
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
                         try {
                             await navigator.share({
                                 files: [file],
-                                title: 'Share Achievement',
-                                text: text
+                                title: achievementTitle,
+                                text: text,
                             });
-                        } catch (err) {
-                            console.error('Share failed:', err);
-                            // Fallback
-                            window.open('https://instagram.com', '_blank');
+                            setActionStatus('Done');
+                        } catch (shareErr) {
+                            console.log('Native share canceled', shareErr);
+                            // If user cancels, we just reset
+                            setActionStatus(null);
                         }
-                    } else {
-                        window.open('https://instagram.com', '_blank');
+                    } else if (platform === 'Instagram') {
+                        // If cannot share files but specifically clicked Instagram, fallback to link
+                        window.open('https://instagram.com', '_blank', 'noopener,noreferrer');
+                        setActionStatus('Done');
                     }
-                } else {
-                    window.open('https://instagram.com', '_blank');
+                } else if (platform === 'Instagram') {
+                    // Fallback for desktop/non-share browsers
+                    window.open('https://instagram.com', '_blank', 'noopener,noreferrer');
+                    setActionStatus('Done');
                 }
             }
-        } else {
-            // ... existing logic for other platforms
-            setTimeout(() => {
-                if (platform === 'Facebook') {
-                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank');
-                } else if (platform === 'WhatsApp') {
-                    window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
-                } else if (platform === 'X') {
-                    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
-                } else if (platform === 'Copy Link') {
-                    navigator.clipboard.writeText(`${text} ${url}`);
-                }
-            }, 500);
-        }
-
-        // Reset status
-        setTimeout(() => {
+        } catch (err) {
+            console.error('Blob action failed:', err);
             setActionStatus(null);
-            if (platform !== 'Copy Link' && platform !== 'Download Image') {
-                onClose();
-            }
-        }, 1500);
+        } finally {
+            setIsGenerating(false);
+            isGeneratingRef.current = false;
+            // Immediate reset after a short visual confirm
+            setTimeout(() => setActionStatus(null), 800);
+        }
     };
 
     return (
-        <Modal onClose={onClose}>
-            <div className="text-center">
-                <div className="flex justify-between items-center mb-2">
-                    {/* Placeholder for header spacing if needed */}
-                    <div></div>
-                    {/* Close button is handled by generic Modal, but we can have custom header too */}
-                </div>
+        <>
+            <Modal onClose={onClose} className="max-w-[420px]" useDefaultPadding={false}>
+                <div className="text-center pt-8 pb-4 px-4 overflow-hidden">
+                    <h3 className="text-xl font-bold text-[#CE8E94] mb-0.5 tracking-tight">Share Your Success</h3>
+                    <p className="text-gray-400 text-[12px] mb-3">
+                        Show off your new <strong>{achievementTitle}</strong> badge to the world!
+                    </p>
 
-                <h3 className="text-2xl font-bold text-[#CE8E94] mb-2">Share Your Success</h3>
-                <p className="text-gray-500 text-sm mb-6">
-                    Show off your new <strong>{achievementTitle}</strong> badge to the world!
-                </p>
+                    {/* Story-Ready Achievement Card Preview */}
+                    <div className="flex justify-center mb-1 overflow-hidden w-full h-[450px] sm:h-[620px]">
+                        {/* Scaling wrapper to fit the 1080x1920 Story Canvas into the Modal UI */}
+                        <div className="scale-[0.22] min-[400px]:scale-[0.24] sm:scale-[0.32] origin-top flex-shrink-0">
+                            {/* Off-screen/Capture Container (9:16 Portrait) */}
+                            <div id="capture-container" className="relative w-[1080px] h-[1920px] bg-[#FFF0E5] flex flex-col items-center justify-center overflow-hidden">
 
-                {/* Preview Card */}
-                {/* Preview Card Area - Includes hidden capture container for high-res export */}
-                <div className="relative flex justify-center mb-8">
-                    {/* Visible Preview (Scaled Down) */}
-                    <div className="transform scale-[0.4] origin-top h-[320px] -mb-[480px]"> {/* Hack to show large content scaled down */}
-                        <div id="capture-container" className="relative w-[1080px] h-[1920px] flex flex-col items-center justify-center overflow-hidden">
-                            {/* STATIC IMAGE BACKGROUND - Replaces CSS Gradient with VALID image */}
-                            <img
-                                src={shareBackgroundBase64}
-                                alt="Background"
-                                className="absolute inset-0 w-full h-full object-cover z-0"
-                            />
+                                {/* Professional Background Glow (Story Style) */}
+                                <div
+                                    className="absolute inset-0 w-full h-full opacity-60"
+                                    style={{
+                                        background: 'radial-gradient(circle at center, rgba(206,142,148,0.5) 0%, rgba(206,142,148,0.1) 60%, rgba(206,142,148,0) 100%)',
+                                        filter: 'blur(80px)',
+                                        zIndex: 0
+                                    }}
+                                />
 
-                            {/* CONTENT OVERLAY - STRICTLY 15:23 VISUALS (Small Card) */}
-                            {/* CONTENT OVERLAY - REMOVED CSS SHELL TO PREVENT DUPLICATION (Text Only) */}
-                            <div className="transform scale-[2.5] origin-center flex flex-col items-center justify-center p-8 mb-8">
-                                <div className="text-6xl mb-4 flex justify-center text-[#CE8E94]">
-                                    {achievementIcon}
-                                </div>
-                                <div className="text-sm font-bold tracking-widest text-[#B5838D] uppercase mb-2 text-center">
-                                    {achievementTitle}
-                                </div>
-                                <div className="text-xs text-gray-400 italic font-medium text-center max-w-[300px]">
-                                    {achievementDescription}
+                                {/* Centered Achievement Card */}
+                                <div
+                                    id="share-card"
+                                    className="relative z-10 w-[680px] aspect-[1/1.35] flex flex-col items-center justify-between p-24 bg-[#FEF9F9] rounded-[200px] shadow-[0_60px_120px_-30px_rgba(206,142,148,0.3)]"
+                                >
+                                    {/* Inner Card */}
+                                    <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-between bg-white rounded-[160px] p-16 shadow-[0_40px_80px_-15px_rgba(206,142,148,0.22)] my-6">
+                                        {/* Achievement Icon Area */}
+                                        <div className="flex-1 flex flex-col items-center justify-center w-full">
+                                            <div className="text-8xl flex justify-center text-[#CE8E94] filter drop-shadow-[0_8px_16px_rgba(206,142,148,0.15)] mb-12 transform scale-150">
+                                                {achievementTitle === 'SOLARIS' ? (
+                                                    <svg viewBox="0 0 100 100" className="w-16 h-16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        {/* Center Circle */}
+                                                        <circle cx="50" cy="50" r="12" stroke="currentColor" strokeWidth="2.5" />
+                                                        {/* 8 Thin Rays */}
+                                                        <line x1="50" y1="28" x2="50" y2="10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                        <line x1="50" y1="72" x2="50" y2="90" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                        <line x1="72" y1="50" x2="90" y2="50" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                        <line x1="28" y1="50" x2="10" y2="50" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                        <line x1="66" y1="34" x2="79" y2="21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                        <line x1="34" y1="66" x2="21" y2="79" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                        <line x1="66" y1="66" x2="79" y2="79" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                        <line x1="34" y1="34" x2="21" y2="21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                                    </svg>
+                                                ) : (
+                                                    achievementIcon
+                                                )}
+                                            </div>
+
+                                            {/* Badge Title */}
+                                            <div className="text-4xl font-bold tracking-[0.35em] text-[#B5838D] uppercase mb-8 leading-none text-center">
+                                                {achievementTitle}
+                                            </div>
+                                            {/* Description */}
+                                            <div className="text-[22px] text-gray-500 italic font-medium text-center leading-relaxed px-4">
+                                                {`"`}{achievementDescription}{`"`}
+                                            </div>
+                                        </div>
+                                        {/* Branding Watermark */}
+                                        <div className="w-full flex justify-center pb-12">
+                                            <div className="w-40 h-40 text-[#CE8E94]/45">
+                                                <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    {/* Five Rays */}
+                                                    <line x1="50" y1="15" x2="50" y2="0" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                                    <line x1="28" y1="22" x2="18" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                                    <line x1="72" y1="22" x2="82" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                                    <line x1="12" y1="38" x2="0" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                                    <line x1="88" y1="38" x2="100" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+
+                                                    {/* Eye Shape */}
+                                                    <path d="M10 55C10 55 25 35 50 35C75 35 90 55 90 55C90 55 75 75 50 75C25 75 10 55 10 55Z" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+
+                                                    {/* Pupil */}
+                                                    <circle cx="50" cy="55" r="10" stroke="currentColor" strokeWidth="4" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    {/* Share Actions Grid */}
+                    <div className="grid grid-cols-2 gap-2 mb-3 px-4">
+                        <button
+                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 transition-all duration-300 shadow-sm group ${actionStatus === 'Instagram' ? 'bg-[#CE8E94] text-white' : 'bg-white text-gray-600'} ${isGenerating ? 'opacity-50' : ''}`}
+                            onClick={() => handleAction('Instagram')}
+                            disabled={isGenerating}
+                        >
+                            <Instagram className={`w-4 h-4 group-hover:text-white ${actionStatus === 'Instagram' ? 'text-white' : 'text-[#CE8E94]'}`} />
+                            <span className="text-[11px] font-bold text-nowrap">
+                                {isGenerating && actionStatus === 'Instagram' ? 'Sharing...' : (actionStatus === 'Instagram' ? 'Done' : 'Instagram')}
+                            </span>
+                        </button>
+
+                        <button
+                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 transition-all duration-300 shadow-sm group ${actionStatus === 'Facebook' ? 'bg-[#CE8E94] text-white' : 'bg-white text-gray-600'} ${isGenerating ? 'opacity-50' : ''}`}
+                            onClick={() => handleAction('Facebook')}
+                            disabled={isGenerating}
+                        >
+                            <Facebook className={`w-4 h-4 group-hover:text-white ${actionStatus === 'Facebook' ? 'text-white' : 'text-[#CE8E94]'}`} />
+                            <span className="text-[11px] font-bold text-nowrap">
+                                {isGenerating && actionStatus === 'Facebook' ? 'Sharing...' : (actionStatus === 'Facebook' ? 'Done' : 'Facebook')}
+                            </span>
+                        </button>
+
+                        <button
+                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 transition-all duration-300 shadow-sm group ${actionStatus === 'WhatsApp' ? 'bg-[#CE8E94] text-white' : 'bg-white text-gray-600'} ${isGenerating ? 'opacity-50' : ''}`}
+                            onClick={() => handleAction('WhatsApp')}
+                            disabled={isGenerating}
+                        >
+                            <MessageCircle className={`w-4 h-4 group-hover:text-white ${actionStatus === 'WhatsApp' ? 'text-white' : 'text-[#CE8E94]'}`} />
+                            <span className="text-[11px] font-bold text-nowrap">
+                                {isGenerating && actionStatus === 'WhatsApp' ? 'Sharing...' : (actionStatus === 'WhatsApp' ? 'Done' : 'WhatsApp')}
+                            </span>
+                        </button>
+
+                        <button
+                            className={`flex items-center justify-center gap-2 p-2 rounded-full border border-gray-100 transition-all duration-300 shadow-sm group ${actionStatus === 'X' ? 'bg-[#CE8E94] text-white' : 'bg-white text-gray-600'} ${isGenerating ? 'opacity-50' : ''}`}
+                            onClick={() => handleAction('X')}
+                            disabled={isGenerating}
+                        >
+                            <Twitter className={`w-4 h-4 group-hover:text-white ${actionStatus === 'X' ? 'text-white' : 'text-[#CE8E94]'}`} />
+                            <span className="text-[11px] font-bold text-nowrap">
+                                {isGenerating && actionStatus === 'X' ? 'Sharing...' : (actionStatus === 'X' ? 'Done' : 'X')}
+                            </span>
+                        </button>
+                    </div>
+
+                    {/* Secondary Actions */}
+                    <div className="flex justify-center gap-8 pt-0.5 pb-2">
+                        <button
+                            className={`flex items-center gap-2 text-[10px] transition-colors font-bold tracking-widest uppercase ${actionStatus === 'Copied!' ? 'text-green-500' : 'text-gray-400 hover:text-[#CE8E94]'}`}
+                            onClick={() => handleAction('Copy Link')}
+                            disabled={actionStatus === 'Copied!'}
+                        >
+                            <Link className="w-3.5 h-3.5" /> {actionStatus === 'Copied!' ? 'Link Copied!' : 'Copy Link'}
+                        </button>
+                        <button
+                            className={`flex items-center gap-2 text-[10px] transition-colors font-bold tracking-widest uppercase ${actionStatus === 'Saved!' ? 'text-green-500' : 'text-gray-400 hover:text-[#CE8E94]'}`}
+                            onClick={() => handleAction('Download Image')}
+                            disabled={actionStatus === 'Saved!'}
+                        >
+                            <Download className="w-3.5 h-3.5" /> {actionStatus === 'Saved!' ? 'Saved!' : 'Save Image'}
+                        </button>
+                    </div>
                 </div>
+            </Modal >
 
-                {/* Share Actions Grid */}
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                    <button
-                        className={`flex items-center justify-center gap-2 p-3 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'Instagram' ? 'bg-[#CE8E94] text-white border-[#CE8E94]' : 'text-gray-600'}`}
-                        onClick={() => handleAction('Instagram')}
-                    >
-                        <Instagram className={`w-5 h-5 text-[#CE8E94] group-hover:text-white ${actionStatus === 'Instagram' ? 'text-white' : ''}`} />
-                        <span className="text-xs font-bold">{actionStatus === 'Instagram' ? 'Opened' : 'Instagram'}</span>
-                    </button>
-
-                    <button
-                        className={`flex items-center justify-center gap-2 p-3 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'Facebook' ? 'bg-[#CE8E94] text-white border-[#CE8E94]' : 'text-gray-600'}`}
-                        onClick={() => handleAction('Facebook')}
-                    >
-                        <Facebook className={`w-5 h-5 text-[#CE8E94] group-hover:text-white ${actionStatus === 'Facebook' ? 'text-white' : ''}`} />
-                        <span className="text-xs font-bold">{actionStatus === 'Facebook' ? 'Opened' : 'Facebook'}</span>
-                    </button>
-
-                    <button
-                        className={`flex items-center justify-center gap-2 p-3 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'WhatsApp' ? 'bg-[#CE8E94] text-white border-[#CE8E94]' : 'text-gray-600'}`}
-                        onClick={() => handleAction('WhatsApp')}
-                    >
-                        <MessageCircle className={`w-5 h-5 text-[#CE8E94] group-hover:text-white ${actionStatus === 'WhatsApp' ? 'text-white' : ''}`} />
-                        <span className="text-xs font-bold">{actionStatus === 'WhatsApp' ? 'Opened' : 'WhatsApp'}</span>
-                    </button>
-
-                    <button
-                        className={`flex items-center justify-center gap-2 p-3 rounded-full border border-gray-100 bg-white hover:bg-[#CE8E94] hover:text-white hover:border-[#CE8E94] transition-all duration-300 shadow-sm group ${actionStatus === 'X' ? 'bg-[#CE8E94] text-white border-[#CE8E94]' : 'text-gray-600'}`}
-                        onClick={() => handleAction('X')}
-                    >
-                        <Twitter className={`w-5 h-5 text-[#CE8E94] group-hover:text-white ${actionStatus === 'X' ? 'text-white' : ''}`} />
-                        <span className="text-xs font-bold">{actionStatus === 'X' ? 'Opened' : 'X'}</span>
-                    </button>
-                </div>
-
-                {/* Secondary Actions */}
-                <div className="flex justify-center gap-4">
-                    <button
-                        className="flex items-center gap-1 text-xs text-gray-400 hover:text-[#CE8E94] transition-colors font-medium"
-                        onClick={() => handleAction('Copy Link')}
-                    >
-                        <Link className="w-3 h-3" /> Copy Link
-                    </button>
-                    <button
-                        className="flex items-center gap-1 text-xs text-gray-400 hover:text-[#CE8E94] transition-colors font-medium"
-                        onClick={() => handleAction('Download Image')}
-                    >
-                        <Download className="w-3 h-3" /> Save Image
-                    </button>
-                </div>
-            </div>
-        </Modal>
+            <AlertModal
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig({ ...alertConfig, isOpen: false })}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+            />
+        </>
     );
 };
