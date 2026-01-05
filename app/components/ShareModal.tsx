@@ -57,7 +57,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
     const renderDesign = (isCapture: boolean) => (
         <div
             id={isCapture ? "capture-container" : undefined}
-            className="relative w-[1080px] h-[1920px] bg-[#FFF0E5] flex flex-col items-center justify-center overflow-hidden"
+            className="relative w-[1080px] h-[1920px] bg-[#FFF0E5] flex flex-col items-center justify-start overflow-hidden pt-[240px]"
         >
             {/* Professional Background Glow (Story Style) */}
             <div
@@ -72,8 +72,8 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
             {/* Centered Achievement Card ( with drop-shadow fix ) */}
             <div
                 style={{
-                    width: '680px',
-                    aspectRatio: '1/1.35',
+                    width: '620px',
+                    aspectRatio: '1/1.5',
                     backgroundColor: '#FEF9F9',
                     borderRadius: '200px',
                     display: 'flex',
@@ -97,8 +97,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     padding: '64px',
-                    filter: 'drop-shadow(0 20px 30px rgba(206,142,148,0.12))',
-                    margin: '24px 0'
+                    filter: 'drop-shadow(0 20px 30px rgba(206,142,148,0.12))'
                 }}>
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
                         <div style={{ fontSize: '160px', color: '#CE8E94', marginBottom: '48px', display: 'flex', justifyContent: 'center' }}>
