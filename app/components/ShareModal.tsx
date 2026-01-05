@@ -115,9 +115,10 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     Show off your new <strong>{achievementTitle}</strong> badge to the world!
                 </p>
 
-                {/* --- VISIBLE PREVIEW CARD (User Sees This) --- */}
-                {/* Clean CSS representation without the scaling hacks causing glitches */}
+                {/* --- MÜKEMMEL ÖNİZLEME (Kullanıcının Gördüğü - Step 106 Görselindeki Temiz Hali) --- */}
+                {/* Clean CSS representation without glitches */}
                 <div className="relative w-full max-w-[320px] mx-auto aspect-[9/16] rounded-xl overflow-hidden shadow-lg mb-8 border border-gray-100">
+                    {/* Önizleme için de aynı görseli kullanıyoruz ama CSS ile düzgün oturttuk */}
                     <img
                         src={shareBackgroundBase64}
                         alt="Background"
@@ -127,33 +128,36 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                         <div className="text-6xl mb-6 text-[#CE8E94] drop-shadow-sm">
                             {achievementIcon}
                         </div>
-                        <div className="text-xl font-bold tracking-widest text-[#B5838D] uppercase mb-3">
+                        <div className="text-xl font-bold tracking-widest text-[#B5838D] uppercase mb-3 text-center">
                             {achievementTitle}
                         </div>
-                        <div className="text-xs text-gray-500 italic font-medium max-w-[200px]">
+                        <div className="text-xs text-gray-500 italic font-medium max-w-[200px] text-center">
                             {achievementDescription}
                         </div>
                     </div>
                 </div>
 
-                {/* --- HIDDEN HIGH-RES CAPTURE CONTAINER (System Uses This) --- */}
-                {/* Strictly 1080x1920, using the 'Working System' structure but isolated to prevent visual bugs */}
+                {/* --- GİZLİ SİSTEM FABRİKASI (15:23 KODUNUN AYNISI - Step 15) --- */}
+                {/* Bu alan Kullanıcıdan GİZLİDİR (opacity-0, z-[-1]). Sadece fotoğraf çekimi için var. */}
+                {/* KOD 15:23'teki Step 15'ten BİREBİR alındı: scale-[2.5] ve Base64 görseli dahil */}
                 <div className="fixed top-0 left-0 pointer-events-none opacity-0 z-[-1]" style={{ transform: 'translateX(-9999px)' }}>
                     <div id="capture-container" className="relative w-[1080px] h-[1920px] flex flex-col items-center justify-center overflow-hidden">
+                        {/* STATIC IMAGE BACKGROUND - Replaces CSS Gradient with VALID image */}
                         <img
                             src={shareBackgroundBase64}
                             alt="Background"
                             className="absolute inset-0 w-full h-full object-cover z-0"
                         />
-                        <div className="relative z-10 flex flex-col items-center justify-center p-16 text-center">
-                            {/* Scaled up content for 1080p */}
-                            <div className="text-[200px] mb-12 text-[#CE8E94]">
+
+                        {/* CONTENT OVERLAY - STRICTLY 15:23 VISUALS (Small Card -> Scaled Up) */}
+                        <div className="transform scale-[2.5] origin-center flex flex-col items-center justify-center p-8 mb-8">
+                            <div className="text-6xl mb-4 flex justify-center text-[#CE8E94]">
                                 {achievementIcon}
                             </div>
-                            <div className="text-6xl font-bold tracking-[0.2em] text-[#B5838D] uppercase mb-10">
+                            <div className="text-sm font-bold tracking-widest text-[#B5838D] uppercase mb-2 text-center">
                                 {achievementTitle}
                             </div>
-                            <div className="text-4xl text-gray-500 italic font-medium max-w-[800px]">
+                            <div className="text-xs text-gray-400 italic font-medium text-center max-w-[300px]">
                                 {achievementDescription}
                             </div>
                         </div>
