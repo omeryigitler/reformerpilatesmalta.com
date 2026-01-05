@@ -7,9 +7,6 @@ import * as htmlToImage from 'html-to-image';
 
 
 import { AlertModal } from './AlertModal';
-import { shareBackgroundBase64 } from '../data/shareBackgroundBase64';
-
-
 interface ShareModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -62,11 +59,14 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
             id={isCapture ? "capture-container" : undefined}
             className="relative w-[1080px] h-[1920px] bg-[#FFF0E5] flex flex-col items-center justify-center overflow-hidden"
         >
-            {/* Background Image ( benchmark 15:23 ) */}
-            <img
-                src={shareBackgroundBase64}
-                alt="Background"
-                className="absolute inset-0 w-full h-full object-cover z-0"
+            {/* Professional Background Glow (Story Style) */}
+            <div
+                className="absolute inset-0 w-full h-full opacity-60"
+                style={{
+                    background: 'radial-gradient(circle at center, rgba(206,142,148,0.5) 0%, rgba(206,142,148,0.1) 60%, rgba(206,142,148,0) 100%)',
+                    filter: 'blur(80px)',
+                    zIndex: 0
+                }}
             />
 
             {/* Centered Achievement Card ( with drop-shadow fix ) */}
@@ -101,8 +101,22 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                     margin: '24px 0'
                 }}>
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                        <div style={{ fontSize: '160px', color: '#CE8E94', marginBottom: '48px' }}>
-                            {achievementIcon}
+                        <div style={{ fontSize: '160px', color: '#CE8E94', marginBottom: '48px', display: 'flex', justifyContent: 'center' }}>
+                            {achievementTitle === 'SOLARIS' ? (
+                                <svg viewBox="0 0 100 100" style={{ width: '130px', height: '130px' }} fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="50" cy="50" r="12" stroke="currentColor" strokeWidth="2.5" />
+                                    <line x1="50" y1="28" x2="50" y2="10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                    <line x1="50" y1="72" x2="50" y2="90" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                    <line x1="72" y1="50" x2="90" y2="50" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                    <line x1="28" y1="50" x2="10" y2="50" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                    <line x1="66" y1="34" x2="79" y2="21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                    <line x1="34" y1="66" x2="21" y2="79" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                    <line x1="66" y1="66" x2="79" y2="79" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                    <line x1="34" y1="34" x2="21" y2="21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                                </svg>
+                            ) : (
+                                achievementIcon
+                            )}
                         </div>
                         <div style={{ fontSize: '48px', fontWeight: 'bold', letterSpacing: '0.35em', color: '#B5838D', textTransform: 'uppercase', textAlign: 'center', marginBottom: '32px', lineHeight: '1.1' }}>
                             {achievementTitle}
