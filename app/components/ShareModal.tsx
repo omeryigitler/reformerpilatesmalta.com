@@ -57,7 +57,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
     const renderDesign = (isCapture: boolean) => (
         <div
             id={isCapture ? "capture-container" : undefined}
-            className="relative w-[1080px] h-[1920px] bg-[#FFF0E5] flex flex-col items-center justify-start overflow-hidden pt-[240px]"
+            className="relative w-[1080px] h-[1920px] bg-[#FFF0E5] flex flex-col items-center justify-center overflow-hidden"
         >
             {/* Professional Background Glow (Story Style) */}
             <div
@@ -69,41 +69,25 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                 }}
             />
 
-            {/* Centered Achievement Card ( with drop-shadow fix ) */}
+            {/* Centered Achievement Card (from v60.1.0) */}
             <div
+                className="relative z-10 w-[680px] aspect-[1/1.35] flex flex-col items-center justify-between p-24 bg-[#FEF9F9] rounded-[200px]"
                 style={{
-                    width: '620px',
-                    aspectRatio: '1/1.5',
-                    backgroundColor: '#FEF9F9',
-                    borderRadius: '200px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '24px',
-                    position: 'relative',
-                    zIndex: 10,
-                    filter: 'drop-shadow(0 40px 60px rgba(206,142,148,0.25))'
+                    filter: 'drop-shadow(0 60px 120px rgba(206,142,148,0.3))'
                 }}
             >
                 {/* Inner Card */}
-                <div style={{
-                    width: '100%',
-                    flex: 1,
-                    backgroundColor: 'white',
-                    borderRadius: '160px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '64px',
-                    filter: 'drop-shadow(0 20px 30px rgba(206,142,148,0.12))',
-                    margin: '24px 0'
-                }}>
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                        <div style={{ fontSize: '120px', color: '#CE8E94', marginBottom: '48px', display: 'flex', justifyContent: 'center' }}>
+                <div
+                    className="relative z-10 w-full flex-grow flex flex-col items-center justify-between bg-white rounded-[160px] p-16 my-6"
+                    style={{
+                        filter: 'drop-shadow(0 40px 80px rgba(206,142,148,0.22))'
+                    }}
+                >
+                    {/* Achievement Icon Area */}
+                    <div className="flex-1 flex flex-col items-center justify-center w-full">
+                        <div className="text-8xl flex justify-center text-[#CE8E94] mb-12 transform scale-150" style={{ filter: 'drop-shadow(0 8px 16px rgba(206,142,148,0.15))' }}>
                             {achievementTitle === 'SOLARIS' ? (
-                                <svg viewBox="0 0 100 100" style={{ width: '130px', height: '130px' }} fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg viewBox="0 0 100 100" className="w-16 h-16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <circle cx="50" cy="50" r="12" stroke="currentColor" strokeWidth="2.5" />
                                     <line x1="50" y1="28" x2="50" y2="10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
                                     <line x1="50" y1="72" x2="50" y2="90" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
@@ -118,25 +102,34 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                                 achievementIcon
                             )}
                         </div>
-                        <div style={{ fontSize: '48px', fontWeight: 'bold', letterSpacing: '0.35em', color: '#B5838D', textTransform: 'uppercase', textAlign: 'center', marginBottom: '32px', lineHeight: '1.1' }}>
+
+                        {/* Badge Title */}
+                        <div className="text-4xl font-bold tracking-[0.35em] text-[#B5838D] uppercase mb-8 leading-none text-center">
                             {achievementTitle}
                         </div>
-                        <div style={{ fontSize: '30px', color: '#9CA3AF', fontStyle: 'italic', fontWeight: '500', textAlign: 'center', padding: '0 32px', lineHeight: '1.6' }}>
+                        {/* Description */}
+                        <div className="text-[22px] text-gray-500 italic font-medium text-center leading-relaxed px-4">
                             &quot;{achievementDescription}&quot;
                         </div>
                     </div>
-
                     {/* Branding Watermark */}
-                    <div style={{ width: '160px', height: '160px', color: 'rgba(206,142,148,0.45)', paddingBottom: '32px' }}>
-                        <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <line x1="50" y1="15" x2="50" y2="0" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                            <line x1="28" y1="22" x2="18" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                            <line x1="72" y1="22" x2="82" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                            <line x1="12" y1="38" x2="0" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                            <line x1="88" y1="38" x2="100" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                            <path d="M10 55C10 55 25 35 50 35C75 35 90 55 90 55C90 55 75 75 50 75C25 75 10 55 10 55Z" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-                            <circle cx="50" cy="55" r="10" stroke="currentColor" strokeWidth="4" />
-                        </svg>
+                    <div className="w-full flex justify-center pb-12">
+                        <div className="w-40 h-40 text-[#CE8E94]/45">
+                            <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                {/* Five Rays */}
+                                <line x1="50" y1="15" x2="50" y2="0" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                <line x1="28" y1="22" x2="18" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                <line x1="72" y1="22" x2="82" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                <line x1="12" y1="38" x2="0" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                                <line x1="88" y1="38" x2="100" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+
+                                {/* Eye Shape */}
+                                <path d="M10 55C10 55 25 35 50 35C75 35 90 55 90 55C90 55 75 75 50 75C25 75 10 55 10 55Z" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+
+                                {/* Pupil */}
+                                <circle cx="50" cy="55" r="10" stroke="currentColor" strokeWidth="4" />
+                            </svg>
+                        </div>
                     </div>
                 </div>
             </div>
