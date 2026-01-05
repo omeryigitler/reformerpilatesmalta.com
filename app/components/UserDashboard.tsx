@@ -396,6 +396,7 @@ END:VCALENDAR`;
             )}
 
             <ShareModal
+                key={sharingItem?.title || 'share-modal'}
                 isOpen={!!sharingItem}
                 onClose={() => setSharingItem(null)}
                 achievementTitle={sharingItem?.title || ''}

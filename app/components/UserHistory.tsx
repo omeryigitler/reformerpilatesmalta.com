@@ -107,6 +107,7 @@ export const UserHistory = ({ slots, userName, userEmail }: { slots: Slot[], use
             {/* Share Modal Integration */}
             {selectedAchievement && (
                 <ShareModal
+                    key={selectedAchievement.title}
                     isOpen={isShareModalOpen}
                     onClose={() => setIsShareModalOpen(false)}
                     achievementTitle={selectedAchievement.title}
