@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-// Deployment Trigger: FORCE_V56_SEAMLESS_FLOW
+// Deployment Trigger: FORCE_V61_SPRING_BUTTERFLY_FIX
 import { useState, useEffect, useCallback } from "react";
 import { listenToSlots, listenToUsers, bookSlotTransaction, cancelBookingTransaction, logoutUserAuth, updateExpiredSlots } from "./services/pilatesService";
 import { Card, CardContent } from "@/app/components/ui/card";
@@ -33,6 +33,7 @@ import { Slot, UserType } from "./types";
 import { sortSlots, formatDateDisplay } from "./utils/helpers";
 import { sendUserBookingConfirmation, sendAdminAlert } from "./services/emailService";
 import { Snowfall, ChristmasTree, SantaHat } from "./components/ChristmasDecorations";
+import { PetalFall, ButterflyFollower, CornerDaisy } from "./components/SpringDecorations";
 
 // --- DYNAMIC IMPORTS ---
 const AdminPanel = dynamic(() => import('./components/AdminPanel').then(mod => mod.AdminPanel), {
@@ -64,7 +65,8 @@ const initialData = {
     logo: defaultLogo,
     socialLinks: { facebook: 'https://facebook.com', instagram: 'https://instagram.com', x: 'https://twitter.com' },
     contactInfo: { email: 'info@pilatesmalta.com', phone: '+356 1234 5678' },
-    holidayMode: false
+    holidayMode: false,
+    springMode: false
 };
 
 
@@ -94,6 +96,7 @@ function PilatesMaltaByGozde() {
     const [loggedInUser, setLoggedInUser] = useState<UserType | null>(null);
     const [authModal, setAuthModal] = useState<string | null>(null);
     const [showChristmasTree, setShowChristmasTree] = useState(true);
+    const [showDaisy, setShowDaisy] = useState(true);
 
     const [managementState, setManagementState] = useState(initialData);
     const [users, setUsers] = useState<UserType[]>([]);
@@ -339,223 +342,234 @@ function PilatesMaltaByGozde() {
 
     // --- MAIN LANDING PAGE ---
     return (
-        <div className="pilates-root min-h-screen flex flex-col items-center p-4 md:p-10 space-y-16 font-sans bg-[#FFF0E5]">
+        <>
+            <div className="pilates-root min-h-screen flex flex-col items-center p-4 md:p-10 space-y-16 font-sans bg-[#FFF0E5]">
 
-            <div className="w-full max-w-7xl px-8 md:px-16 py-16 md:py-20 bg-white/60 backdrop-blur-md rounded-[3rem] shadow-2xl border border-white/50">
-
-
-                {/* SAFE HEADER SECTION (Logo + Login/Register) */}
-                <div id="main-header" className="w-full flex flex-col sm:flex-row justify-between items-center mb-10 border-b border-[#CE8E94]/20 pb-8 gap-6 sm:gap-0">
-                    <div className="border-4 border-white rounded-full shadow-xl inline-block hover:scale-105 transition-transform duration-500 overflow-hidden bg-white">
-                        <img
-                            src={managementState.logo || defaultLogo}
-                            alt="Logo"
-                            className="w-20 h-20 rounded-full object-cover shadow-sm"
-                            onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                if (!target.src.includes(defaultLogo)) {
-                                    target.src = defaultLogo;
-                                } else {
-                                    // If fallback also fails, hide or show error placeholder to prevent loop
-                                    target.style.display = 'none';
-                                }
-                            }}
-                        />
-                    </div>
+                <div className="w-full max-w-7xl px-8 md:px-16 py-16 md:py-20 bg-white/60 backdrop-blur-md rounded-[3rem] shadow-2xl border border-white/50">
 
 
-                    <div>
-                        {loggedInUser ? (
-                            <div className="flex gap-3 items-center">
-                                <span className="font-bold text-[#CE8E94] text-lg hidden sm:inline">Hi, {loggedInUser.firstName}</span>
-                                <Button
-                                    onClick={() => loggedInUser.role === 'user' ? setCurrentView('user-dashboard') : setCurrentView('admin')}
-                                    className="px-6 py-2 bg-green-600 text-white rounded-xl text-sm font-bold shadow-md hover:bg-green-700 hover:shadow-lg transition duration-300 flex items-center gap-2"
-                                >
-                                    {loggedInUser.role === 'user' ? <User className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                                    {loggedInUser.role === 'user' ? 'My Dashboard' : 'Admin Panel'}
-                                </Button>
-                                <Button
-                                    onClick={handleLogout}
-                                    className="p-2 bg-gray-200 text-gray-700 rounded-full hover:bg-red-100 hover:text-red-500 transition duration-300"
-                                >
-                                    <LogOut className="w-5 h-5" />
-                                </Button>
-                            </div>
-                        ) : (
-                            <UserPanel
-                                onLogin={handleSetLoggedInUser}
-                                activePanel={authModal}
-                                setActivePanel={setAuthModal}
-                            />
-                        )}
-                    </div>
-                </div>
-
-                <div className="flex flex-col lg:flex-row-reverse items-center gap-16 lg:gap-24">
-
-                    <div className="w-full lg:w-1/2 flex justify-center">
-                        <div className="relative group w-full max-w-md lg:max-w-full flex justify-center">
-                            {/* Wrapper for tight logo/hat coupling - User specific structure */}
-                            <div className="relative inline-block mt-5"> {/* eye-wrapper equivalent */}
-                                <div className="absolute -inset-1 bg-gradient-to-r from-[#CE8E94] to-pink-200 rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
-                                {(managementState.heroImage || managementState.holidayMode) && (
-                                    <img
-                                        src={managementState.holidayMode ? '/holiday-logo.png' : (managementState.heroImage || defaultHero)}
-                                        alt="Hero"
-                                        onError={(e) => {
-                                            const target = e.target as HTMLImageElement;
-                                            if (!target.src.includes(defaultHero)) {
-                                                target.src = defaultHero;
-                                            } else {
-                                                target.style.display = 'none';
-                                            }
-                                        }}
-                                        className="relative block w-full h-auto max-h-[600px] object-contain rounded-[2rem] shadow-2xl transition-transform duration-500 group-hover:scale-[1.01]"
-                                    />
-                                )}
-                                {managementState.holidayMode && (
-                                    <SantaHat className="absolute -top-[2%] left-[27%] w-[22%] -rotate-[22deg] z-[99] transition-all duration-[400ms] ease-[cubic-bezier(0.175,0.885,0.32,1.275)] origin-bottom pointer-events-none group-hover:-rotate-[42deg] group-hover:-translate-y-[5px] group-hover:scale-105" />
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start h-full justify-center py-4 text-center lg:text-left">
-
-                        <div className="space-y-8 w-full">
-                            <div>
-                                <h1 className={`text-6xl lg:text-8xl ${managementState.heroFont} text-[#CE8E94] mb-4 leading-none tracking-tight drop-shadow-sm`}>
-                                    {managementState.heroTitle}
-                                </h1>
-                                <p className={`text-xl text-gray-600 ${managementState.heroFont} leading-relaxed font-light max-w-md mx-auto lg:mx-0`}>
-                                    {managementState.heroSubtitle}
-                                </p>
-                            </div>
-
-                            <div className="flex flex-wrap justify-center lg:grid lg:grid-cols-2 gap-8 pt-6">
-                                {managementState.trustSignals.map((signal, idx) => (
-                                    <div key={idx} className={`flex items-start gap-3 group cursor-default text-left ${idx === 2 ? 'lg:col-span-2 lg:justify-self-center' : ''}`}>
-                                        <div className="bg-[#CE8E94]/20 p-3 rounded-full text-[#CE8E94] shadow-sm group-hover:bg-[#CE8E94] group-hover:text-white transition-colors duration-300">
-                                            {idx === 0 && <Award className="w-6 h-6" />}
-                                            {idx === 1 && <Star className="w-6 h-6" />}
-                                            {idx === 2 && <Heart className="w-6 h-6" />}
-                                        </div>
-                                        <div>
-                                            <h4 className="font-bold text-[#CE8E94] text-lg leading-tight">{signal.title}</h4>
-                                            <p className="text-sm text-gray-600">{signal.sub}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-
-                <div className="mt-24">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        {managementState.campaigns.map((camp, idx) => (
-                            <Card
-                                key={idx}
-                                className="rounded-3xl shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 bg-white border border-gray-100 overflow-hidden group h-full cursor-pointer relative"
-                                onClick={() => {
-                                    if (!loggedInUser) {
-                                        setAuthModal('register');
-                                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                                    } else if (loggedInUser.role === 'user') {
-                                        setCurrentView('user-dashboard');
+                    {/* SAFE HEADER SECTION (Logo + Login/Register) */}
+                    <div id="main-header" className="w-full flex flex-col sm:flex-row justify-between items-center mb-10 border-b border-[#CE8E94]/20 pb-8 gap-6 sm:gap-0">
+                        <div className="border-4 border-white rounded-full shadow-xl inline-block hover:scale-105 transition-transform duration-500 overflow-hidden bg-white">
+                            <img
+                                src={managementState.logo || defaultLogo}
+                                alt="Logo"
+                                className="w-20 h-20 rounded-full object-cover shadow-sm"
+                                onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    if (!target.src.includes(defaultLogo)) {
+                                        target.src = defaultLogo;
+                                    } else {
+                                        // If fallback also fails, hide or show error placeholder to prevent loop
+                                        target.style.display = 'none';
                                     }
                                 }}
-                            >
-                                <CardContent className="p-10 flex flex-col h-full justify-between">
-                                    <div>
-                                        <div className="flex justify-between items-start mb-6">
-                                            <h2 className="text-3xl font-bold text-[#CE8E94] group-hover:text-[#B57A80] transition-colors">{camp.title}</h2>
-                                            <div className="bg-[#FFF0E5] p-3 rounded-full text-[#CE8E94] group-hover:bg-[#CE8E94] group-hover:text-white transition-colors">
-                                                {idx === 0 ? <Tag className="w-8 h-8" /> : <Sparkles className="w-8 h-8" />}
+                            />
+                        </div>
+
+
+                        <div>
+                            {loggedInUser ? (
+                                <div className="flex gap-3 items-center">
+                                    <span className="font-bold text-[#CE8E94] text-lg hidden sm:inline">Hi, {loggedInUser.firstName}</span>
+                                    <Button
+                                        onClick={() => loggedInUser.role === 'user' ? setCurrentView('user-dashboard') : setCurrentView('admin')}
+                                        className="px-6 py-2 bg-green-600 text-white rounded-xl text-sm font-bold shadow-md hover:bg-green-700 hover:shadow-lg transition duration-300 flex items-center gap-2"
+                                    >
+                                        {loggedInUser.role === 'user' ? <User className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                                        {loggedInUser.role === 'user' ? 'My Dashboard' : 'Admin Panel'}
+                                    </Button>
+                                    <Button
+                                        onClick={handleLogout}
+                                        className="p-2 bg-gray-200 text-gray-700 rounded-full hover:bg-red-100 hover:text-red-500 transition duration-300"
+                                    >
+                                        <LogOut className="w-5 h-5" />
+                                    </Button>
+                                </div>
+                            ) : (
+                                <UserPanel
+                                    onLogin={handleSetLoggedInUser}
+                                    activePanel={authModal}
+                                    setActivePanel={setAuthModal}
+                                />
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col lg:flex-row-reverse items-center gap-16 lg:gap-24">
+
+                        <div className="w-full lg:w-1/2 flex justify-center">
+                            <div className="relative group w-full max-w-md lg:max-w-full flex justify-center">
+                                {/* Wrapper for tight logo/hat coupling - User specific structure */}
+                                <div className="relative inline-block mt-5"> {/* eye-wrapper equivalent */}
+                                    <div className="absolute -inset-1 bg-gradient-to-r from-[#CE8E94] to-pink-200 rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+                                    {(managementState.heroImage || managementState.holidayMode) && (
+                                        <img
+                                            src={managementState.holidayMode ? '/holiday-logo.png' : (managementState.heroImage || defaultHero)}
+                                            alt="Hero"
+                                            onError={(e) => {
+                                                const target = e.target as HTMLImageElement;
+                                                if (!target.src.includes(defaultHero)) {
+                                                    target.src = defaultHero;
+                                                } else {
+                                                    target.style.display = 'none';
+                                                }
+                                            }}
+                                            className="relative block w-full h-auto max-h-[600px] object-contain rounded-[2rem] shadow-2xl transition-transform duration-500 group-hover:scale-[1.01]"
+                                        />
+                                    )}
+                                    {managementState.holidayMode && (
+                                        <SantaHat className="absolute -top-[2%] left-[27%] w-[22%] -rotate-[22deg] z-[99] transition-all duration-[400ms] ease-[cubic-bezier(0.175,0.885,0.32,1.275)] origin-bottom pointer-events-none group-hover:-rotate-[42deg] group-hover:-translate-y-[5px] group-hover:scale-105" />
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start h-full justify-center py-4 text-center lg:text-left">
+
+                            <div className="space-y-8 w-full">
+                                <div>
+                                    <h1 className={`text-6xl lg:text-8xl ${managementState.heroFont} text-[#CE8E94] mb-4 leading-none tracking-tight drop-shadow-sm`}>
+                                        {managementState.heroTitle}
+                                    </h1>
+                                    <p className={`text-xl text-gray-600 ${managementState.heroFont} leading-relaxed font-light max-w-md mx-auto lg:mx-0`}>
+                                        {managementState.heroSubtitle}
+                                    </p>
+                                </div>
+
+                                <div className="flex flex-wrap justify-center lg:grid lg:grid-cols-2 gap-8 pt-6">
+                                    {managementState.trustSignals.map((signal, idx) => (
+                                        <div key={idx} className={`flex items-start gap-3 group cursor-default text-left ${idx === 2 ? 'lg:col-span-2 lg:justify-self-center' : ''}`}>
+                                            <div className="bg-[#CE8E94]/20 p-3 rounded-full text-[#CE8E94] shadow-sm group-hover:bg-[#CE8E94] group-hover:text-white transition-colors duration-300">
+                                                {idx === 0 && <Award className="w-6 h-6" />}
+                                                {idx === 1 && <Star className="w-6 h-6" />}
+                                                {idx === 2 && <Heart className="w-6 h-6" />}
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-[#CE8E94] text-lg leading-tight">{signal.title}</h4>
+                                                <p className="text-sm text-gray-600">{signal.sub}</p>
                                             </div>
                                         </div>
-                                        {camp.image && <img src={camp.image} alt={camp.title} className="w-full h-56 object-cover rounded-2xl mb-6 shadow-md" />}
-                                        <p className="text-gray-600 text-xl leading-relaxed">{camp.description}</p>
-                                    </div>
-                                    {!loggedInUser && (
-                                        <div className="mt-6 flex items-center text-[#CE8E94] font-bold group-hover:translate-x-2 transition-transform">
-                                            <span>Register to Claim</span>
-                                            <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                                    ))}
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-24">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                            {managementState.campaigns.map((camp, idx) => (
+                                <Card
+                                    key={idx}
+                                    className="rounded-3xl shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 bg-white border border-gray-100 overflow-hidden group h-full cursor-pointer relative"
+                                    onClick={() => {
+                                        if (!loggedInUser) {
+                                            setAuthModal('register');
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                        } else if (loggedInUser.role === 'user') {
+                                            setCurrentView('user-dashboard');
+                                        }
+                                    }}
+                                >
+                                    <CardContent className="p-10 flex flex-col h-full justify-between">
+                                        <div>
+                                            <div className="flex justify-between items-start mb-6">
+                                                <h2 className="text-3xl font-bold text-[#CE8E94] group-hover:text-[#B57A80] transition-colors">{camp.title}</h2>
+                                                <div className="bg-[#FFF0E5] p-3 rounded-full text-[#CE8E94] group-hover:bg-[#CE8E94] group-hover:text-white transition-colors">
+                                                    {idx === 0 ? <Tag className="w-8 h-8" /> : <Sparkles className="w-8 h-8" />}
+                                                </div>
+                                            </div>
+                                            {camp.image && <img src={camp.image} alt={camp.title} className="w-full h-56 object-cover rounded-2xl mb-6 shadow-md" />}
+                                            <p className="text-gray-600 text-xl leading-relaxed">{camp.description}</p>
                                         </div>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-            <div className="w-full max-w-7xl mt-12 mb-6 px-10 py-12 bg-white/60 backdrop-blur-md rounded-[3rem] shadow-xl border border-white/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-10 md:gap-0">
-                <div className="text-center md:text-left w-full md:w-auto">
-                    <h2 className="text-2xl font-bold mb-6 text-[#CE8E94] tracking-tight">Follow Us</h2>
-                    <div className="flex flex-wrap justify-center md:justify-start gap-4 md:gap-6">
-                        {managementState.socialLinks.facebook && (
-                            <a href={managementState.socialLinks.facebook} className="flex items-center space-x-3 text-gray-600 font-medium hover:text-[#CE8E94] transition group bg-white/50 px-4 py-3 rounded-full shadow-sm hover:shadow-md">
-                                <Facebook className="w-5 h-5 text-[#CE8E94]" />
-                                <span className="hidden lg:inline">Facebook</span>
-                            </a>
-                        )}
-                        {managementState.socialLinks.instagram && (
-                            <a href={managementState.socialLinks.instagram} className="flex items-center space-x-3 text-gray-600 font-medium hover:text-[#CE8E94] transition group bg-white/50 px-4 py-3 rounded-full shadow-sm hover:shadow-md">
-                                <Instagram className="w-5 h-5 text-[#CE8E94]" />
-                                <span className="hidden lg:inline">Instagram</span>
-                            </a>
-                        )}
-                        {managementState.socialLinks.x && (
-                            <a href={managementState.socialLinks.x} className="flex items-center space-x-3 text-gray-600 font-medium hover:text-[#CE8E94] transition group bg-white/50 px-4 py-3 rounded-full shadow-sm hover:shadow-md">
-                                <Twitter className="w-5 h-5 text-[#CE8E94]" />
-                                <span className="hidden lg:inline">X</span>
-                            </a>
-                        )}
+                                        {!loggedInUser && (
+                                            <div className="mt-6 flex items-center text-[#CE8E94] font-bold group-hover:translate-x-2 transition-transform">
+                                                <span>Register to Claim</span>
+                                                <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
-                <div className="text-center md:text-right flex flex-col items-center md:items-end w-full md:w-auto">
-                    <h2 className="text-2xl font-bold mb-6 text-[#CE8E94] tracking-tight">Contact</h2>
-                    <div className="space-y-3">
-                        <a href={`mailto:${managementState.contactInfo.email}`} className="flex items-center justify-center md:justify-end text-gray-600 text-lg group hover:text-[#CE8E94] transition cursor-pointer">
-                            <Mail className="w-5 h-5 mr-3 text-[#CE8E94]" />{managementState.contactInfo.email}
-                        </a>
-                        <a href={`tel:${managementState.contactInfo.phone}`} className="flex items-center justify-center md:justify-end text-gray-600 text-lg group hover:text-[#CE8E94] transition cursor-pointer">
-                            <Phone className="w-5 h-5 mr-3 text-[#CE8E94]" />{managementState.contactInfo.phone}
-                        </a>
+                <div className="w-full max-w-7xl mt-12 mb-6 px-10 py-12 bg-white/60 backdrop-blur-md rounded-[3rem] shadow-xl border border-white/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-10 md:gap-0">
+                    <div className="text-center md:text-left w-full md:w-auto">
+                        <h2 className="text-2xl font-bold mb-6 text-[#CE8E94] tracking-tight">Follow Us</h2>
+                        <div className="flex flex-wrap justify-center md:justify-start gap-4 md:gap-6">
+                            {managementState.socialLinks.facebook && (
+                                <a href={managementState.socialLinks.facebook} className="flex items-center space-x-3 text-gray-600 font-medium hover:text-[#CE8E94] transition group bg-white/50 px-4 py-3 rounded-full shadow-sm hover:shadow-md">
+                                    <Facebook className="w-5 h-5 text-[#CE8E94]" />
+                                    <span className="hidden lg:inline">Facebook</span>
+                                </a>
+                            )}
+                            {managementState.socialLinks.instagram && (
+                                <a href={managementState.socialLinks.instagram} className="flex items-center space-x-3 text-gray-600 font-medium hover:text-[#CE8E94] transition group bg-white/50 px-4 py-3 rounded-full shadow-sm hover:shadow-md">
+                                    <Instagram className="w-5 h-5 text-[#CE8E94]" />
+                                    <span className="hidden lg:inline">Instagram</span>
+                                </a>
+                            )}
+                            {managementState.socialLinks.x && (
+                                <a href={managementState.socialLinks.x} className="flex items-center space-x-3 text-gray-600 font-medium hover:text-[#CE8E94] transition group bg-white/50 px-4 py-3 rounded-full shadow-sm hover:shadow-md">
+                                    <Twitter className="w-5 h-5 text-[#CE8E94]" />
+                                    <span className="hidden lg:inline">X</span>
+                                </a>
+                            )}
+                        </div>
                     </div>
 
+                    <div className="text-center md:text-right flex flex-col items-center md:items-end w-full md:w-auto">
+                        <h2 className="text-2xl font-bold mb-6 text-[#CE8E94] tracking-tight">Contact</h2>
+                        <div className="space-y-3">
+                            <a href={`mailto:${managementState.contactInfo.email}`} className="flex items-center justify-center md:justify-end text-gray-600 text-lg group hover:text-[#CE8E94] transition cursor-pointer">
+                                <Mail className="w-5 h-5 mr-3 text-[#CE8E94]" />{managementState.contactInfo.email}
+                            </a>
+                            <a href={`tel:${managementState.contactInfo.phone}`} className="flex items-center justify-center md:justify-end text-gray-600 text-lg group hover:text-[#CE8E94] transition cursor-pointer">
+                                <Phone className="w-5 h-5 mr-3 text-[#CE8E94]" />{managementState.contactInfo.phone}
+                            </a>
+                        </div>
+
+                    </div>
                 </div>
+
+                {/* Developer Credit */}
+                <div className="w-full text-center pb-8 text-gray-400 text-sm font-medium">
+                    <p>
+                        Designed & Developed by <a href="https://omeryigitler.com" target="_blank" rel="noopener noreferrer" className="text-[#CE8E94]">Ömer YİĞİTLER</a>
+                    </p>
+                </div>
+
+                {/* FLOATING WHATSAPP BUTTON */}
+                <a
+                    href={`https://wa.me/${managementState.contactInfo.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent("Hello, I would like to get information about Reformer Pilates Malta classes.")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="fixed bottom-6 right-6 z-50 bg-[#25D366] text-white p-4 rounded-full shadow-2xl hover:bg-[#128C7E] transition-all duration-300 transform hover:scale-110 animate-bounce flex items-center justify-center cursor-pointer group"
+                    title="Chat on WhatsApp"
+                >
+                    {/* Custom WhatsApp Icon SVG */}
+                    <svg viewBox="0 0 24 24" className="w-8 h-8 fill-current">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                    </svg>
+                </a>
+
+                {managementState.holidayMode && <Snowfall />}
+                {managementState.holidayMode && showChristmasTree && (
+                    <ChristmasTree onClick={() => setShowChristmasTree(false)} />
+                )}
+
+                {/* Spring Mode Decorations - Petals and Daisy inside container */}
+                {managementState.springMode && <PetalFall />}
+                {managementState.springMode && showDaisy && (
+                    <CornerDaisy onClick={() => setShowDaisy(false)} />
+                )}
             </div>
 
-            {/* Developer Credit */}
-            <div className="w-full text-center pb-8 text-gray-400 text-sm font-medium">
-                <p>
-                    Designed & Developed by <a href="https://omeryigitler.com" target="_blank" rel="noopener noreferrer" className="text-[#CE8E94]">Ömer YİĞİTLER</a>
-                </p>
-            </div>
-
-            {/* FLOATING WHATSAPP BUTTON */}
-            <a
-                href={`https://wa.me/${managementState.contactInfo.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent("Hello, I would like to get information about Reformer Pilates Malta classes.")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="fixed bottom-6 right-6 z-50 bg-[#25D366] text-white p-4 rounded-full shadow-2xl hover:bg-[#128C7E] transition-all duration-300 transform hover:scale-110 animate-bounce flex items-center justify-center cursor-pointer group"
-                title="Chat on WhatsApp"
-            >
-                {/* Custom WhatsApp Icon SVG */}
-                <svg viewBox="0 0 24 24" className="w-8 h-8 fill-current">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                </svg>
-            </a>
-
-            {managementState.holidayMode && <Snowfall />}
-            {managementState.holidayMode && showChristmasTree && (
-                <ChristmasTree onClick={() => setShowChristmasTree(false)} />
-            )}
-        </div >
+            {/* ButterflyFollower MUST be outside main container for fixed positioning to work! */}
+            {managementState.springMode && <ButterflyFollower />}
+        </>
     );
 }

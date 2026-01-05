@@ -38,4 +38,5 @@ export type ManagementState = {
     socialLinks: { facebook: string; instagram: string; x: string; };
     contactInfo: { email: string; phone: string; };
     holidayMode: boolean;
+    springMode: boolean;
 };

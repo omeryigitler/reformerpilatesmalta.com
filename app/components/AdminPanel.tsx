@@ -746,6 +746,31 @@ export const AdminPanel = ({
                             />
                         </div>
 
+                        {/* Spring Mode Toggle */}
+                        <div className="bg-white/80 backdrop-blur-sm p-6 rounded-3xl border border-pink-200/50 shadow-sm flex items-center justify-between group hover:shadow-md transition-shadow">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-pink-50 rounded-2xl text-pink-500 group-hover:bg-pink-100 transition-colors">
+                                    <Sparkles className="w-7 h-7" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-gray-800">Spring Mode 🌸🦋</h3>
+                                    <p className="text-sm text-gray-500">Enable spring decorations, butterflies, and falling petals.</p>
+                                </div>
+                            </div>
+                            <Switch
+                                checked={managementState.springMode}
+                                onCheckedChange={async (val) => {
+                                    setManagementState(prev => ({ ...prev, springMode: val }));
+                                    try {
+                                        await updateDoc(doc(db, "management", "settings"), { springMode: val });
+                                    } catch (e) {
+                                        console.error("Error auto-saving spring mode:", e);
+                                    }
+                                }}
+                                className="data-[state=checked]:bg-pink-500"
+                            />
+                        </div>
+
                         <div>
                             <h3 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-3 border-b pb-2"><Edit3 className="w-6 h-6 text-[#CE8E94]" /> Hero Section Content</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
