@@ -7,6 +7,7 @@ import * as htmlToImage from 'html-to-image';
 
 
 import { AlertModal } from './AlertModal';
+import { shareBackgroundBase64 } from '../data/shareBackgroundBase64';
 
 
 interface ShareModalProps {
@@ -40,14 +41,12 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         if (!element) return null;
 
         try {
-            // Wait a tiny bit for styles to be fully computed if modal just opened
-            await new Promise(resolve => setTimeout(resolve, 100));
-            // Perform generation on the high-res off-screen container
+            // Wait to ensure everything is rendered
+            await new Promise(resolve => setTimeout(resolve, 200));
             return await htmlToImage.toBlob(element, {
-                pixelRatio: 1, // We already use 1080x1920, so 1 is enough
+                pixelRatio: 1,
                 backgroundColor: '#FFF0E5',
                 cacheBust: true,
-                skipAutoScale: true,
                 width: 1080,
                 height: 1920
             });
@@ -57,7 +56,80 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         }
     };
 
-    // Pre-generate the blob as soon as the modal opens to make sharing synchronous
+    // UNIFIED DESIGN FUNCTION (Ensures Preview and Export are identical)
+    const renderDesign = (isCapture: boolean) => (
+        <div
+            id={isCapture ? "capture-container" : undefined}
+            className="relative w-[1080px] h-[1920px] bg-[#FFF0E5] flex flex-col items-center justify-center overflow-hidden"
+        >
+            {/* Background Image ( benchmark 15:23 ) */}
+            <img
+                src={shareBackgroundBase64}
+                alt="Background"
+                className="absolute inset-0 w-full h-full object-cover z-0"
+            />
+
+            {/* Centered Achievement Card ( with drop-shadow fix ) */}
+            <div
+                style={{
+                    width: '680px',
+                    aspectRatio: '1/1.35',
+                    backgroundColor: '#FEF9F9',
+                    borderRadius: '200px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '24px',
+                    position: 'relative',
+                    zIndex: 10,
+                    filter: 'drop-shadow(0 40px 60px rgba(206,142,148,0.25))'
+                }}
+            >
+                {/* Inner Card */}
+                <div style={{
+                    width: '100%',
+                    height: '92%',
+                    backgroundColor: 'white',
+                    borderRadius: '160px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '64px',
+                    filter: 'drop-shadow(0 20px 30px rgba(206,142,148,0.12))',
+                    margin: '24px 0'
+                }}>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                        <div style={{ fontSize: '160px', color: '#CE8E94', marginBottom: '48px' }}>
+                            {achievementIcon}
+                        </div>
+                        <div style={{ fontSize: '48px', fontWeight: 'bold', letterSpacing: '0.35em', color: '#B5838D', textTransform: 'uppercase', textAlign: 'center', marginBottom: '32px', lineHeight: '1.1' }}>
+                            {achievementTitle}
+                        </div>
+                        <div style={{ fontSize: '30px', color: '#9CA3AF', fontStyle: 'italic', fontWeight: '500', textAlign: 'center', padding: '0 32px', lineHeight: '1.6' }}>
+                            &quot;{achievementDescription}&quot;
+                        </div>
+                    </div>
+
+                    {/* Branding Watermark */}
+                    <div style={{ width: '160px', height: '160px', color: 'rgba(206,142,148,0.45)', paddingBottom: '32px' }}>
+                        <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <line x1="50" y1="15" x2="50" y2="0" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                            <line x1="28" y1="22" x2="18" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                            <line x1="72" y1="22" x2="82" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                            <line x1="12" y1="38" x2="0" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                            <line x1="88" y1="38" x2="100" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                            <path d="M10 55C10 55 25 35 50 35C75 35 90 55 90 55C90 55 75 75 50 75C25 75 10 55 10 55Z" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+                            <circle cx="50" cy="55" r="10" stroke="currentColor" strokeWidth="4" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    // Pre-generate the blob as soon as the modal opens
     React.useEffect(() => {
         if (isOpen) {
             const timer = setTimeout(async () => {
@@ -66,7 +138,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                 const blob = await generateImageBlob();
                 if (blob) setPreGeneratedBlob(blob);
                 isGeneratingRef.current = false;
-            }, 300); // Give modal animation time to settle
+            }, 600); // Wait longer for all assets to load
             return () => clearTimeout(timer);
         } else {
             setPreGeneratedBlob(null);
@@ -88,14 +160,11 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
     };
 
     const handleAction = async (platform: string) => {
-        // Reset previous state for immediate visual feedback
         setActionStatus(platform);
-
         const text = `I just unlocked the ${achievementTitle} badge on Reformer Pilates Malta! 🏆`;
         const url = typeof window !== 'undefined' ? window.location.href : '';
         const filename = `pilates-badge-${achievementTitle.toLowerCase().replace(/\s+/g, '-')}.png`;
 
-        // CATEGORY 1: Direct Utility Actions (No Blob Needed)
         if (platform === 'Copy Link') {
             try {
                 await navigator.clipboard.writeText(`${text} ${url}`);
@@ -107,7 +176,6 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
             return;
         }
 
-        // CATEGORY 2: Actions involving Image Blob (Share/Download)
         if (isGeneratingRef.current) return;
 
         try {
@@ -125,10 +193,7 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                 triggerDownload(blob, filename);
                 setActionStatus('Saved!');
             } else {
-                // Social Sharing (Instagram, Facebook, WhatsApp, X)
                 const file = new File([blob], filename, { type: 'image/png' });
-
-                // Try Native Image Sharing first (Best Experience for all platforms on mobile)
                 if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
                     try {
                         await navigator.share({
@@ -139,11 +204,9 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                         setActionStatus('Done');
                     } catch (shareErr) {
                         console.log('Share canceled or failed', shareErr);
-                        // If canceled, we might want to still offer fallback or just stop
                         setActionStatus(null);
                     }
                 } else {
-                    // Fallback to legacy URL-based sharing (Link Only)
                     if (platform === 'Facebook') {
                         window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
                     } else if (platform === 'WhatsApp') {
@@ -162,7 +225,6 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         } finally {
             setIsGenerating(false);
             isGeneratingRef.current = false;
-            // Immediate reset after a short visual confirm if not already reset
             setTimeout(() => setActionStatus(null), 1000);
         }
     };
@@ -176,83 +238,10 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                         Show off your new <strong>{achievementTitle}</strong> badge to the world!
                     </p>
 
-                    {/* Story-Ready Achievement Card Preview */}
-                    <div className="flex justify-center mb-1 overflow-hidden w-full h-[450px] sm:h-[620px]">
-                        {/* Scaling wrapper to fit the 1080x1920 Story Canvas into the Modal UI */}
+                    {/* STORY PREVIEW (User sees this) */}
+                    <div className="flex justify-center mb-1 overflow-hidden w-full h-[450px] sm:h-[620px] relative">
                         <div className="scale-[0.22] min-[400px]:scale-[0.24] sm:scale-[0.32] origin-top flex-shrink-0">
-                            {/* Off-screen/Capture Container (9:16 Portrait) */}
-                            <div id="capture-container" className="relative w-[1080px] h-[1920px] bg-[#FFF0E5] flex flex-col items-center justify-center overflow-hidden">
-
-                                {/* Professional Background Glow (Story Style) */}
-                                <div
-                                    className="absolute inset-0 w-full h-full opacity-60"
-                                    style={{
-                                        background: 'radial-gradient(circle at center, rgba(206,142,148,0.5) 0%, rgba(206,142,148,0.1) 60%, rgba(206,142,148,0) 100%)',
-                                        filter: 'blur(80px)',
-                                        zIndex: 0
-                                    }}
-                                />
-
-                                {/* Centered Achievement Card */}
-                                <div
-                                    id="share-card"
-                                    className="relative z-10 w-[680px] aspect-[1/1.35] flex flex-col items-center justify-between p-24 bg-[#FEF9F9] rounded-[200px] shadow-[0_60px_120px_-30px_rgba(206,142,148,0.3)]"
-                                >
-                                    {/* Inner Card */}
-                                    <div className="relative z-10 w-full flex-grow flex flex-col items-center justify-between bg-white rounded-[160px] p-16 shadow-[0_40px_80px_-15px_rgba(206,142,148,0.22)] my-6">
-                                        {/* Achievement Icon Area */}
-                                        <div className="flex-1 flex flex-col items-center justify-center w-full">
-                                            <div className="text-8xl flex justify-center text-[#CE8E94] filter drop-shadow-[0_8px_16px_rgba(206,142,148,0.15)] mb-12 transform scale-150">
-                                                {achievementTitle === 'SOLARIS' ? (
-                                                    <svg viewBox="0 0 100 100" className="w-16 h-16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        {/* Center Circle */}
-                                                        <circle cx="50" cy="50" r="12" stroke="currentColor" strokeWidth="2.5" />
-                                                        {/* 8 Thin Rays */}
-                                                        <line x1="50" y1="28" x2="50" y2="10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                        <line x1="50" y1="72" x2="50" y2="90" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                        <line x1="72" y1="50" x2="90" y2="50" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                        <line x1="28" y1="50" x2="10" y2="50" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                        <line x1="66" y1="34" x2="79" y2="21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                        <line x1="34" y1="66" x2="21" y2="79" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                        <line x1="66" y1="66" x2="79" y2="79" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                        <line x1="34" y1="34" x2="21" y2="21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                                                    </svg>
-                                                ) : (
-                                                    achievementIcon
-                                                )}
-                                            </div>
-
-                                            {/* Badge Title */}
-                                            <div className="text-4xl font-bold tracking-[0.35em] text-[#B5838D] uppercase mb-8 leading-none text-center">
-                                                {achievementTitle}
-                                            </div>
-                                            {/* Description */}
-                                            <div className="text-[22px] text-gray-500 italic font-medium text-center leading-relaxed px-4">
-                                                {`"`}{achievementDescription}{`"`}
-                                            </div>
-                                        </div>
-                                        {/* Branding Watermark */}
-                                        <div className="w-full flex justify-center pb-12">
-                                            <div className="w-40 h-40 text-[#CE8E94]/45">
-                                                <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    {/* Five Rays */}
-                                                    <line x1="50" y1="15" x2="50" y2="0" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                                                    <line x1="28" y1="22" x2="18" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                                                    <line x1="72" y1="22" x2="82" y2="8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                                                    <line x1="12" y1="38" x2="0" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                                                    <line x1="88" y1="38" x2="100" y2="30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-
-                                                    {/* Eye Shape */}
-                                                    <path d="M10 55C10 55 25 35 50 35C75 35 90 55 90 55C90 55 75 75 50 75C25 75 10 55 10 55Z" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-
-                                                    {/* Pupil */}
-                                                    <circle cx="50" cy="55" r="10" stroke="currentColor" strokeWidth="4" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            {renderDesign(false)}
                         </div>
                     </div>
 
@@ -323,6 +312,11 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                 </div>
             </Modal >
 
+            {/* PERSISTENT OFF-SCREEN CAPTURE AREA (Hidden but rendered) */}
+            <div style={{ position: 'fixed', top: '-10000px', left: 0, zIndex: -9999, pointerEvents: 'none' }}>
+                {renderDesign(true)}
+            </div>
+
             <AlertModal
                 isOpen={alertConfig.isOpen}
                 onClose={() => setAlertConfig({ ...alertConfig, isOpen: false })}
@@ -333,3 +327,4 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         </>
     );
 };
+
