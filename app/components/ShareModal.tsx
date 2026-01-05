@@ -95,32 +95,19 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
         const url = typeof window !== 'undefined' ? window.location.href : '';
         const filename = `pilates-badge-${achievementTitle.toLowerCase().replace(/\s+/g, '-')}.png`;
 
-        // CATEGORY 1: Direct Redirections (Link Only)
-        if (['Facebook', 'WhatsApp', 'X', 'Copy Link'].includes(platform)) {
-            if (platform === 'Copy Link') {
-                try {
-                    await navigator.clipboard.writeText(`${text} ${url}`);
-                    setActionStatus('Copied!');
-                } catch (err) {
-                    console.error('Clipboard failed', err);
-                }
-            } else if (platform === 'Facebook') {
-                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
-                setActionStatus('Done');
-            } else if (platform === 'WhatsApp') {
-                window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank', 'noopener,noreferrer');
-                setActionStatus('Done');
-            } else if (platform === 'X') {
-                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
-                setActionStatus('Done');
+        // CATEGORY 1: Direct Utility Actions (No Blob Needed)
+        if (platform === 'Copy Link') {
+            try {
+                await navigator.clipboard.writeText(`${text} ${url}`);
+                setActionStatus('Copied!');
+            } catch (err) {
+                console.error('Clipboard failed', err);
             }
-
-            // Fast reset for redirections
-            setTimeout(() => setActionStatus(null), 600);
+            setTimeout(() => setActionStatus(null), 800);
             return;
         }
 
-        // CATEGORY 2: Blob-Dependent Actions (Image Share/Download)
+        // CATEGORY 2: Actions involving Image Blob (Share/Download)
         if (isGeneratingRef.current) return;
 
         try {
@@ -132,45 +119,51 @@ export const ShareModal = ({ isOpen, onClose, achievementTitle, achievementIcon,
                 if (blob) setPreGeneratedBlob(blob);
             }
 
-            if (platform === 'Download Image' && blob) {
+            if (!blob) throw new Error('Could not generate image');
+
+            if (platform === 'Download Image') {
                 triggerDownload(blob, filename);
                 setActionStatus('Saved!');
-            } else if (platform === 'Instagram' || platform === 'Native Share') {
-                // Image-based sharing (Instagram or System Share)
-                if (blob && navigator.share) {
-                    const file = new File([blob], filename, { type: 'image/png' });
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                        try {
-                            await navigator.share({
-                                files: [file],
-                                title: achievementTitle,
-                                text: text,
-                            });
-                            setActionStatus('Done');
-                        } catch (shareErr) {
-                            console.log('Native share canceled', shareErr);
-                            // If user cancels, we just reset
-                            setActionStatus(null);
-                        }
-                    } else if (platform === 'Instagram') {
-                        // If cannot share files but specifically clicked Instagram, fallback to link
-                        window.open('https://instagram.com', '_blank', 'noopener,noreferrer');
+            } else {
+                // Social Sharing (Instagram, Facebook, WhatsApp, X)
+                const file = new File([blob], filename, { type: 'image/png' });
+
+                // Try Native Image Sharing first (Best Experience for all platforms on mobile)
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: achievementTitle,
+                            text: text,
+                        });
                         setActionStatus('Done');
+                    } catch (shareErr) {
+                        console.log('Share canceled or failed', shareErr);
+                        // If canceled, we might want to still offer fallback or just stop
+                        setActionStatus(null);
                     }
-                } else if (platform === 'Instagram') {
-                    // Fallback for desktop/non-share browsers
-                    window.open('https://instagram.com', '_blank', 'noopener,noreferrer');
+                } else {
+                    // Fallback to legacy URL-based sharing (Link Only)
+                    if (platform === 'Facebook') {
+                        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+                    } else if (platform === 'WhatsApp') {
+                        window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank', 'noopener,noreferrer');
+                    } else if (platform === 'X') {
+                        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
+                    } else if (platform === 'Instagram') {
+                        window.open('https://instagram.com', '_blank', 'noopener,noreferrer');
+                    }
                     setActionStatus('Done');
                 }
             }
         } catch (err) {
-            console.error('Blob action failed:', err);
+            console.error('Action failed:', err);
             setActionStatus(null);
         } finally {
             setIsGenerating(false);
             isGeneratingRef.current = false;
-            // Immediate reset after a short visual confirm
-            setTimeout(() => setActionStatus(null), 800);
+            // Immediate reset after a short visual confirm if not already reset
+            setTimeout(() => setActionStatus(null), 1000);
         }
     };
 
