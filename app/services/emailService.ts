@@ -11,7 +11,7 @@ const USER_TEMPLATE = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_USER!;
 const STUDIO_INFO = {
     name: 'Reformer Pilates Malta',
     address: 'Triq Il-Hgejjeg, San Giljan, Malta',
-    instructor: 'Ömer YİĞİTLER',
+    instructor: 'Gözde',
     maps_link: 'https://maps.app.goo.gl/YourGoogleMapsLinkHere', // TODO: User should update this
     website: 'https://www.reformerpilatesmalta.com'
 };
