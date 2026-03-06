@@ -64,7 +64,7 @@ const initialData = {
     heroImage: defaultHero,
     logo: defaultLogo,
     socialLinks: { facebook: 'https://facebook.com', instagram: 'https://instagram.com', x: 'https://twitter.com' },
-    contactInfo: { email: 'info@pilatesmalta.com', phone: '+356 1234 5678' },
+    contactInfo: { email: 'info@reformerpilatesmalta.com', phone: '+356 99749805' },
     holidayMode: false,
     springMode: false
 };
