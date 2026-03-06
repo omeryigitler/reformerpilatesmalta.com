@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,7 +24,7 @@ export const metadata: Metadata = {
         alt: 'Reformer Pilates Malta Studio',
       },
     ],
-    locale: 'en_US',
+    locale: 'en_MT',
     type: 'website',
   },
   twitter: {
@@ -37,9 +39,9 @@ export const metadata: Metadata = {
   },
   manifest: '/manifest.json',
   icons: {
-    icon: '/logo.jpg',
-    shortcut: '/logo.jpg',
-    apple: '/logo.jpg',
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
   },
 };
 
@@ -71,13 +73,15 @@ export default function RootLayout({
                 "longitude": "14.3754"
               },
               "url": "https://www.reformerpilatesmalta.com",
-              "telephone": "+356 1234 5678",
+              "telephone": "+35699749805",
               "email": "info@reformerpilatesmalta.com",
               "priceRange": "$$"
             })
           }}
         />
         {children}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
