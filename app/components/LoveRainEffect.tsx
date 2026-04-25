@@ -1,6 +1,7 @@
 "use client";
 
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 type InteractionStage = 'idle' | 'animating' | 'finished';
 
@@ -163,6 +164,7 @@ export const LoveRainEffect = React.memo(() => {
     const burstSystemRef = useRef<BurstSystemHandle>(null);
     const heartRef = useRef<HTMLDivElement>(null);
     const hasTriggeredRef = useRef(false);
+    const [mounted, setMounted] = useState(false);
     const [pileItems, setPileItems] = useState<PileItem[]>([]);
     const [stage, setStage] = useState<InteractionStage>('idle');
     const [showText, setShowText] = useState(false);
@@ -194,6 +196,27 @@ export const LoveRainEffect = React.memo(() => {
     }, []);
 
     useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    useEffect(() => {
+        if (stage === 'finished') return;
+
+        const previousOverflow = document.body.style.overflow;
+        const preventScroll = (event: Event) => event.preventDefault();
+
+        document.body.style.overflow = 'hidden';
+        window.addEventListener('wheel', preventScroll, { passive: false });
+        window.addEventListener('touchmove', preventScroll, { passive: false });
+
+        return () => {
+            document.body.style.overflow = previousOverflow;
+            window.removeEventListener('wheel', preventScroll);
+            window.removeEventListener('touchmove', preventScroll);
+        };
+    }, [stage]);
+
+    useEffect(() => {
         if (stage !== 'idle') return;
 
         const handleFirstInteraction = (event: Event) => {
@@ -206,13 +229,11 @@ export const LoveRainEffect = React.memo(() => {
 
         window.addEventListener('mousedown', handleFirstInteraction);
         window.addEventListener('touchstart', handleFirstInteraction);
-        window.addEventListener('scroll', handleFirstInteraction);
         window.addEventListener('keydown', handleFirstInteraction);
 
         return () => {
             window.removeEventListener('mousedown', handleFirstInteraction);
             window.removeEventListener('touchstart', handleFirstInteraction);
-            window.removeEventListener('scroll', handleFirstInteraction);
             window.removeEventListener('keydown', handleFirstInteraction);
         };
     }, [runSequence, stage]);
@@ -242,26 +263,29 @@ export const LoveRainEffect = React.memo(() => {
         }
     `, []);
 
-    return (
-        <>
+    if (!mounted) return null;
+
+    return createPortal(
+        <div className={`fixed inset-0 z-[9994] overflow-hidden ${stage === 'finished' ? 'pointer-events-none' : 'pointer-events-auto'}`}>
             <style>{styles}</style>
             <div
-                className={`fixed inset-0 z-[9994] pointer-events-none bg-[#FFF9F5] transition-opacity duration-[2000ms] ${overlayVisible ? 'opacity-100' : 'opacity-0'}`}
+                className={`absolute inset-0 pointer-events-none bg-[#FFF9F5] transition-opacity duration-[2000ms] ${overlayVisible ? 'opacity-100' : 'opacity-0'}`}
                 aria-hidden="true"
             />
-            <div className={`fixed inset-0 z-[9995] flex items-center justify-center pointer-events-none transition-all duration-300 ${stage === 'idle' ? 'opacity-100 scale-100' : 'opacity-0 scale-110'}`}>
+            <div className={`absolute inset-0 z-[1] flex items-center justify-center pointer-events-none transition-all duration-300 ${stage === 'idle' ? 'opacity-100 scale-100' : 'opacity-0 scale-110'}`}>
                 <div ref={heartRef}>
                     <HeroHeart />
                 </div>
             </div>
-            <div className={`fixed inset-0 z-[9995] flex items-center justify-center pointer-events-none transition-opacity duration-[2000ms] ${showText ? 'opacity-100' : 'opacity-0'}`}>
+            <div className={`absolute inset-0 z-[1] flex items-center justify-center pointer-events-none transition-opacity duration-[2000ms] ${showText ? 'opacity-100' : 'opacity-0'}`}>
                 <h2 className="font-serif text-5xl md:text-8xl text-[#e11d48] font-bold drop-shadow-lg text-center leading-tight tracking-tight">
                     Happy<br />Valentine&apos;s<br />Day
                 </h2>
             </div>
             <BurstSystem ref={burstSystemRef} onLand={handleParticleLand} />
             <BottomPile items={pileItems} />
-        </>
+        </div>,
+        document.body
     );
 });
 LoveRainEffect.displayName = "LoveRainEffect";
