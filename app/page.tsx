@@ -34,6 +34,7 @@ import { sortSlots, formatDateDisplay } from "./utils/helpers";
 import { sendUserBookingConfirmation, sendAdminAlert } from "./services/emailService";
 import { Snowfall, ChristmasTree, SantaHat } from "./components/ChristmasDecorations";
 import { PetalFall, ButterflyFollower, CornerDaisy } from "./components/SpringDecorations";
+import { LoveRainEffect } from "./components/LoveRainEffect";
 
 // --- DYNAMIC IMPORTS ---
 const AdminPanel = dynamic(() => import('./components/AdminPanel').then(mod => mod.AdminPanel), {
@@ -66,7 +67,8 @@ const initialData = {
     socialLinks: { facebook: 'https://facebook.com', instagram: 'https://instagram.com', x: 'https://twitter.com' },
     contactInfo: { email: 'info@reformerpilatesmalta.com', phone: '+356 99749805' },
     holidayMode: false,
-    springMode: false
+    springMode: false,
+    loveRainMode: false
 };
 
 
@@ -566,6 +568,7 @@ function PilatesMaltaByGozde() {
                 {managementState.springMode && showDaisy && (
                     <CornerDaisy onClick={() => setShowDaisy(false)} />
                 )}
+                {managementState.loveRainMode && <LoveRainEffect />}
             </div>
 
             {/* ButterflyFollower MUST be outside main container for fixed positioning to work! */}

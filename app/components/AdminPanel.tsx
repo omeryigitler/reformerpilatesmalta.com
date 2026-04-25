@@ -839,6 +839,31 @@ export const AdminPanel = ({
                             />
                         </div>
 
+                        {/* Love Rain Mode Toggle */}
+                        <div className="bg-white/80 backdrop-blur-sm p-6 rounded-3xl border border-rose-200/60 shadow-sm flex items-center justify-between group hover:shadow-md transition-shadow">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-rose-50 rounded-2xl text-rose-500 group-hover:bg-rose-100 transition-colors">
+                                    <Sparkles className="w-7 h-7" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-gray-800">Love Rain Mode ❤️🌧️</h3>
+                                    <p className="text-sm text-gray-500">Enable the love heart burst and Valentine rain effect.</p>
+                                </div>
+                            </div>
+                            <Switch
+                                checked={!!managementState.loveRainMode}
+                                onCheckedChange={async (val) => {
+                                    setManagementState(prev => ({ ...prev, loveRainMode: val }));
+                                    try {
+                                        await updateDoc(doc(db, "management", "settings"), { loveRainMode: val });
+                                    } catch (e) {
+                                        console.error("Error auto-saving love rain mode:", e);
+                                    }
+                                }}
+                                className="data-[state=checked]:bg-rose-500"
+                            />
+                        </div>
+
                         <div>
                             <h3 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-3 border-b pb-2"><Edit3 className="w-6 h-6 text-[#CE8E94]" /> Hero Section Content</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

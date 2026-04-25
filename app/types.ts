@@ -39,4 +39,5 @@ export type ManagementState = {
     contactInfo: { email: string; phone: string; };
     holidayMode: boolean;
     springMode: boolean;
+    loveRainMode: boolean;
 };
