@@ -105,7 +105,7 @@ const BurstSystem = forwardRef<BurstSystemHandle, { onLand: (svgContent: string,
             const particle = particles[i];
             particle.update();
 
-            if (particle.y > screenHeight - 72) {
+            if (particle.y > screenHeight - 112) {
                 onLand(particle.svgContent, particle.x);
                 particle.element.remove();
                 particles.splice(i, 1);
@@ -143,11 +143,11 @@ const BurstSystem = forwardRef<BurstSystemHandle, { onLand: (svgContent: string,
 BurstSystem.displayName = "BurstSystem";
 
 const BottomPile = React.memo(({ items }: { items: PileItem[] }) => (
-    <div className="fixed bottom-3 left-0 w-full h-36 md:h-44 pointer-events-none z-[85] overflow-visible" aria-hidden="true">
+    <div className="fixed bottom-10 left-0 w-full h-32 md:h-40 pointer-events-none z-[85] overflow-visible" aria-hidden="true">
         {items.map((item) => (
             <div
                 key={item.id}
-                className="absolute bottom-2 w-8 h-8 md:w-10 md:h-10 transition-opacity duration-700 opacity-80 mix-blend-multiply will-change-transform"
+                className="absolute bottom-0 w-8 h-8 md:w-10 md:h-10 transition-opacity duration-700 opacity-75 mix-blend-multiply will-change-transform"
                 style={{
                     left: item.x,
                     transform: `translate3d(-50%, 0, 0) rotate(${item.rot}deg)`,
@@ -246,7 +246,7 @@ export const LoveRainEffect = React.memo(() => {
         <>
             <style>{styles}</style>
             <div
-                className={`fixed inset-0 z-[70] pointer-events-none transition-[opacity,background-color] duration-[2000ms] ${showText ? 'bg-white/80' : 'bg-white/55'} ${overlayVisible ? 'opacity-100' : 'opacity-0'}`}
+                className={`fixed inset-0 z-[70] pointer-events-none bg-[#FFF9F5] transition-opacity duration-[2000ms] ${overlayVisible ? 'opacity-95' : 'opacity-0'}`}
                 aria-hidden="true"
             />
             <div className={`fixed inset-0 z-[80] flex items-center justify-center pointer-events-none transition-all duration-300 ${stage === 'idle' ? 'opacity-100 scale-100' : 'opacity-0 scale-110'}`}>
