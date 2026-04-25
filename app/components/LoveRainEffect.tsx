@@ -138,12 +138,12 @@ const BurstSystem = forwardRef<BurstSystemHandle, { onLand: (svgContent: string,
 
     useEffect(() => () => cancelAnimationFrame(frameIdRef.current), []);
 
-    return <div ref={containerRef} className="fixed inset-0 pointer-events-none z-[90]" />;
+    return <div ref={containerRef} className="fixed inset-0 pointer-events-none z-[9997]" />;
 });
 BurstSystem.displayName = "BurstSystem";
 
 const BottomPile = React.memo(({ items }: { items: PileItem[] }) => (
-    <div className="fixed bottom-10 left-0 w-full h-32 md:h-40 pointer-events-none z-[85] overflow-visible" aria-hidden="true">
+    <div className="fixed bottom-10 left-0 w-full h-32 md:h-40 pointer-events-none z-[9996] overflow-visible" aria-hidden="true">
         {items.map((item) => (
             <div
                 key={item.id}
@@ -246,15 +246,15 @@ export const LoveRainEffect = React.memo(() => {
         <>
             <style>{styles}</style>
             <div
-                className={`fixed inset-0 z-[70] pointer-events-none bg-[#FFF9F5] transition-opacity duration-[2000ms] ${overlayVisible ? 'opacity-95' : 'opacity-0'}`}
+                className={`fixed inset-0 z-[9994] pointer-events-none bg-[#FFF9F5] transition-opacity duration-[2000ms] ${overlayVisible ? 'opacity-100' : 'opacity-0'}`}
                 aria-hidden="true"
             />
-            <div className={`fixed inset-0 z-[80] flex items-center justify-center pointer-events-none transition-all duration-300 ${stage === 'idle' ? 'opacity-100 scale-100' : 'opacity-0 scale-110'}`}>
+            <div className={`fixed inset-0 z-[9995] flex items-center justify-center pointer-events-none transition-all duration-300 ${stage === 'idle' ? 'opacity-100 scale-100' : 'opacity-0 scale-110'}`}>
                 <div ref={heartRef}>
                     <HeroHeart />
                 </div>
             </div>
-            <div className={`fixed inset-0 z-[80] flex items-center justify-center pointer-events-none transition-opacity duration-[2000ms] ${showText ? 'opacity-100' : 'opacity-0'}`}>
+            <div className={`fixed inset-0 z-[9995] flex items-center justify-center pointer-events-none transition-opacity duration-[2000ms] ${showText ? 'opacity-100' : 'opacity-0'}`}>
                 <h2 className="font-serif text-5xl md:text-8xl text-[#e11d48] font-bold drop-shadow-lg text-center leading-tight tracking-tight">
                     Happy<br />Valentine&apos;s<br />Day
                 </h2>
