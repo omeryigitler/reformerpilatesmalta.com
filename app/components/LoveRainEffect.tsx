@@ -137,12 +137,12 @@ const BurstSystem = forwardRef<BurstSystemHandle, { onLand: (svgContent: string,
 
     useEffect(() => () => cancelAnimationFrame(frameIdRef.current), []);
 
-    return <div ref={containerRef} className="fixed inset-0 pointer-events-none z-[10000]" />;
+    return <div ref={containerRef} className="fixed inset-0 pointer-events-none z-[90]" />;
 });
 BurstSystem.displayName = "BurstSystem";
 
 const BottomPile = React.memo(({ items }: { items: PileItem[] }) => (
-    <div className="fixed bottom-0 left-0 w-full h-24 pointer-events-none z-[9999] overflow-hidden" aria-hidden="true">
+    <div className="fixed bottom-0 left-0 w-full h-24 pointer-events-none z-[85] overflow-hidden" aria-hidden="true">
         {items.map((item) => (
             <div
                 key={item.id}
@@ -164,6 +164,7 @@ BottomPile.displayName = "BottomPile";
 export const LoveRainEffect = React.memo(() => {
     const burstSystemRef = useRef<BurstSystemHandle>(null);
     const heartRef = useRef<HTMLDivElement>(null);
+    const hasTriggeredRef = useRef(false);
     const [pileItems, setPileItems] = useState<PileItem[]>([]);
     const [stage, setStage] = useState<InteractionStage>('idle');
     const [showText, setShowText] = useState(false);
@@ -199,17 +200,18 @@ export const LoveRainEffect = React.memo(() => {
 
         const handleFirstInteraction = (event: Event) => {
             if (event.type === 'keydown' && (event as KeyboardEvent).key.toLowerCase() === 'tab') return;
+            if (hasTriggeredRef.current) return;
+
+            hasTriggeredRef.current = true;
             runSequence();
         };
 
-        window.addEventListener('mousemove', handleFirstInteraction, { once: true });
-        window.addEventListener('mousedown', handleFirstInteraction, { once: true });
-        window.addEventListener('touchstart', handleFirstInteraction, { once: true });
-        window.addEventListener('scroll', handleFirstInteraction, { once: true });
-        window.addEventListener('keydown', handleFirstInteraction, { once: true });
+        window.addEventListener('mousedown', handleFirstInteraction);
+        window.addEventListener('touchstart', handleFirstInteraction);
+        window.addEventListener('scroll', handleFirstInteraction);
+        window.addEventListener('keydown', handleFirstInteraction);
 
         return () => {
-            window.removeEventListener('mousemove', handleFirstInteraction);
             window.removeEventListener('mousedown', handleFirstInteraction);
             window.removeEventListener('touchstart', handleFirstInteraction);
             window.removeEventListener('scroll', handleFirstInteraction);
@@ -246,15 +248,15 @@ export const LoveRainEffect = React.memo(() => {
         <>
             <style>{styles}</style>
             <div
-                className={`fixed inset-0 z-[9997] pointer-events-none transition-all duration-[2000ms] ${showText ? 'bg-white/70 backdrop-blur-md' : 'bg-white/40 backdrop-blur-sm'} ${overlayVisible ? 'opacity-100' : 'opacity-0'}`}
+                className={`fixed inset-0 z-[70] pointer-events-none transition-all duration-[2000ms] ${showText ? 'bg-white/70 backdrop-blur-md' : 'bg-white/40 backdrop-blur-sm'} ${overlayVisible ? 'opacity-100' : 'opacity-0'}`}
                 aria-hidden="true"
             />
-            <div className={`fixed inset-0 z-[9998] flex items-center justify-center pointer-events-none transition-all duration-300 ${stage === 'idle' ? 'opacity-100 scale-100' : 'opacity-0 scale-110'}`}>
+            <div className={`fixed inset-0 z-[80] flex items-center justify-center pointer-events-none transition-all duration-300 ${stage === 'idle' ? 'opacity-100 scale-100' : 'opacity-0 scale-110'}`}>
                 <div ref={heartRef}>
                     <HeroHeart />
                 </div>
             </div>
-            <div className={`fixed inset-0 z-[9998] flex items-center justify-center pointer-events-none transition-opacity duration-[2000ms] ${showText ? 'opacity-100' : 'opacity-0'}`}>
+            <div className={`fixed inset-0 z-[80] flex items-center justify-center pointer-events-none transition-opacity duration-[2000ms] ${showText ? 'opacity-100' : 'opacity-0'}`}>
                 <h2 className="font-serif text-5xl md:text-8xl text-[#e11d48] font-bold drop-shadow-lg text-center leading-tight tracking-tight">
                     Happy<br />Valentine&apos;s<br />Day
                 </h2>
