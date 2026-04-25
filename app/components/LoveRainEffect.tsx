@@ -73,7 +73,8 @@ class Particle {
         const size = (isMobile ? 15 : 20) + Math.random() * (isMobile ? 20 : 30);
         this.element.style.width = `${size}px`;
         this.element.style.height = `${size}px`;
-        this.element.style.transform = `translate(${this.x}px, ${this.y}px)`;
+        this.element.style.willChange = 'transform';
+        this.element.style.transform = `translate3d(${this.x}px, ${this.y}px, 0)`;
     }
 
     update() {
@@ -83,7 +84,7 @@ class Particle {
         this.rot += this.vRot;
         this.vx *= 0.99;
         this.vy *= 0.95;
-        this.element.style.transform = `translate(${this.x}px, ${this.y}px) rotate(${this.rot}deg)`;
+        this.element.style.transform = `translate3d(${this.x}px, ${this.y}px, 0) rotate(${this.rot}deg)`;
     }
 }
 
@@ -104,7 +105,7 @@ const BurstSystem = forwardRef<BurstSystemHandle, { onLand: (svgContent: string,
             const particle = particles[i];
             particle.update();
 
-            if (particle.y > screenHeight - 50) {
+            if (particle.y > screenHeight - 72) {
                 onLand(particle.svgContent, particle.x);
                 particle.element.remove();
                 particles.splice(i, 1);
@@ -142,21 +143,18 @@ const BurstSystem = forwardRef<BurstSystemHandle, { onLand: (svgContent: string,
 BurstSystem.displayName = "BurstSystem";
 
 const BottomPile = React.memo(({ items }: { items: PileItem[] }) => (
-    <div className="fixed bottom-0 left-0 w-full h-24 pointer-events-none z-[85] overflow-hidden" aria-hidden="true">
+    <div className="fixed bottom-3 left-0 w-full h-36 md:h-44 pointer-events-none z-[85] overflow-visible" aria-hidden="true">
         {items.map((item) => (
             <div
                 key={item.id}
-                className="absolute bottom-0 w-8 h-8 md:w-10 md:h-10 transition-all duration-700 opacity-80 mix-blend-multiply"
+                className="absolute bottom-2 w-8 h-8 md:w-10 md:h-10 transition-opacity duration-700 opacity-80 mix-blend-multiply will-change-transform"
                 style={{
                     left: item.x,
-                    transform: `translateX(-50%) rotate(${item.rot}deg)`,
+                    transform: `translate3d(-50%, 0, 0) rotate(${item.rot}deg)`,
                 }}
                 dangerouslySetInnerHTML={{ __html: item.svg }}
             />
         ))}
-        {items.length > 5 && (
-            <div className="absolute bottom-0 left-0 w-full h-8 bg-gradient-to-t from-[#FFF0E5] to-transparent pointer-events-none" />
-        )}
     </div>
 ));
 BottomPile.displayName = "BottomPile";
@@ -248,7 +246,7 @@ export const LoveRainEffect = React.memo(() => {
         <>
             <style>{styles}</style>
             <div
-                className={`fixed inset-0 z-[70] pointer-events-none transition-all duration-[2000ms] ${showText ? 'bg-white/70 backdrop-blur-md' : 'bg-white/40 backdrop-blur-sm'} ${overlayVisible ? 'opacity-100' : 'opacity-0'}`}
+                className={`fixed inset-0 z-[70] pointer-events-none transition-[opacity,background-color] duration-[2000ms] ${showText ? 'bg-white/80' : 'bg-white/55'} ${overlayVisible ? 'opacity-100' : 'opacity-0'}`}
                 aria-hidden="true"
             />
             <div className={`fixed inset-0 z-[80] flex items-center justify-center pointer-events-none transition-all duration-300 ${stage === 'idle' ? 'opacity-100 scale-100' : 'opacity-0 scale-110'}`}>
